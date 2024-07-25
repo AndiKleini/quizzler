@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { SinglePickComponent } from './single-pick/single-pick.component';
 
 @Component({
   selector: 'app-root',
