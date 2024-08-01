@@ -1,14 +1,14 @@
 import { Component, Input } from '@angular/core';
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, NgFor } from '@angular/common';
 
 import { QuestionService } from '../services/question.service';
-import { Observable } from 'rxjs';
+import { Observable, timer } from 'rxjs';
 import { Question } from '../entities/question';
 
 @Component({
   selector: 'app-single-pick',
   standalone: true,
-  imports: [ AsyncPipe ],
+  imports: [ AsyncPipe, NgFor ],
   templateUrl: './single-pick.component.html',
   styleUrl: './single-pick.component.css'
 })

@@ -7,29 +7,13 @@
       </div>
     </div>
     <div class="div-table"> 
-      <div class="div-table-row">
+      <div *ngFor="let option of (question$ | async)?.options" class="div-table-row">
           <div class="div-table-cell div-table-cell-checkbox">
             <input type="checkbox" class="largeCheckbox"/>
           </div>
           <div class="div-table-cell div-table-cell-selection-text">
-            <label class="label-question">Is this true or what.</label>
+            <label class="label-question">{{ option.text }}</label>
           </div>
-      </div>
-      <div class="div-table-row">
-        <div class="div-table-cell div-table-cell-checkbox">
-          <input type="checkbox" class="largeCheckbox"/>
         </div>
-        <div class="div-table-cell div-table-cell-selection-text">
-          <label class="label-question">Is this true or what. Maybe we should try with a bit longer version.</label>
-        </div>
-      </div>
-      <div class="div-table-row">
-        <div class="div-table-cell div-table-cell-checkbox">
-          <input type="checkbox" class="largeCheckbox"/>
-        </div>
-        <div class="div-table-cell div-table-cell-selection-text">
-          <label class="label-question">Is this true or what.</label>
-        </div>
-      </div>
     </div>
   </div>
