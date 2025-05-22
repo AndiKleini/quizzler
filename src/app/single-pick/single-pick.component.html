@@ -6,14 +6,19 @@
         </label>
       </div>
     </div>
-    <div class="div-table"> 
-      <div *ngFor="let option of (question$ | async)?.options" class="div-table-row">
-          <div class="div-table-cell div-table-cell-checkbox">
-            <input type="checkbox" class="largeCheckbox"/>
+    <form [formGroup]="singlePickQuestionForm" (ngSubmit)="submitquestion(singlePickQuestionForm.value)">
+      <div class="div-table"> 
+        <div *ngFor="let option of options.controls; index as optid" class="div-table-row">
+            <div class="div-table-cell div-table-cell-checkbox">
+              <input [formControl]="option" type="checkbox" class="largeCheckbox"/>
+            </div>
+            <div class="div-table-cell div-table-cell-selection-text">
+              <label class="label-question">{{ (question$ | async )?.options![optid].text }}</label>
+            </div>
           </div>
-          <div class="div-table-cell div-table-cell-selection-text">
-            <label class="label-question">{{ option.text }}</label>
-          </div>
-        </div>
-    </div>
+      </div>
+      <div>
+        <button type="submit">Submit</button>
+      </div>
+    </form>
   </div>

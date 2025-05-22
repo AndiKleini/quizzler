@@ -22,9 +22,9 @@ export class QuestionService {
        answers. The text can be a bit longer as we are here to learn and learn and learn 
        and learn.`, 
        [ 
-          {text: "Is this true or false 1 ?", selected: false },
-          {text: "Is this true or false 2 ?", selected: false },
-          {text: "Is this true or false 3 ?", selected: false },
+          new Option("Is this true or false 1 ?"),
+          new Option("Is this true or false 2 ?"),
+          new Option("Is this true or false 3 ?")
         ] ));
     }
      return of(new Question(questionId, 
@@ -36,6 +36,9 @@ export class QuestionService {
      answers. The text can be a bit longer as we are here to learn and learn and learn 
      and learn. This is the quetsion that was asked. And the candidate has to checkout the correct
      answers. The text can be a bit longer as we are here to learn and learn and learn 
-     and learn.`, [ {text: "Can we apply this", selected: false } ]));
+     and learn.`,
+     [ 
+      new Option("Can we apply this")
+     ]));
   }
 }
