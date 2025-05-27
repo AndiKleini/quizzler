@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SinglePickComponent } from './single-pick.component';
+import { SinglepickComponent } from './singlepick.component';
 
-describe('SinglePickComponent', () => {
-  let component: SinglePickComponent;
-  let fixture: ComponentFixture<SinglePickComponent>;
+describe('SinglepickComponent', () => {
+  let component: SinglepickComponent;
+  let fixture: ComponentFixture<SinglepickComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SinglePickComponent]
+      imports: [SinglepickComponent]
     })
     .compileComponents();
-    
-    fixture = TestBed.createComponent(SinglePickComponent);
+
+    fixture = TestBed.createComponent(SinglepickComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
