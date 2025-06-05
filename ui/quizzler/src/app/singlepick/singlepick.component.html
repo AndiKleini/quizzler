@@ -1,12 +1,12 @@
 <p>singlepick works!</p>
+<h2>{{singlePickQuestion.title}}</h2>
+<label>{{singlePickQuestion.text}}</label>
 <div [formGroup]="singlePickForm" >
     <div formArrayName="options">
-        <h2>Aliases</h2>
-        @for (option of this.options.controls; track $index; let currIndex = $index) {
+        @for (option of this.singlePickQuestion.options; track $index; let currIndex = $index) {
             <div>
-                <input id="option-{{ currIndex }}" type="checkbox" [checked]="currIndex == selectedIndex" 
-                    (click)="selectedIndex = currIndex" />
-                <label for="option-{{ currIndex }}">Option:</label>
+                <input id="option-{{ currIndex }}" type="checkbox" [checked]="option.isSelected" [formControlName]="option.id" >
+                <label for="option-{{ currIndex }}">{{option.text}}</label>
             </div>
         }
         <button type="button">Submit</button>

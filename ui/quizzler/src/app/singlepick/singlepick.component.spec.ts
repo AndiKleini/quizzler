@@ -19,4 +19,8 @@ describe('SinglepickComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it ('should display initally 3 options', () => {
+    expect(component.singlePickForm).toBeTruthy();
+  });
 });
