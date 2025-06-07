@@ -12,26 +12,25 @@ import { QuestionService } from '../services/questionservice';
   styleUrl: './singlepick.component.css'
 })
 export class SinglepickComponent implements OnInit  {
-  selectedIndex = -1;
   singlePickForm: FormGroup;
   public singlePickQuestion: SinglePickQuestion;
   constructor(private formBuilder: FormBuilder, questionService: QuestionService) {
     this.singlePickForm = this.formBuilder.group( {
-      options: this.formBuilder.array([false])
+      options: this.formBuilder.array([])
     });
     this.singlePickQuestion = questionService.getSinglePickQuestionById(1);
   }
-    ngOnInit(): void {
-      this.singlePickQuestion.options.forEach(
-        option => { 
-          let optionControl = this.formBuilder.control('');
-          optionControl.valueChanges.subscribe(newValue => {
-            this.singlePickQuestion.select(option.id);
-          });
-          this.options.push(optionControl);
+  ngOnInit(): void {
+    this.singlePickQuestion.options.forEach(
+      (option, number) => { 
+        let optionControl = this.formBuilder.control(false);
+        optionControl.valueChanges.subscribe(newValue => {
+          this.singlePickQuestion.select(option.id);
         });
-    }
-    get options() {
-      return this.singlePickForm.get('options') as FormArray;
-    }
+        this.options.push(optionControl);
+      });
+  }
+  get options() {
+    return this.singlePickForm.get('options') as FormArray;
+  }
 }

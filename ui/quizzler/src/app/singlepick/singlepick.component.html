@@ -5,8 +5,8 @@
     <div formArrayName="options">
         @for (option of this.singlePickQuestion.options; track $index; let currIndex = $index) {
             <div>
-                <input id="option-{{ currIndex }}" type="checkbox" [checked]="option.isSelected" [formControlName]="option.id" >
-                <label for="option-{{ currIndex }}">{{option.text}}</label>
+                <input id="{{currIndex}}" type="checkbox" [checked]="option.isSelected" [formControlName]="currIndex" >
+                <label for="{{currIndex}}">{{option.text}}</label>
             </div>
         }
         <button type="button">Submit</button>
