@@ -7,6 +7,7 @@ export class SinglePickQuestion {
         public options: SingePickOption[]
     ) { };
     select(selectedOptionId: number) {
-      this.options.forEach(o => o.isSelected = (o.id == selectedOptionId));
+      this.options.forEach(o => { 
+        o.isSelected = (o.id == selectedOptionId) ? !o.isSelected : false});
     }
 }

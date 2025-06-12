@@ -37,7 +37,7 @@ describe('SinglepickComponent', () => {
     expect(options).toBeTruthy();
     expect((options as FormArray).length).toEqual(4);
   });
-  it ('should select first option on first click', fakeAsync (() => {
+  it ('should select first option on first click', () => {
     let mockQuestionService = {
        getSinglePickQuestionById: jest.fn().mockReturnValue( new SinglePickQuestion(
                    "Question ES 1", 
@@ -62,7 +62,7 @@ describe('SinglepickComponent', () => {
     selectOptionById('0');
 
     expectOnlyOneOptionIsSelected(component.singlePickForm, 0);
-  }));
+  });
 });
 function expectOnlyOneOptionIsSelected(form: FormGroup<any>, selectedIndex: number) {
   let options = form.get('options');
