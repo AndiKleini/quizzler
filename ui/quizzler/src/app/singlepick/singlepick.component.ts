@@ -1,36 +1,30 @@
 import { Component, OnInit } from '@angular/core';
-import {FormGroup, ReactiveFormsModule, FormBuilder, FormArray} from '@angular/forms';
+import { FormGroup, ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { SinglePickQuestion } from "../entities/singlepickquestion";
 import { SingePickOption } from '../entities/singlepickoption';
 import { QuestionService } from '../services/questionservice';
+import { NgFor } from '@angular/common';
 
 @Component({
   selector: 'quizzler-singlepick',
   standalone: true,
-  imports: [ ReactiveFormsModule ],
+  imports: [ ReactiveFormsModule, NgFor ],
   templateUrl: './singlepick.component.html',
   styleUrl: './singlepick.component.css'
 })
 export class SinglepickComponent implements OnInit  {
   singlePickForm: FormGroup;
   public singlePickQuestion: SinglePickQuestion;
+selectedIndex: any;
   constructor(private formBuilder: FormBuilder, questionService: QuestionService) {
     this.singlePickForm = this.formBuilder.group( {
-      options: this.formBuilder.array([])
+      selectedOption: ['']
     });
     this.singlePickQuestion = questionService.getSinglePickQuestionById(1);
   }
   ngOnInit(): void {
-    this.singlePickQuestion.options.forEach(
-      (option, number) => { 
-        let optionControl = this.formBuilder.control(false);
-        optionControl.valueChanges.subscribe(newValue => {
-          this.singlePickQuestion.select(option.id);
-        });
-        this.options.push(optionControl);
-      });
   }
-  get options() {
-    return this.singlePickForm.get('options') as FormArray;
+  submit() {
+    console.log(this.singlePickForm.get('selectedOption')?.value);
   }
 }

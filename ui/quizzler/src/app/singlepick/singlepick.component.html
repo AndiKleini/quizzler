@@ -2,13 +2,11 @@
 <h2>{{singlePickQuestion.title}}</h2>
 <label>{{singlePickQuestion.text}}</label>
 <div [formGroup]="singlePickForm" >
-    <div formArrayName="options">
-        @for (option of this.singlePickQuestion.options; track $index; let currIndex = $index) {
-            <div>
-                <input id="{{currIndex}}" type="checkbox" [checked]="option.isSelected" [formControlName]="currIndex" >
-                <label for="{{currIndex}}">{{option.text}}</label>
-            </div>
-        }
-        <button type="button">Submit</button>
+    <div *ngFor='let option of singlePickQuestion.options;' >
+        <input id="{{option.id}}" type="radio" 
+            [value]="option.id"
+            formControlName="selectedOption"/>
+        <label for="{{option.id}}">{{option.text}}</label>
     </div>
+    <button type="submit" (click)="submit()">Evaluate</button>
 </div>

@@ -22,12 +22,28 @@ describe('SinglepickComponent', () => {
     fixture.detectChanges();
 
     expect(component.singlePickForm).toBeTruthy();
-    let options = component.singlePickForm.get('options');
-    
-    expect(options).toBeTruthy();
-    expect((options as FormArray).length).toEqual(4);
+    let selectedOption = component.singlePickForm.get('selectedOption');
+    expect(selectedOption).toBeTruthy();
+    expectNumberOfRenderedOptionsIs(4);
   });
-  it.each([0,1,2,3]) ('should select first option on first click', (firstSelect) => {
+  it ('should select no option by default', async () => {
+    let mockQuestionService = returnUntouchedOptions();
+    await TestBed.configureTestingModule({
+      imports: [SinglepickComponent],
+      providers: [
+        {provide: QuestionService, useValue: mockQuestionService}
+      ]
+    }).compileComponents();
+    fixture = TestBed.createComponent(SinglepickComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component.singlePickForm).toBeTruthy();
+    let selectedOption = component.singlePickForm.get('selectedOption');
+    expect(selectedOption).toBeTruthy();
+    expect(selectedOption?.value).toEqual('');
+  });
+  it.each([1,2,3,4]) ('should select first option on first click', (firstSelect) => {
     let mockQuestionService = returnUntouchedOptions();
     TestBed.configureTestingModule({
       imports: [SinglepickComponent],
@@ -41,26 +57,17 @@ describe('SinglepickComponent', () => {
 
     selectOptionById(firstSelect.toString());
 
-    expectOnlyOneOptionIsSelected(component.singlePickForm, firstSelect);
-  });
-  it.each([0,1,2,3]) ('should toggle selection with clicking twice', (firstSelect) => {
-    let mockQuestionService = returnUntouchedOptions();
-    TestBed.configureTestingModule({
-      imports: [SinglepickComponent],
-      providers: [
-        {provide: QuestionService, useValue: mockQuestionService}
-      ]
-    }).compileComponents();
-    fixture = TestBed.createComponent(SinglepickComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-
-    selectOptionById(firstSelect.toString());
-    selectOptionById(firstSelect.toString());
-
-    expectNoOptionIsSelected(component.singlePickForm);
+    let selectedOption = component.singlePickForm.get('selectedOption');
+    expect(selectedOption).toBeTruthy();
+    expect(selectedOption?.value).toEqual(firstSelect);
   });
 });
+function expectNumberOfRenderedOptionsIs(numberOfExpectedOptions: number) {
+  for (let i = 1; i <= numberOfExpectedOptions; i++) {
+    let radio = document.getElementById(`${i}`);
+    expect(radio).toBeTruthy();
+  }
+}
 function returnUntouchedOptions() {
   return {
     getSinglePickQuestionById: jest.fn().mockReturnValue(new SinglePickQuestion(
@@ -74,20 +81,8 @@ function returnUntouchedOptions() {
       ]))
   };
 }
-function expectOnlyOneOptionIsSelected(form: FormGroup<any>, selectedIndex: number) {
-  let options = form.get('options');
-  let array = options as FormArray;
-  array.controls.forEach((element, index) => { 
-    expect(element.value).toEqual(index == selectedIndex); });
-}
 function selectOptionById(id: string) {
-  let checkBox = document.getElementById(id);
-  expect(checkBox).toBeTruthy();
-  checkBox?.click();
-}
-function expectNoOptionIsSelected(form: FormGroup<any>) {
-  let options = form.get('options');
-  let array = options as FormArray;
-  array.controls.forEach((element, index) => { 
-    expect(element.value).toEqual(false); });
+  let radio = document.getElementById(id);
+  expect(radio).toBeTruthy();
+  radio?.click();
 }
