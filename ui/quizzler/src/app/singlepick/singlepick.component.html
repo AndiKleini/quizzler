@@ -1,12 +1,18 @@
-<p>singlepick works!</p>
-<h2>{{singlePickQuestion.title}}</h2>
-<label>{{singlePickQuestion.text}}</label>
-<div [formGroup]="singlePickForm" >
-    <div *ngFor='let option of singlePickQuestion.options;' >
-        <input id="{{option.id}}" type="radio" 
+<div [formGroup]="singlePickForm" class="question-container">
+    <div class="question-title">{{singlePickQuestion.title}}</div>
+    <div class="question-text"> {{singlePickQuestion.text}} </div>
+    <div *ngFor='let option of singlePickQuestion.options;' class="option-item" 
+        [ngClass]="option.id.toString() == this.singlePickForm.get('selectedOption')?.value ? 'selected' : ''">
+        <input id="{{option.id}}" type="radio" class="option-checkbox"
             [value]="option.id"
-            formControlName="selectedOption"/>
-        <label for="{{option.id}}">{{option.text}}</label>
+            formControlName="selectedOption" #selectedOption>
+        <div class="option-text">
+            <label for="{{option.id}}"><span class="option-label">({{option.id}})</span> {{option.text}}
+            
+            </label>
+        </div>
     </div>
-    <button type="submit" (click)="submit()">Evaluate</button>
+    <div>
+        <button type="submit" (click)="submit()" class="question-submit"> Evaluate </button>
+    </div>
 </div>

@@ -3,12 +3,12 @@ import { FormGroup, ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { SinglePickQuestion } from "../entities/singlepickquestion";
 import { SingePickOption } from '../entities/singlepickoption';
 import { QuestionService } from '../services/questionservice';
-import { NgFor } from '@angular/common';
+import { NgFor, NgClass } from '@angular/common';
 
 @Component({
   selector: 'quizzler-singlepick',
   standalone: true,
-  imports: [ ReactiveFormsModule, NgFor ],
+  imports: [ ReactiveFormsModule, NgFor, NgClass ],
   templateUrl: './singlepick.component.html',
   styleUrl: './singlepick.component.css'
 })

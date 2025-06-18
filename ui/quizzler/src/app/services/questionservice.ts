@@ -7,12 +7,12 @@ export class QuestionService {
     getSinglePickQuestionById(id: number) : SinglePickQuestion {
         return  new SinglePickQuestion(
             "Question ES 1", 
-            "This is the text of a single pick question !",
+            "Which of the following qualities can most likely be improved by using a layered architecture?",
             [ 
-              new SingePickOption(1, 'Option 1'), 
-              new SingePickOption(2, 'Option 2'),
-              new SingePickOption(3, 'Option 3'),
-              new SingePickOption(4, 'Option 4')
+              new SingePickOption(1, 'Runtime efficiency (performance).'), 
+              new SingePickOption(2, 'Flexibility in modifying or changing the system.'),
+              new SingePickOption(3, 'Flexibility at runtime (configurability).'),
+              new SingePickOption(4, 'Non-repudiability.')
             ]);
     }
 }
