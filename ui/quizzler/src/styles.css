@@ -1,1 +1,19 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+    --primary: #003B70;
+    --secondary: #0066B3;
+    --accent: #00A0E3;
+    --correct: #28a745;
+    --text: #333333;
+    --light-bg: #f8f9fa;
+    --border: #dee2e6;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: var(--text);
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: var(--light-bg);
+}

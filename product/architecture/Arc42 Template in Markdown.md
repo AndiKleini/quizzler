@@ -598,8 +598,12 @@ It contains following entities:
 - moderator
 - participant
 
+**Angular design principles**
+This section is dedicated to applied design principles for the angular ui.
 
-A question 
+- questions are presented and submitted as angular forms (reactive forms)
+- semantic correctness of selections in questions (e.g. selection of requested number of correct options) are validated by
+form validation (e.g.: number of currently selected options exceeds the max number of correct options -> one selection is false for sure and would lead to 0 point when submitted)
 
 **Content.**
 
@@ -686,6 +690,8 @@ Design Decisions
 ================
 
 - **Use gRPC** for realizing RPCs from the client to the backend. As upcoming versions may need bidirectional streaming capabilities (e.g.: collecting currently selected answers from all quizzers (answer collection)) and the interface should be ideomatic, gRPC was favoured over REST. 
+
+-- **Use capabilities of angular forms for semantic validation** for semantic validation of questions (e.g.: if all requested options are selected) angular forms will be used. The special logic behind single pick, pick or decision questions regarding the number of options that can be selected is covered by form validation. Alternatively this validation logic could be seen as part of the model classes but this would lead unnecessary complexity and circumvent angular and html form caopabilities. 
 
 Quality Requirements 
 ====================
