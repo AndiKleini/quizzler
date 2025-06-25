@@ -61,6 +61,11 @@
     background-color: rgba(40, 167, 69, 0.05);
 }
 
+.false {
+    border: 2px solid var(--false);
+    background-color: rgba(200, 23, 44, 0.05);
+}
+
 .option-label {
     font-weight: 600;
     display: inline-block;

@@ -1,14 +1,18 @@
 <div [formGroup]="singlePickForm" class="question-container">
     <div class="question-title">{{singlePickQuestion.title}}</div>
     <div class="question-text"> {{singlePickQuestion.text}} </div>
-    <div *ngFor='let option of singlePickQuestion.options;' class="option-item" 
-        [ngClass]="option.id.toString() == this.singlePickForm.get('selectedOption')?.value ? 'selected' : ''">
+    <div *ngFor='let option of singlePickQuestion.options;' class="option-item" id="optcontainer-{{option.id}}"
+        [ngClass]=
+            "{
+                'selected' : option.id.toString() == this.singlePickForm.get('selectedOption')?.value,
+                'correct': this.correctOption != -1 && option.id == this.correctOption,
+                'false': this.correctOption != -1 && option.id != this.correctOption
+            }">
         <input id="{{option.id}}" type="radio" class="option-checkbox"
             [value]="option.id"
             formControlName="selectedOption" #selectedOption>
         <div class="option-text">
             <label for="{{option.id}}"><span class="option-label">({{option.id}})</span> {{option.text}}
-            
             </label>
         </div>
     </div>

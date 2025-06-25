@@ -15,8 +15,9 @@ import { NgFor, NgClass } from '@angular/common';
 export class SinglepickComponent implements OnInit  {
   singlePickForm: FormGroup;
   public singlePickQuestion: SinglePickQuestion;
+  correctOption: number = -1;
 selectedIndex: any;
-  constructor(private formBuilder: FormBuilder, questionService: QuestionService) {
+  constructor(private formBuilder: FormBuilder, private questionService: QuestionService) {
     this.singlePickForm = this.formBuilder.group( {
       selectedOption: ['']
     });
@@ -25,6 +26,9 @@ selectedIndex: any;
   ngOnInit(): void {
   }
   submit() {
-    console.log(this.singlePickForm.get('selectedOption')?.value);
+    let result = this.questionService.evaluate(
+        this.singlePickQuestion, 
+        this.singlePickForm.get('selectedOption')?.value);
+    this.correctOption = result.correctOptionId;
   }
 }

@@ -4,6 +4,9 @@ import { QuestionService } from '../services/questionservice';
 import { SinglePickQuestion } from '../entities/singlepickquestion';
 import { SingePickOption } from '../entities/singlepickoption';
 import { FormArray, FormGroup } from '@angular/forms';
+import { SinglePickResult } from '../entities/singlepickresult';
+import { By } from '@angular/platform-browser';
+import { LetDeclaration } from '@angular/compiler';
 
 describe('SinglepickComponent', () => {
   let component: SinglepickComponent;
@@ -61,16 +64,53 @@ describe('SinglepickComponent', () => {
     expect(selectedOption).toBeTruthy();
     expect(selectedOption?.value).toEqual(firstSelect);
   });
+  it.each([1, 2, 3, 4]) ('should display wrong and correct options in corresponding style after evaluation', (correctOption) => {
+    let mockQuestionService = returnUntouchedOptions();
+    returnCorrectOptionAt(mockQuestionService, correctOption);
+    TestBed.configureTestingModule({
+      imports: [SinglepickComponent],
+      providers: [
+        {provide: QuestionService, useValue: mockQuestionService}
+      ]
+    }).compileComponents();
+    fixture = TestBed.createComponent(SinglepickComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    selectOptionById(correctOption.toString());
+    fixture.debugElement.query(By.css('button[type="submit"]')).nativeElement.click();
+    fixture.detectChanges();
+
+    let selectedOption = component.singlePickForm.get('selectedOption');
+    expect(selectedOption).toBeTruthy();
+    expectOptionIsCorrectWithId(fixture, correctOption);
+    let options = [1, 2, 3, 4];
+    expectWrongOptionsAreFalseO(options, correctOption, fixture);
+  });
 });
+function expectWrongOptionsAreFalseO(options: number[], correctOptionId: number, fixture: ComponentFixture<SinglepickComponent>) {
+  options.filter(option => option != correctOptionId).forEach(option => {
+    let falseElement = fixture.debugElement.query(By.css(`#optcontainer-${option}`));
+    expect(falseElement.classes['false']).toBeTruthy();
+    expect(falseElement.classes['correct']).toBeFalsy();
+  });
+}
+
+function expectOptionIsCorrectWithId(fixture: ComponentFixture<SinglepickComponent>, correctOptionId: number) {
+  let correctElement = fixture.debugElement.query(By.css(`#optcontainer-${correctOptionId}`));
+  expect(correctElement.classes['correct']).toBeTruthy();
+  expect(correctElement.classes['false']).toBeFalsy();
+}
+
 function expectNumberOfRenderedOptionsIs(numberOfExpectedOptions: number) {
   for (let i = 1; i <= numberOfExpectedOptions; i++) {
     let radio = document.getElementById(`${i}`);
     expect(radio).toBeTruthy();
   }
 }
-function returnUntouchedOptions() {
-  return {
-    getSinglePickQuestionById: jest.fn().mockReturnValue(new SinglePickQuestion(
+function returnUntouchedOptions() : QuestionService {
+  let mock = new QuestionService();
+  mock.getSinglePickQuestionById = jest.fn().mockReturnValue(new SinglePickQuestion(
       "Question ES 1",
       "This is the text of a single pick question !",
       [
@@ -78,8 +118,13 @@ function returnUntouchedOptions() {
         new SingePickOption(2, 'Option 2'),
         new SingePickOption(3, 'Option 3'),
         new SingePickOption(4, 'Option 4')
-      ]))
-  };
+      ]));
+    return mock;
+  ;
+}
+function returnCorrectOptionAt(mock: QuestionService, correctOptionId: number) {
+   mock.evaluate = jest.fn().mockReturnValue(
+    new SinglePickResult(correctOptionId));
 }
 function selectOptionById(id: string) {
   let radio = document.getElementById(id);
