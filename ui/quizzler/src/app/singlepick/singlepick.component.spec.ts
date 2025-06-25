@@ -8,6 +8,7 @@ import { SinglePickResult } from '../entities/singlepickresult';
 import { By } from '@angular/platform-browser';
 import { LetDeclaration } from '@angular/compiler';
 
+const availableOptions = [1, 2, 3, 4];
 describe('SinglepickComponent', () => {
   let component: SinglepickComponent;
   let fixture: ComponentFixture<SinglepickComponent>;
@@ -46,7 +47,7 @@ describe('SinglepickComponent', () => {
     expect(selectedOption).toBeTruthy();
     expect(selectedOption?.value).toEqual('');
   });
-  it.each([1,2,3,4]) ('should select first option on first click', (firstSelect) => {
+  it.each(availableOptions) ('should select first option on first click', (firstSelect) => {
     let mockQuestionService = returnUntouchedOptions();
     TestBed.configureTestingModule({
       imports: [SinglepickComponent],
@@ -64,9 +65,9 @@ describe('SinglepickComponent', () => {
     expect(selectedOption).toBeTruthy();
     expect(selectedOption?.value).toEqual(firstSelect);
   });
-  it.each([1, 2, 3, 4]) ('should display wrong and correct options in corresponding style after evaluation', (correctOption) => {
+  it.each(availableOptions) ('should display wrong and correct options in corresponding style after evaluation', (correctOptionId) => {
     let mockQuestionService = returnUntouchedOptions();
-    returnCorrectOptionAt(mockQuestionService, correctOption);
+    returnCorrectOptionAt(mockQuestionService, correctOptionId);
     TestBed.configureTestingModule({
       imports: [SinglepickComponent],
       providers: [
@@ -77,15 +78,14 @@ describe('SinglepickComponent', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
 
-    selectOptionById(correctOption.toString());
+    selectOptionById(correctOptionId.toString());
     fixture.debugElement.query(By.css('button[type="submit"]')).nativeElement.click();
     fixture.detectChanges();
 
     let selectedOption = component.singlePickForm.get('selectedOption');
     expect(selectedOption).toBeTruthy();
-    expectOptionIsCorrectWithId(fixture, correctOption);
-    let options = [1, 2, 3, 4];
-    expectWrongOptionsAreFalseO(options, correctOption, fixture);
+    expectOptionIsCorrectWithId(fixture, correctOptionId);
+    expectWrongOptionsAreFalseO(availableOptions, correctOptionId, fixture);
   });
 });
 function expectWrongOptionsAreFalseO(options: number[], correctOptionId: number, fixture: ComponentFixture<SinglepickComponent>) {
