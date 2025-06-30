@@ -1,0 +1,3 @@
+# ignore ng config in diff
+package.json -diff
+package-lock.json -diff

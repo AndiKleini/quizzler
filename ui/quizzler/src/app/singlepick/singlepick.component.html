@@ -4,9 +4,9 @@
     <div *ngFor='let option of singlePickQuestion.options;' class="option-item" id="optcontainer-{{option.id}}"
         [ngClass]=
             "{
-                'selected' : option.id.toString() == this.singlePickForm.get('selectedOption')?.value,
-                'correct': this.correctOption != -1 && option.id == this.correctOption,
-                'false': this.correctOption != -1 && option.id != this.correctOption
+                'selected' : option.id.toString() === this.singlePickForm.get('selectedOption')?.value,
+                'correct': this.correctOption !== -1 && option.id === this.correctOption,
+                'false': this.correctOption !== -1 && option.id !== this.correctOption
             }">
         <input id="{{option.id}}" type="radio" class="option-checkbox"
             [value]="option.id"

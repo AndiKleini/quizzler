@@ -5,3 +5,5 @@ TODO list for the project:
 - integrate lint
 - integrate unit test run at commit 
 - integrate lint run at commit
+- refactor implementation of unselected state with setting form control value to -1
+- refatcor expressions selecting proper css classes.

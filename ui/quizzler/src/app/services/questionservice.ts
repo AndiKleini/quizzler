@@ -5,6 +5,8 @@ import { SinglePickResult } from "../entities/singlepickresult";
 
 @Injectable({  providedIn: 'root'})
 export class QuestionService {
+    // method is currently stubbed out only
+    // eslint-disable-next-line 
     getSinglePickQuestionById(id: number) : SinglePickQuestion {
       return  new SinglePickQuestion(
           "Question ES 1", 
@@ -16,6 +18,8 @@ export class QuestionService {
             new SingePickOption(4, 'Non-repudiability.')
           ]);
     }
+    // method is currently stubbed out only
+    // eslint-disable-next-line 
     evaluate(question: SinglePickQuestion, selectedOptionId: number) : SinglePickResult {
       return new SinglePickResult(2);
     }
