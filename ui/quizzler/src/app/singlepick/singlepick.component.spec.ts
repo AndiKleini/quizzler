@@ -77,7 +77,9 @@ describe('SinglepickComponent', () => {
     fixture.detectChanges();
 
     selectOptionById(correctOptionId.toString());
-    fixture.debugElement.query(By.css('button[type="submit"]')).nativeElement.click();
+    fixture.detectChanges();
+
+    querySubmitButton(fixture).click();
     fixture.detectChanges();
 
     const selectedOption = component.singlePickForm.get('selectedOption');
@@ -85,7 +87,28 @@ describe('SinglepickComponent', () => {
     expectOptionIsCorrectWithId(fixture, correctOptionId);
     expectWrongOptionsAreFalseO(availableOptions, correctOptionId, fixture);
   });
+  it ('should disable submit button in case of no option selected', async () => {
+    const mockQuestionService = returnUntouchedOptions();
+    await TestBed.configureTestingModule({
+      imports: [SinglepickComponent],
+      providers: [
+        {provide: QuestionService, useValue: mockQuestionService}
+      ]
+    }).compileComponents();
+    fixture = TestBed.createComponent(SinglepickComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    const submitBtn = querySubmitButton(fixture);
+    
+    expect(submitBtn.disabled).toBeTruthy();
+  });
 });
+
+function querySubmitButton(fixture: ComponentFixture<SinglepickComponent>) {
+  return fixture.debugElement.query(By.css('button[type=submit]')).nativeElement;
+}
+
 function expectWrongOptionsAreFalseO(options: number[], correctOptionId: number, fixture: ComponentFixture<SinglepickComponent>) {
   options.filter(option => option != correctOptionId).forEach(option => {
     const falseElement = fixture.debugElement.query(By.css(`#optcontainer-${option}`));

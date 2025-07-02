@@ -1,8 +1,16 @@
 import { Component, inject } from '@angular/core';
-import { FormGroup, ReactiveFormsModule, FormBuilder } from '@angular/forms';
+import { 
+  FormGroup, 
+  ReactiveFormsModule, 
+  FormBuilder, 
+  ValidatorFn, 
+  AbstractControl, 
+  ValidationErrors } from '@angular/forms';
 import { SinglePickQuestion } from "../entities/singlepickquestion";
 import { QuestionService } from '../services/questionservice';
 import { NgFor, NgClass } from '@angular/common';
+
+const optionDefaultValue = '';
 
 @Component({
   selector: 'quizzler-singlepick',
@@ -22,8 +30,13 @@ export class SinglepickComponent {
   constructor() {
     const questionService = this.questionService;
 
-    this.singlePickForm = this.formBuilder.group( {
-      selectedOption: ['']
+    this.singlePickForm = this.formBuilder.group( { 
+      selectedOption: [ 
+        optionDefaultValue, 
+        [ 
+          this.anyOptionSelectedValidator() 
+        ] 
+      ], 
     });
     this.singlePickQuestion = questionService.getSinglePickQuestionById(1);
   }
@@ -32,5 +45,10 @@ export class SinglepickComponent {
         this.singlePickQuestion, 
         this.singlePickForm.get('selectedOption')?.value);
     this.correctOption = result.correctOptionId;
+  }
+  anyOptionSelectedValidator(): ValidatorFn {
+    return (control:AbstractControl) : ValidationErrors | null => {
+      return control.value === optionDefaultValue ? { errNoOptionSelected: true } : null; 
+    };
   }
 }

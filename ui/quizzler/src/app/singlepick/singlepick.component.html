@@ -17,6 +17,6 @@
         </div>
     </div>
     <div>
-        <button type="submit" (click)="submit()" class="question-submit"> Evaluate </button>
+        <button type="submit" (click)="submit()" [disabled]="singlePickForm.invalid" class="question-submit"> Evaluate </button>
     </div>
 </div>
