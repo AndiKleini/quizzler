@@ -8,14 +8,14 @@ import {
   ValidationErrors } from '@angular/forms';
 import { SinglePickQuestion } from "../entities/singlepickquestion";
 import { QuestionService } from '../services/questionservice';
-import { NgFor, NgClass } from '@angular/common';
+import { NgFor, NgIf, NgClass } from '@angular/common';
 
 const optionDefaultValue = '';
 
 @Component({
   selector: 'quizzler-singlepick',
   standalone: true,
-  imports: [ ReactiveFormsModule, NgFor, NgClass ],
+  imports: [ ReactiveFormsModule, NgFor, NgIf, NgClass ],
   templateUrl: './singlepick.component.html',
   styleUrl: './singlepick.component.css'
 })
@@ -24,25 +24,27 @@ export class SinglepickComponent {
   private questionService = inject(QuestionService);
 
   singlePickForm: FormGroup;
-  public singlePickQuestion: SinglePickQuestion;
+  public singlePickQuestion?: SinglePickQuestion;
   correctOption = -1;
 
   constructor() {
-    const questionService = this.questionService;
-
-    this.singlePickForm = this.formBuilder.group( { 
-      selectedOption: [ 
-        optionDefaultValue, 
-        [ 
-          this.anyOptionSelectedValidator() 
-        ] 
-      ], 
+    this.singlePickForm = this.formBuilder.group( {
+      selectedOption: [
+        optionDefaultValue,
+        [
+          this.anyOptionSelectedValidator()
+        ]
+      ],
     });
-    this.singlePickQuestion = questionService.getSinglePickQuestionById(1);
+    this.questionService.getSinglePickQuestionById(1)
+      .subscribe(question => this.singlePickQuestion = question);
   }
   submit() {
+    if (!this.singlePickQuestion) {
+      return;
+    }
     const result = this.questionService.evaluate(
-        this.singlePickQuestion, 
+        this.singlePickQuestion,
         this.singlePickForm.get('selectedOption')?.value);
     this.correctOption = result.correctOptionId;
   }

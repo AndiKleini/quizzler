@@ -5,6 +5,7 @@ import { SinglePickQuestion } from '../entities/singlepickquestion';
 import { SingePickOption } from '../entities/singlepickoption';
 import { SinglePickResult } from '../entities/singlepickresult';
 import { By } from '@angular/platform-browser';
+import { of } from 'rxjs';
 
 const availableOptions = [1, 2, 3, 4];
 describe('SinglepickComponent', () => {
@@ -130,8 +131,9 @@ function expectNumberOfRenderedOptionsIs(numberOfExpectedOptions: number) {
   }
 }
 function returnUntouchedOptions() : QuestionService {
-  const mock = new QuestionService();
-  mock.getSinglePickQuestionById = jest.fn().mockReturnValue(new SinglePickQuestion(
+  const mock = {
+    getSinglePickQuestionById: jest.fn().mockReturnValue(of(new SinglePickQuestion(
+      1,
       "Question ES 1",
       "This is the text of a single pick question !",
       [
@@ -139,9 +141,10 @@ function returnUntouchedOptions() : QuestionService {
         new SingePickOption(2, 'Option 2'),
         new SingePickOption(3, 'Option 3'),
         new SingePickOption(4, 'Option 4')
-      ]));
-    return mock;
-  ;
+      ]))),
+    evaluate: jest.fn()
+  } as unknown as QuestionService;
+  return mock;
 }
 function returnCorrectOptionAt(mock: QuestionService, correctOptionId: number) {
    mock.evaluate = jest.fn().mockReturnValue(

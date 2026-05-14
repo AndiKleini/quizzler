@@ -1,4 +1,4 @@
-<div [formGroup]="singlePickForm" class="question-container">
+<div *ngIf="singlePickQuestion" [formGroup]="singlePickForm" class="question-container">
     <div class="question-title">{{singlePickQuestion.title}}</div>
     <div class="question-text"> {{singlePickQuestion.text}} </div>
     <div *ngFor='let option of singlePickQuestion.options;' class="option-item" id="optcontainer-{{option.id}}"

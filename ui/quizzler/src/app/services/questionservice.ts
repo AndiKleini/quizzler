@@ -1,25 +1,20 @@
-import { Injectable } from "@angular/core";
+import { Injectable, inject } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { Observable } from "rxjs";
 import { SinglePickQuestion } from "../entities/singlepickquestion";
-import { SingePickOption } from "../entities/singlepickoption";
 import { SinglePickResult } from "../entities/singlepickresult";
+
+const apiBaseUrl = 'http://localhost:8080';
 
 @Injectable({  providedIn: 'root'})
 export class QuestionService {
-    // method is currently stubbed out only
-    // eslint-disable-next-line 
-    getSinglePickQuestionById(id: number) : SinglePickQuestion {
-      return  new SinglePickQuestion(
-          "Question ES 1", 
-          "Which of the following qualities can most likely be improved by using a layered architecture?",
-          [ 
-            new SingePickOption(1, 'Runtime efficiency (performance).'), 
-            new SingePickOption(2, 'Flexibility in modifying or changing the system.'),
-            new SingePickOption(3, 'Flexibility at runtime (configurability).'),
-            new SingePickOption(4, 'Non-repudiability.')
-          ]);
+    private http = inject(HttpClient);
+
+    getSinglePickQuestionById(id: number): Observable<SinglePickQuestion> {
+      return this.http.get<SinglePickQuestion>(`${apiBaseUrl}/question/${id}`);
     }
     // method is currently stubbed out only
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     evaluate(question: SinglePickQuestion, selectedOptionId: number) : SinglePickResult {
       return new SinglePickResult(2);
     }
