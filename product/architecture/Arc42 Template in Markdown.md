@@ -18,7 +18,8 @@ Requirements Overview
 
 -   The quizzers have to join a quizz
 -   The moderator navigates through the questions
--   Whenever a participant submits an answer the evaluation is displayed as response
+-   Whenever a participant submits an answer the evaluation is displayed as response to the participant
+-   The moderator gets a statistic that shows the distribution of selected answers
 
 Quality Goals 
 -------------
@@ -73,7 +74,7 @@ to the architecture and its documentation.
 
 | Role/Name   | Contact                   | Expectations              |
 | ----------- | ------------------------- | ------------------------- |
-| Role-1      | Contact-1                 | *&lt;Expectation-1*&gt;   |
+| Trainer / Andreas Kleinbichler    | AndiKleini                  | *&lt;Wants to check whether all participants share a common understanding of the topics.&gt;   |
 | Role-2      | Contact-2                 | *&lt;Expectation-2*&gt;   |
 
 Architecture Constraints
@@ -156,6 +157,25 @@ the communication partner, the inputs, and the outputs.
 
 Technical Context
 -----------------
+
+**Business Context**
+
+```mermaid
+C4Context
+  title Context diagram – Quizzler
+
+  UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
+
+  Person(quizzer, "Quizzer", "Answers quiz questions")
+  Person(moderator, "Moderator", "Navigates through a quiz")
+  Person(author, "Author", "Creates questions")
+
+  System(quizzler, "Quiz App", "Provides an online quiz for participants")
+
+  Rel(quizzer, quizzler, "Answers questions, receives feedback")
+  Rel(author, quizzler, "Creates and maintains quiz")
+  Rel(moderator, quizzler, "Navigates through a quiz")
+```
 
 **Contents.**
 
