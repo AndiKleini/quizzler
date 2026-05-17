@@ -24,7 +24,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
-class QuizSessionServiceTest {
+class QuizSessionServiceTests {
 
     private static final String SESSION_PUBLIC_ID = "11111111-2222-3333-4444-555555555555";
 
@@ -47,6 +47,7 @@ class QuizSessionServiceTest {
 
         QuizSessionDto dto = quizSessionService.createSession();
 
+        assertThat(dto.getPublicId()).isNotBlank();
         assertThat(dto).usingRecursiveComparison().ignoringFields("publicId").isEqualTo(expected);
     }
 

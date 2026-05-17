@@ -24,7 +24,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
-class QuestionServiceTest {
+class QuestionServiceTests {
 
     private static final String QUESTION_TITLE = "Layered architecture question";
     private static final String QUESTION_TEXT = "Which quality is best improved by a layered architecture?";

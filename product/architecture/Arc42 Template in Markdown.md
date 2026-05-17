@@ -592,7 +592,7 @@ Please copy the structure from level 1 for each selected element.
 Cross-cutting Concepts 
 ======================
 
-**Basic Archictecture**
+**Basic Architecture**
 
 Follows the principle of clean architecture.
 Having separate packages for entities representing the core business logic.
@@ -604,14 +604,14 @@ The direction of dependency is use cases -> entities.
 ***Core domains***
 
 ***Domain question-bank*** 
-The quizz domain is our code domain. It provides the questions and answers.
+The quiz domain is our code domain. It provides the questions and answers.
 It contains following list of entities:
 - question (can be a single pick, multiple pick or decision question, has one solution)
 - evaluation (evaluates the provided answers of a question)
 - solution (provides the solution to the question, solves one question)
 
-***Domain quizz***
-The quizz-run domain supports quizz runs by connection quizz, moderator and participants to a run.
+***Domain quiz***
+The quiz-run domain supports quizz runs by connection quizz, moderator and participants to a run.
 It contains following entities:
 - quizz (a quizz contains a collection of questions )
 - quizzrun (represents a run of a quizz
@@ -632,6 +632,80 @@ This section captures the conventions used for unit tests across the system. The
 - *Readable test method naming*: test methods follow the schema `methodUnderTest_when_condition_then_outcome` (or the shorter `methodUnderTest_condition_outcome`) with snake_case separators, e.g. `getSinglePickQuestion_which_exists_is_returned`, `getSinglePickQuestion_when_not_exists_throws`. The intent is that the method name reads as a sentence describing the scenario, so a test report acts as a behavioural specification of the system.
 - *One scenario per test*: each test covers a single behavioural scenario (one happy path, one sad path, …). All assertions for that scenario live in the same test method — typically a single object-graph comparison plus, where applicable, an exception assertion. Granular per-field tests and defensive/meta tests (e.g. reflection-based DTO surface checks) are avoided.
 - *Pure unit tests for service-layer code*: services are exercised without a Spring context — `@ExtendWith(MockitoExtension.class)` plus `@Mock` for collaborators and `@InjectMocks` for the unit under test. JPA-generated `id` fields are set with `ReflectionTestUtils.setField` rather than introducing test-only setters on production entities.
+
+The `createSession_assigns_a_question_as_current_without_neighbours` test from `QuizSessionServiceTest` shows the pattern:
+
+```java
+@ExtendWith(MockitoExtension.class)
+class QuizSessionServiceTest {
+
+    @Mock
+    private QuizSessionRepository quizSessionRepository;
+
+    @Mock
+    private QuestionRepository questionRepository;
+
+    @InjectMocks
+    private QuizSessionService quizSessionService;
+
+    @Test
+    void createSession_assigns_a_question_as_current_without_neighbours() {
+        SinglePickQuestion question = new SinglePickQuestion("Title", "Text");
+        ReflectionTestUtils.setField(question, "id", 42L);
+        QuizSessionDto expected = new QuizSessionDto(SESSION_PUBLIC_ID, 42L, 0L, 0L);
+        when(questionRepository.findAll()).thenReturn(List.of(question));
+        when(quizSessionRepository.save(any(QuizSession.class))).thenAnswer(call -> call.getArgument(0));
+
+        QuizSessionDto dto = quizSessionService.createSession();
+
+        assertThat(dto.getPublicId()).isNotBlank();
+        assertThat(dto).usingRecursiveComparison().ignoringFields("publicId").isEqualTo(expected);
+    }
+}
+```
+
+- *Component tests for the back-end through its HTTP surface*: a controller and the slice of the system behind it (service, repository, persistence) are tested together as one component, exercised only through the REST API — never by calling Java methods directly. The full application is started with `@SpringBootTest(webEnvironment = RANDOM_PORT)` and `@AutoConfigureWebTestClient`; an in-memory H2 database (`src/test/resources/application.properties`) replaces PostgreSQL so the test owns its data. Requests are issued with an injected `WebTestClient`, fixtures are seeded and cleared per test via the real repositories in a `@BeforeEach`, and the response body is asserted as a DTO with the object-graph comparison above. `QuizSessionControllerTest` is the reference example: it drives `POST /session` and `GET /session/{publicId}` end to end, seeds exactly one question so the randomly assigned `currentQuestion` is deterministic, and excludes the server-generated `publicId` from the recursive comparison (`ignoringFields("publicId")`) while still asserting it is non-blank.
+
+The `createSession_assigns_the_only_question_as_current` test from `QuizSessionControllerTest` shows the pattern:
+
+```java
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureWebTestClient
+public class QuizSessionControllerTest {
+
+    @Autowired
+    private QuestionRepository questionRepository;
+
+    @Autowired
+    private QuizSessionRepository quizSessionRepository;
+
+    private Long seededQuestionId;
+
+    @BeforeEach
+    void seedTestData() {
+        quizSessionRepository.deleteAll();
+        questionRepository.deleteAll();
+
+        SinglePickQuestion question = new SinglePickQuestion(QUESTION_TITLE, QUESTION_TEXT);
+        seededQuestionId = questionRepository.save(question).getId();
+    }
+
+    @Test
+    public void createSession_assigns_the_only_question_as_current(@Autowired WebTestClient webTestClient) {
+        QuizSessionDto expected = new QuizSessionDto(null, seededQuestionId, 0L, 0L);
+
+        webTestClient.post().uri(SESSION).exchange()
+                .expectStatus().isCreated()
+                .expectBody(QuizSessionDto.class)
+                .value(dto -> {
+                    assertThat(dto.getPublicId()).isNotBlank();
+                    assertThat(dto).usingRecursiveComparison()
+                            .ignoringFields("publicId")
+                            .isEqualTo(expected);
+                });
+    }
+}
+```
 
 **Content.**
 
