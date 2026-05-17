@@ -41,15 +41,13 @@ class QuizSessionServiceTest {
     void createSession_assigns_a_question_as_current_without_neighbours() {
         SinglePickQuestion question = new SinglePickQuestion("Title", "Text");
         ReflectionTestUtils.setField(question, "id", 42L);
+        QuizSessionDto expected = new QuizSessionDto(SESSION_PUBLIC_ID, 42L, 0L, 0L);
         when(questionRepository.findAll()).thenReturn(List.of(question));
         when(quizSessionRepository.save(any(QuizSession.class))).thenAnswer(call -> call.getArgument(0));
 
         QuizSessionDto dto = quizSessionService.createSession();
 
-        assertThat(dto.getPublicId()).isNotBlank();
-        assertThat(dto.getCurrentQuestion()).isEqualTo(42L);
-        assertThat(dto.getNextQuestion()).isEqualTo(0L);
-        assertThat(dto.getPreviousQuestion()).isEqualTo(0L);
+        assertThat(dto).usingRecursiveComparison().ignoringFields("publicId").isEqualTo(expected);
     }
 
     @Test
@@ -65,11 +63,12 @@ class QuizSessionServiceTest {
     void getSession_which_exists_is_returned() {
         QuizSession session = new QuizSession(SESSION_PUBLIC_ID, 42L, 0L, 0L);
         when(quizSessionRepository.findByPublicId(SESSION_PUBLIC_ID)).thenReturn(Optional.of(session));
+        QuizSessionDto expected = new QuizSessionDto(SESSION_PUBLIC_ID, 42L, 0L, 0L);
 
         QuizSessionDto dto = quizSessionService.getSession(SESSION_PUBLIC_ID);
 
         assertThat(dto).usingRecursiveComparison()
-                .isEqualTo(new QuizSessionDto(SESSION_PUBLIC_ID, 42L, 0L, 0L));
+                .isEqualTo(expected);
     }
 
     @Test
