@@ -9,6 +9,6 @@ The quizzers get an url that offers the first question in the session. For sake 
 # solution
 - A session has to be created in the database (via insert ... no frontend solution in place yet).
 - The session gets assigned randomly one question from the database.
-- The session has an unguessable Id that is put into a link an shared with the quizzers
+- The session has an unguessable Id that is put into a link and shared with the quizzers
 - After the single question is answered the session is closed for the user on the server. Then the link is not working anymore.
 

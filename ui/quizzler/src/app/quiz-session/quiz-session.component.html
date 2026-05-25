@@ -1,0 +1,7 @@
+@if (isNotFound()) {
+    <p>404 quiz-session not found</p>
+} @else if (quizSession()) {
+    <button type="button">Start</button>
+} @else {
+    <p>Loading...</p>
+}
