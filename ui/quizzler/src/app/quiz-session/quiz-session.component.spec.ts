@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { By } from '@angular/platform-browser';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 import { QuizSessionComponent } from './quiz-session.component';
 import { SessionService } from '../services/quiz-sessionservice';
@@ -12,6 +12,7 @@ const SESSION_ID = '33d24a21-3f56-42c6-a959-6567ca56139e';
 describe('QuizSessionComponent', () => {
   let fixture: ComponentFixture<QuizSessionComponent>;
   let component: QuizSessionComponent;
+  let mockRouter: { navigate: jest.Mock };
 
   it('loadSession_when_session_exists_then_start_button_is_rendered', () => {
     const loaded = new QuizSession(SESSION_ID, 42, 0, 0);
@@ -35,11 +36,22 @@ describe('QuizSessionComponent', () => {
     expect(queryStartButton(fixture)).toBeFalsy();
   });
 
+  it('loadSession_when_service_throws_then_redirects_to_error', () => {
+    const error = { message: 'boom', status: 500 };
+    const mockSessionService = sessionServiceThrowing(error);
+
+    setupFixtureWith(mockSessionService);
+
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/error']);
+  });
+
   function setupFixtureWith(mockSessionService: SessionService): void {
+    mockRouter = { navigate: jest.fn().mockResolvedValue(true) };
     TestBed.configureTestingModule({
       imports: [QuizSessionComponent],
       providers: [
         { provide: SessionService, useValue: mockSessionService },
+        { provide: Router, useValue: mockRouter },
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: convertToParamMap({ id: SESSION_ID }) } }
@@ -55,6 +67,12 @@ describe('QuizSessionComponent', () => {
 function sessionServiceReturning(session: QuizSession): SessionService {
   return {
     getSessionById: jest.fn().mockReturnValue(of(session))
+  } as unknown as SessionService;
+}
+
+function sessionServiceThrowing(error: unknown): SessionService {
+  return {
+    getSessionById: jest.fn().mockReturnValue(throwError(() => error))
   } as unknown as SessionService;
 }
 
