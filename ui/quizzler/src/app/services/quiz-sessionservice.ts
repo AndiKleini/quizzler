@@ -9,7 +9,7 @@ const apiBaseUrl = 'http://localhost:8080';
 export class SessionService {
     private http = inject(HttpClient);
 
-    getSessionById(id: string): Observable<QuizSession | undefined> {
+    getSessionById(id: string): Observable<QuizSession> {
       return this.http.get<QuizSession>(`${apiBaseUrl}/session/${id}`).
         pipe(catchError(err => {
           if (err.status === 404) {

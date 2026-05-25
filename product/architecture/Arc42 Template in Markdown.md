@@ -625,7 +625,7 @@ This section is dedicated to applied design principles for the angular ui.
 - semantic correctness of selections in questions (e.g. selection of requested number of correct options) are validated by
 form validation (e.g.: number of currently selected options exceeds the max number of correct options -> one selection is false for sure and would lead to 0 point when submitted)
 - signals are the preferred way of handling state in components; component fields that represent state are declared as `signal`/`computed` rather than plain properties
-- conversion from `Observable` to signal via `toSignal` is performed in the component (not in the service); services keep their `Observable<T>` return types, and the component is the layer that subscribes by binding the stream to a signal
+- conversion from `Observable` to signal via `toSignal` is performed in the component (not in the service); services keep their `Observable<T>` return types, and the component is the layer that subscribes by binding the stream to a signal. This way we can keep the services reusable for consumers that may require observables.
 
 **Unit testing**
 This section captures the conventions used for unit tests across the system. They apply to all back-end JUnit tests; the same spirit applies to Angular Jest tests where the tooling allows.

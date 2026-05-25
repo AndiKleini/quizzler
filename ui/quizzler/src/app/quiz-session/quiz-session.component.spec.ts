@@ -4,10 +4,10 @@ import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 
 import { QuizSessionComponent } from './quiz-session.component';
-import { SessionService } from '../services/sessionservice';
+import { SessionService } from '../services/quiz-sessionservice';
 import { QuizSession } from '../entities/quizsession';
 
-const SESSION_ID = 'abc-123';
+const SESSION_ID = '33d24a21-3f56-42c6-a959-6567ca56139e';
 
 describe('QuizSessionComponent', () => {
   let fixture: ComponentFixture<QuizSessionComponent>;

@@ -3,7 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { QuizSession } from '../entities/quizsession';
-import { SessionService } from '../services/sessionservice';
+import { SessionService } from '../services/quiz-sessionservice';
 
 @Component({
   selector: 'quizzler-quiz-session',
@@ -16,12 +16,9 @@ export class QuizSessionComponent {
   private sessionService = inject(SessionService);
   id: string | null = this.route.snapshot.paramMap.get('id');
 
-  public quizSession: Signal<QuizSession | undefined> = toSignal(
-    this.id ? this.sessionService.getSessionById(this.id) : of(undefined),
-    { initialValue: undefined }
+  public quizSession = toSignal(
+    this.id ? this.sessionService.getSessionById(this.id) : of(QuizSession.getDefaultQuizSession()) 
   );
 
-  public isNotFound = computed(
-    () => this.quizSession()?.publicId === QuizSession.getDefaultQuizSession().publicId
-  );
+  public isNotFound = computed(() => this.quizSession()?.isDefault() ?? true);
 }
