@@ -1,6 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { catchError, of } from 'rxjs';
+import { catchError, map, of } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { QuizSession } from '../entities/quizsession';
 import { SessionService } from '../services/quiz-sessionservice';
@@ -19,10 +19,17 @@ export class QuizSessionComponent {
 
   public quizSession = toSignal(
     (this.id ? this.sessionService.getSessionById(this.id) : of(QuizSession.getDefaultQuizSession()))
-      .pipe(catchError(err => {
-        console.error(err?.message ?? err);
-        this.router.navigate(['/error']);
-        return of(undefined);
+      .pipe(
+        map(quizsession => 
+          new QuizSession(
+              quizsession.publicId, 
+              quizsession.currentQuestion, 
+              quizsession.nextQuestion, 
+              quizsession.previousQuestion)),
+        catchError(err => {
+          console.error(err?.message ?? err);
+          this.router.navigate(['/error']);
+          return of(undefined);
       }))
   );
 
