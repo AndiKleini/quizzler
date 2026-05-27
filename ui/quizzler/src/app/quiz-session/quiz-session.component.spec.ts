@@ -19,7 +19,7 @@ describe('QuizSessionComponent', () => {
     setupFixtureWith(mockSessionService);
     await fixture.whenStable();
 
-    expect(component.quizSession).toEqual(loaded);
+    expect(component.quizSession()).toEqual(loaded);
     expect(component.isNotFound()).toBe(false);
     expect(component.isLoading()).toBe(false);
     expect(queryStartButton(fixture)).toBeTruthy();
@@ -63,7 +63,7 @@ describe('QuizSessionComponent', () => {
     expect(isLoadingAfterFetch).toBe(true);
     expect(component.isLoading()).toBe(false);
     expect(queryNotFoundMessage(fixture)).toBeFalsy();
-    expect(component.quizSession).toEqual(loaded);
+    expect(component.quizSession()).toEqual(loaded);
     expect(queryStartButton(fixture)).toBeTruthy();
     expect(queryLoadingMessage(fixture)).toBeFalsy();
   });

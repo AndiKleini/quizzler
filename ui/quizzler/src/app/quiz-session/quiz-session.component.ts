@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, map, of, tap } from 'rxjs';
 import { QuizSession } from '../entities/quizsession';
@@ -15,7 +15,6 @@ export class QuizSessionComponent implements OnInit {
   ngOnInit(): void {
     (this.id ? this.sessionService.getSessionById(this.id) : of(QuizSession.getDefaultQuizSession()))
       .pipe(
-        tap(() => this.isLoading.set(false)),
         map(quizsession => 
           new QuizSession(
               quizsession.publicId, 
@@ -28,8 +27,8 @@ export class QuizSessionComponent implements OnInit {
           this.router.navigate(['/error']);
           return of(undefined);
       })).subscribe(session => {
-        this.quizSession = session ?? QuizSession.getDefaultQuizSession();
-        this.isNotFound.set(this.quizSession.isDefault());
+        this.isLoading.set(false);
+        this.quizSession.set(session ?? QuizSession.getDefaultQuizSession());
       });
   }
 
@@ -39,6 +38,6 @@ export class QuizSessionComponent implements OnInit {
   private id: string | null = this.route.snapshot.paramMap.get('id');
 
   public isLoading = signal(true);
-  public quizSession = QuizSession.getDefaultQuizSession();
-  public isNotFound = signal(false);
+  public quizSession = signal(QuizSession.getDefaultQuizSession());
+  public isNotFound = computed(() => this.quizSession().isDefault());
 }
