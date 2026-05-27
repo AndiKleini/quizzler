@@ -39,8 +39,6 @@ export class QuizSessionComponent implements OnInit {
   private id: string | null = this.route.snapshot.paramMap.get('id');
 
   public isLoading = signal(true);
-
   public quizSession = QuizSession.getDefaultQuizSession();
-
   public isNotFound = signal(false);
 }

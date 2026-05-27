@@ -47,8 +47,9 @@ describe('QuizSessionComponent', () => {
 
   it('loadSession_when_service_processes_then_shows_loading_indicator', async () => {
     let isLoadingAfterFetch: boolean | undefined;
+    const loaded = new QuizSession(SESSION_ID, 42, 0, 0);
     const mockSessionService = {
-      getSessionById: jest.fn().mockReturnValue(of(new QuizSession(SESSION_ID, 42, 0, 0)).pipe(
+      getSessionById: jest.fn().mockReturnValue(of(loaded).pipe(
         tap(() => {
           isLoadingAfterFetch = component.isLoading(); 
           fixture.detectChanges();
@@ -62,7 +63,7 @@ describe('QuizSessionComponent', () => {
     expect(isLoadingAfterFetch).toBe(true);
     expect(component.isLoading()).toBe(false);
     expect(queryNotFoundMessage(fixture)).toBeFalsy();
-    expect(component.quizSession).toEqual(new QuizSession(SESSION_ID, 42, 0, 0));
+    expect(component.quizSession).toEqual(loaded);
     expect(queryStartButton(fixture)).toBeTruthy();
     expect(queryLoadingMessage(fixture)).toBeFalsy();
   });
