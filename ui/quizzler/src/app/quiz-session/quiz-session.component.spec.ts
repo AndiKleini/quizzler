@@ -1,8 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
-import { By } from '@angular/platform-browser';
-import { of, throwError } from 'rxjs';
-
+import { of, tap, throwError } from 'rxjs';
 import { QuizSessionComponent } from './quiz-session.component';
 import { SessionService } from '../services/quiz-sessionservice';
 import { QuizSession } from '../entities/quizsession';
@@ -14,14 +12,16 @@ describe('QuizSessionComponent', () => {
   let component: QuizSessionComponent;
   let mockRouter: { navigate: jest.Mock };
 
-  it('loadSession_when_session_exists_then_start_button_is_rendered', () => {
+  it('loadSession_when_session_exists_then_start_button_is_rendered', async () => {
     const loaded = new QuizSession(SESSION_ID, 42, 0, 0);
     const mockSessionService = sessionServiceReturning(loaded);
 
     setupFixtureWith(mockSessionService);
+    await fixture.whenStable();
 
-    expect(component.quizSession()).toEqual(loaded);
+    expect(component.quizSession).toEqual(loaded);
     expect(component.isNotFound()).toBe(false);
+    expect(component.isLoading()).toBe(false);
     expect(queryStartButton(fixture)).toBeTruthy();
     expect(queryNotFoundMessage(fixture)).toBeFalsy();
   });
@@ -32,7 +32,7 @@ describe('QuizSessionComponent', () => {
     setupFixtureWith(mockSessionService);
 
     expect(component.isNotFound()).toBe(true);
-    expect(queryNotFoundMessage(fixture)?.nativeElement.textContent).toContain('not found');
+    expect(queryNotFoundMessage(fixture)).toBeTruthy();
     expect(queryStartButton(fixture)).toBeFalsy();
   });
 
@@ -43,6 +43,28 @@ describe('QuizSessionComponent', () => {
     setupFixtureWith(mockSessionService);
 
     expect(mockRouter.navigate).toHaveBeenCalledWith(['/error']);
+  });
+
+  it('loadSession_when_service_processes_then_shows_loading_indicator', async () => {
+    let isLoadingAfterFetch: boolean | undefined;
+    const mockSessionService = {
+      getSessionById: jest.fn().mockReturnValue(of(new QuizSession(SESSION_ID, 42, 0, 0)).pipe(
+        tap(() => {
+          isLoadingAfterFetch = component.isLoading(); 
+          fixture.detectChanges();
+          expect(queryLoadingMessage(fixture)).toBeTruthy();
+        })))
+    } as unknown as SessionService;
+    
+    setupFixtureWith(mockSessionService);
+    await fixture.whenStable();
+
+    expect(isLoadingAfterFetch).toBe(true);
+    expect(component.isLoading()).toBe(false);
+    expect(queryNotFoundMessage(fixture)).toBeFalsy();
+    expect(component.quizSession).toEqual(new QuizSession(SESSION_ID, 42, 0, 0));
+    expect(queryStartButton(fixture)).toBeTruthy();
+    expect(queryLoadingMessage(fixture)).toBeFalsy();
   });
 
   function setupFixtureWith(mockSessionService: SessionService): void {
@@ -77,9 +99,19 @@ function sessionServiceThrowing(error: unknown): SessionService {
 }
 
 function queryStartButton(fixture: ComponentFixture<QuizSessionComponent>) {
-  return fixture.debugElement.query(By.css('button[type=button]'));
+  return fixture.debugElement.query(el => el.name === 'button' && el.nativeElement.textContent.toLowerCase().includes('start'));
 }
 
 function queryNotFoundMessage(fixture: ComponentFixture<QuizSessionComponent>) {
-  return fixture.debugElement.query(By.css('p'));
+  return fixture.debugElement.query(
+      el => el.name === 'p' &&
+      el.nativeElement.textContent.toLowerCase().includes('not found')
+  );
+}
+
+function queryLoadingMessage(fixture: ComponentFixture<QuizSessionComponent>) {
+  return fixture.debugElement.query(
+    el => el.name === 'p' &&
+    el.nativeElement.textContent.toLowerCase().includes('loading')
+  );
 }
