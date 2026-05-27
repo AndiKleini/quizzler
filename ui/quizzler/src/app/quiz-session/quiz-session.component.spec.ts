@@ -3,14 +3,23 @@ import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { of, tap, throwError } from 'rxjs';
 import { QuizSessionComponent } from './quiz-session.component';
 import { SessionService } from '../services/quiz-sessionservice';
+import { QuizAttemptService } from '../services/quiz-attemptservice';
 import { QuizSession } from '../entities/quizsession';
+import { QuizAttempt } from '../entities/quizattempt';
 
 const SESSION_ID = '33d24a21-3f56-42c6-a959-6567ca56139e';
+const ATTEMPT_ID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
+const QUESTION_ID = 42;
 
 describe('QuizSessionComponent', () => {
   let fixture: ComponentFixture<QuizSessionComponent>;
   let component: QuizSessionComponent;
   let mockRouter: { navigate: jest.Mock };
+  let mockQuizAttemptService: { createAttempt: jest.Mock } | undefined;
+
+  beforeEach(() => {
+    mockQuizAttemptService = undefined;
+  });
 
   it('loadSession_when_session_exists_then_start_button_is_rendered', async () => {
     const loaded = new QuizSession(SESSION_ID, 42, 0, 0);
@@ -68,16 +77,42 @@ describe('QuizSessionComponent', () => {
     expect(queryLoadingMessage(fixture)).toBeFalsy();
   });
 
+  it('onStart_when_attempt_created_then_navigates_to_attempt_step', async () => {
+    const loaded = new QuizSession(SESSION_ID, QUESTION_ID, 0, 0);
+    const attempt = new QuizAttempt(ATTEMPT_ID, SESSION_ID, QUESTION_ID);
+    mockQuizAttemptService = { createAttempt: jest.fn().mockReturnValue(of(attempt)) };
+    setupFixtureWith(sessionServiceReturning(loaded));
+    await fixture.whenStable();
+
+    queryStartButton(fixture).nativeElement.click();
+
+    expect(mockQuizAttemptService.createAttempt).toHaveBeenCalledWith(SESSION_ID);
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/quiz-session', SESSION_ID, 'attempt-step']);
+  });
+
+  it('onStart_when_attempt_creation_throws_then_redirects_to_error', async () => {
+    const loaded = new QuizSession(SESSION_ID, QUESTION_ID, 0, 0);
+    mockQuizAttemptService = { createAttempt: jest.fn().mockReturnValue(throwError(() => ({ message: 'boom' }))) };
+    setupFixtureWith(sessionServiceReturning(loaded));
+    await fixture.whenStable();
+
+    queryStartButton(fixture).nativeElement.click();
+
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/error']);
+  });
+
   function setupFixtureWith(mockSessionService: SessionService): void {
     mockRouter = { navigate: jest.fn().mockResolvedValue(true) };
+    mockQuizAttemptService ??= { createAttempt: jest.fn().mockReturnValue(of(new QuizAttempt(ATTEMPT_ID, SESSION_ID, QUESTION_ID))) };
     TestBed.configureTestingModule({
       imports: [QuizSessionComponent],
       providers: [
         { provide: SessionService, useValue: mockSessionService },
+        { provide: QuizAttemptService, useValue: mockQuizAttemptService },
         { provide: Router, useValue: mockRouter },
         {
           provide: ActivatedRoute,
-          useValue: { snapshot: { paramMap: convertToParamMap({ id: SESSION_ID }) } }
+          useValue: { snapshot: { paramMap: convertToParamMap({ sessionId: SESSION_ID }) } }
         }
       ]
     }).compileComponents();

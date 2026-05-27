@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, map, of, tap } from 'rxjs';
 import { QuizSession } from '../entities/quizsession';
 import { SessionService } from '../services/quiz-sessionservice';
+import { QuizAttemptService } from '../services/quiz-attemptservice';
 
 @Component({
   selector: 'quizzler-quiz-session',
@@ -15,12 +16,12 @@ export class QuizSessionComponent implements OnInit {
   ngOnInit(): void {
     (this.id ? this.sessionService.getSessionById(this.id) : of(QuizSession.getDefaultQuizSession()))
       .pipe(
-        map(quizsession => 
+        map(quizSession => 
           new QuizSession(
-              quizsession.publicId, 
-              quizsession.currentQuestion, 
-              quizsession.nextQuestion, 
-              quizsession.previousQuestion)),
+              quizSession.publicId, 
+              quizSession.currentQuestion, 
+              quizSession.nextQuestion, 
+              quizSession.previousQuestion)),
         catchError(err => {
           console.error(err?.message ?? err);
           this.isLoading.set(false);
@@ -34,10 +35,28 @@ export class QuizSessionComponent implements OnInit {
 
   private route = inject(ActivatedRoute);
   private sessionService = inject(SessionService);
+  private quizAttemptService = inject(QuizAttemptService);
   private router = inject(Router);
-  private id: string | null = this.route.snapshot.paramMap.get('id');
+  private id: string | null = this.route.snapshot.paramMap.get('sessionId');
 
   public isLoading = signal(true);
   public quizSession = signal(QuizSession.getDefaultQuizSession());
   public isNotFound = computed(() => this.quizSession().isDefault());
+
+  public onStart(): void {
+    if (!this.id) {
+      return;
+    }
+    this.quizAttemptService.createAttempt(this.id)
+      .pipe(catchError(err => {
+        console.error(err?.message ?? err);
+        this.router.navigate(['/error']);
+        return of(undefined);
+      }))
+      .subscribe(attempt => {
+        if (attempt) {
+          this.router.navigate(['/quiz-session', attempt.sessionId, 'attempt-step']);
+        }
+      });
+  }
 }
