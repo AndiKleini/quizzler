@@ -1,6 +1,6 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { catchError, map, of, tap } from 'rxjs';
+import { catchError, map, of } from 'rxjs';
 import { QuizSession } from '../entities/quizsession';
 import { SessionService } from '../services/quiz-sessionservice';
 import { QuizAttemptService } from '../services/quiz-attemptservice';
@@ -16,12 +16,7 @@ export class QuizSessionComponent implements OnInit {
   ngOnInit(): void {
     (this.id ? this.sessionService.getSessionById(this.id) : of(QuizSession.getDefaultQuizSession()))
       .pipe(
-        map(quizSession => 
-          new QuizSession(
-              quizSession.publicId, 
-              quizSession.currentQuestion, 
-              quizSession.nextQuestion, 
-              quizSession.previousQuestion)),
+        map(quizSession => new QuizSession(quizSession.publicId)),
         catchError(err => {
           console.error(err?.message ?? err);
           this.isLoading.set(false);

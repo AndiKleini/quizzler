@@ -27,7 +27,6 @@ import org.springframework.web.server.ResponseStatusException;
 class QuizAttemptServiceTests {
 
     private static final String SESSION_PUBLIC_ID = "11111111-2222-3333-4444-555555555555";
-    private static final long FIRST_QUESTION_ID = 42L;
 
     @Mock
     private QuizSessionRepository quizSessionRepository;
@@ -39,14 +38,14 @@ class QuizAttemptServiceTests {
     private QuizAttemptService quizAttemptService;
 
     @Test
-    void createAttempt_uses_session_current_question_and_persists_new_attempt() {
-        QuizSession session = new QuizSession(SESSION_PUBLIC_ID, FIRST_QUESTION_ID, 0L, 0L);
+    void createAttempt_persists_new_attempt_for_hardcoded_question() {
+        QuizSession session = new QuizSession(SESSION_PUBLIC_ID);
         when(quizSessionRepository.findByPublicId(SESSION_PUBLIC_ID)).thenReturn(Optional.of(session));
         when(quizAttemptRepository.save(any(QuizAttempt.class))).thenAnswer(call -> call.getArgument(0));
 
         QuizAttemptDto dto = quizAttemptService.createAttempt(SESSION_PUBLIC_ID);
 
-        QuizAttemptDto expected = new QuizAttemptDto(null, SESSION_PUBLIC_ID, FIRST_QUESTION_ID);
+        QuizAttemptDto expected = new QuizAttemptDto(null, SESSION_PUBLIC_ID, QuizAttemptService.HARDCODED_QUESTION_ID);
         assertThat(dto)
                 .usingRecursiveComparison()
                 .ignoringFields("attemptId")

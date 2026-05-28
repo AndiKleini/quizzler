@@ -18,23 +18,11 @@ public class QuizSession {
     @Column(name = "public_id", nullable = false, unique = true)
     private String publicId;
 
-    @Column(name = "current_question", nullable = false)
-    private long currentQuestion;
-
-    @Column(name = "next_question", nullable = false)
-    private long nextQuestion;
-
-    @Column(name = "previous_question", nullable = false)
-    private long previousQuestion;
-
     protected QuizSession() {
     }
 
-    public QuizSession(String publicId, long currentQuestion, long nextQuestion, long previousQuestion) {
+    public QuizSession(String publicId) {
         this.publicId = publicId;
-        this.currentQuestion = currentQuestion;
-        this.nextQuestion = nextQuestion;
-        this.previousQuestion = previousQuestion;
     }
 
     public Long getId() {
@@ -43,17 +31,5 @@ public class QuizSession {
 
     public String getPublicId() {
         return publicId;
-    }
-
-    public long getCurrentQuestion() {
-        return currentQuestion;
-    }
-
-    public long getNextQuestion() {
-        return nextQuestion;
-    }
-
-    public long getPreviousQuestion() {
-        return previousQuestion;
     }
 }

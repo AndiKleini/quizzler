@@ -11,7 +11,7 @@ export class SessionService {
 
     getSessionById(id: string): Observable<QuizSession> {
       return this.http.get<QuizSession>(`${apiBaseUrl}/session/${id}`).pipe(
-        map(r => new QuizSession(r.publicId, r.currentQuestion, r.nextQuestion, r.previousQuestion)),
+        map(r => new QuizSession(r.publicId)),
         catchError(err => {
           if (err.status === 404) {
             return of(QuizSession.getDefaultQuizSession());

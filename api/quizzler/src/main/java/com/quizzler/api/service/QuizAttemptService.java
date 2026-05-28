@@ -14,6 +14,8 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class QuizAttemptService {
 
+    public static final long HARDCODED_QUESTION_ID = 1L;
+
     private final QuizSessionRepository quizSessionRepository;
     private final QuizAttemptRepository quizAttemptRepository;
 
@@ -31,7 +33,7 @@ public class QuizAttemptService {
         QuizAttempt attempt = new QuizAttempt(
                 UUID.randomUUID().toString(),
                 session,
-                session.getCurrentQuestion());
+                HARDCODED_QUESTION_ID);
         return toDto(quizAttemptRepository.save(attempt));
     }
 

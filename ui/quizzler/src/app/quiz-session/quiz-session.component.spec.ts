@@ -22,7 +22,7 @@ describe('QuizSessionComponent', () => {
   });
 
   it('loadSession_when_session_exists_then_start_button_is_rendered', async () => {
-    const loaded = new QuizSession(SESSION_ID, 42, 0, 0);
+    const loaded = new QuizSession(SESSION_ID);
     const mockSessionService = sessionServiceReturning(loaded);
 
     setupFixtureWith(mockSessionService);
@@ -56,7 +56,7 @@ describe('QuizSessionComponent', () => {
 
   it('loadSession_when_service_processes_then_shows_loading_indicator', async () => {
     let isLoadingAfterFetch: boolean | undefined;
-    const loaded = new QuizSession(SESSION_ID, 42, 0, 0);
+    const loaded = new QuizSession(SESSION_ID);
     const mockSessionService = {
       getSessionById: jest.fn().mockReturnValue(of(loaded).pipe(
         tap(() => {
@@ -78,7 +78,7 @@ describe('QuizSessionComponent', () => {
   });
 
   it('onStart_when_attempt_created_then_navigates_to_attempt_step', async () => {
-    const loaded = new QuizSession(SESSION_ID, QUESTION_ID, 0, 0);
+    const loaded = new QuizSession(SESSION_ID);
     const attempt = new QuizAttempt(ATTEMPT_ID, SESSION_ID, QUESTION_ID);
     mockQuizAttemptService = { createAttempt: jest.fn().mockReturnValue(of(attempt)) };
     setupFixtureWith(sessionServiceReturning(loaded));
@@ -92,7 +92,7 @@ describe('QuizSessionComponent', () => {
   });
 
   it('onStart_when_attempt_creation_throws_then_redirects_to_error', async () => {
-    const loaded = new QuizSession(SESSION_ID, QUESTION_ID, 0, 0);
+    const loaded = new QuizSession(SESSION_ID);
     mockQuizAttemptService = { createAttempt: jest.fn().mockReturnValue(throwError(() => ({ message: 'boom' }))) };
     setupFixtureWith(sessionServiceReturning(loaded));
     await fixture.whenStable();

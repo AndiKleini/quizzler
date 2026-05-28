@@ -17,6 +17,7 @@ import com.quizzler.api.repository.AnswerRepository;
 import com.quizzler.api.repository.QuizAttemptRepository;
 import com.quizzler.api.repository.QuestionRepository;
 import com.quizzler.api.repository.QuizSessionRepository;
+import com.quizzler.api.service.QuizAttemptService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,8 +65,8 @@ public class QuizAttemptControllerTests {
     }
 
     @Test
-    public void createAttempt_returns_attempt_with_current_question(@Autowired WebTestClient webTestClient) {
-        quizSessionRepository.save(new QuizSession(SESSION_PUBLIC_ID, seededQuestionId, 0L, 0L));
+    public void createAttempt_returns_attempt_with_hardcoded_question(@Autowired WebTestClient webTestClient) {
+        quizSessionRepository.save(new QuizSession(SESSION_PUBLIC_ID));
 
         webTestClient.post().uri(ATTEMPT_URI, SESSION_PUBLIC_ID).exchange()
                 .expectStatus().isCreated()
@@ -73,7 +74,7 @@ public class QuizAttemptControllerTests {
                 .value(dto -> {
                     assertThat(dto.getAttemptId()).isNotBlank();
                     assertThat(dto.getSessionId()).isEqualTo(SESSION_PUBLIC_ID);
-                    assertThat(dto.getQuestionId()).isEqualTo(seededQuestionId);
+                    assertThat(dto.getQuestionId()).isEqualTo(QuizAttemptService.HARDCODED_QUESTION_ID);
                 });
     }
 
@@ -86,7 +87,7 @@ public class QuizAttemptControllerTests {
     @Test
     public void submitAnswer_inserts_new_answer_for_attempt(@Autowired WebTestClient webTestClient) {
         QuizSession session = quizSessionRepository.save(
-                new QuizSession(SESSION_PUBLIC_ID, seededQuestionId, 0L, 0L));
+                new QuizSession(SESSION_PUBLIC_ID));
         quizAttemptRepository.save(new QuizAttempt(ATTEMPT_PUBLIC_ID, session, seededQuestionId));
         AnswerSubmissionDto submission = new AnswerSubmissionDto(seededQuestionId, SELECTED_OPTION_ID);
         Instant before = Instant.now().minus(1, ChronoUnit.SECONDS);
@@ -108,7 +109,7 @@ public class QuizAttemptControllerTests {
     @Test
     public void submitAnswer_when_called_twice_inserts_two_answers(@Autowired WebTestClient webTestClient) {
         QuizSession session = quizSessionRepository.save(
-                new QuizSession(SESSION_PUBLIC_ID, seededQuestionId, 0L, 0L));
+                new QuizSession(SESSION_PUBLIC_ID));
         quizAttemptRepository.save(new QuizAttempt(ATTEMPT_PUBLIC_ID, session, seededQuestionId));
         AnswerSubmissionDto first = new AnswerSubmissionDto(seededQuestionId, 1L);
         AnswerSubmissionDto second = new AnswerSubmissionDto(seededQuestionId, 2L);

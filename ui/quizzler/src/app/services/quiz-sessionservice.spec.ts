@@ -27,16 +27,11 @@ describe('SessionService', () => {
   afterEach(() => httpMock.verify());
 
   it('getSessionById_when_response_is_json_payload_maps_to_quiz_session_instance', () => {
-    const expected = new QuizSession(SESSION_ID, 42, 41, 43);
+    const expected = new QuizSession(SESSION_ID);
     let actual: QuizSession | undefined;
 
     service.getSessionById(SESSION_ID).subscribe(s => actual = s);
-    httpMock.expectOne(SESSION_URL).flush({
-      publicId: SESSION_ID,
-      currentQuestion: 42,
-      nextQuestion: 41,
-      previousQuestion: 43
-    });
+    httpMock.expectOne(SESSION_URL).flush({ publicId: SESSION_ID });
 
     expect(actual).toBeInstanceOf(QuizSession);
     expect(actual).toEqual(expected);
