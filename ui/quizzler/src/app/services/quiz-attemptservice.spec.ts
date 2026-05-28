@@ -11,6 +11,7 @@ const ATTEMPT_ID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
 const QUESTION_ID = 42;
 const SELECTED_OPTION_ID = 3;
 const ANSWER_ID = 7;
+const CORRECT_OPTION_ID = 2;
 const SUBMITTED_AT = '2026-05-28T10:00:00Z';
 const ATTEMPT_URL = `http://localhost:8080/session/${SESSION_ID}/attempt`;
 const ANSWER_URL = `${ATTEMPT_URL}/${ATTEMPT_ID}/answer`;
@@ -60,7 +61,7 @@ describe('QuizAttemptService', () => {
   });
 
   it('submitAnswer_when_response_is_json_payload_posts_submission_and_maps_to_answer_instance', () => {
-    const expected = new Answer(ANSWER_ID, ATTEMPT_ID, QUESTION_ID, SELECTED_OPTION_ID, SUBMITTED_AT);
+    const expected = new Answer(ANSWER_ID, ATTEMPT_ID, QUESTION_ID, SELECTED_OPTION_ID, CORRECT_OPTION_ID, SUBMITTED_AT);
     let actual: Answer | undefined;
 
     service.submitAnswer(SESSION_ID, ATTEMPT_ID, QUESTION_ID, SELECTED_OPTION_ID).subscribe(a => actual = a);
@@ -72,6 +73,7 @@ describe('QuizAttemptService', () => {
       attemptId: ATTEMPT_ID,
       questionId: QUESTION_ID,
       selectedOptionId: SELECTED_OPTION_ID,
+      correctOptionId: CORRECT_OPTION_ID,
       submittedAt: SUBMITTED_AT
     });
 

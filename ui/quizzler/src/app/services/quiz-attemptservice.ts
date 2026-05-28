@@ -21,7 +21,7 @@ export class QuizAttemptService {
             `${apiBaseUrl}/session/${sessionId}/attempt/${attemptId}/answer`,
             { questionId, selectedOptionId }
         ).pipe(
-            map(r => new Answer(r.id, r.attemptId, r.questionId, r.selectedOptionId, r.submittedAt))
+            map(r => new Answer(r.id, r.attemptId, r.questionId, r.selectedOptionId, r.correctOptionId, r.submittedAt))
         );
     }
 }

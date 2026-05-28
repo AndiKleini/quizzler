@@ -1,13 +1,16 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { SinglepickComponent } from '../singlepick/singlepick.component';
 import { QuizAttemptService } from '../services/quiz-attemptservice';
+import { NgIf } from '@angular/common';
+
+const noEvaluation = -1;
 
 @Component({
   selector: 'quizzler-quiz-attempt-step',
   standalone: true,
-  imports: [SinglepickComponent],
+  imports: [SinglepickComponent, NgIf],
   templateUrl: './quiz-attempt-step.component.html',
   styleUrl: './quiz-attempt-step.component.css'
 })
@@ -19,6 +22,8 @@ export class QuizAttemptStepComponent {
   public sessionId = this.route.snapshot.paramMap.get('sessionId') ?? '';
   public attemptId = this.route.snapshot.paramMap.get('attemptId') ?? '';
   public questionId = Number(this.route.snapshot.paramMap.get('questionId'));
+  public correctOption = signal(noEvaluation);
+  public isEvaluated = computed(() => this.correctOption() !== noEvaluation);
 
   public onAnswerSubmitted(selectedOptionId: number): void {
     this.quizAttemptService.submitAnswer(this.sessionId, this.attemptId, this.questionId, selectedOptionId)
@@ -27,6 +32,14 @@ export class QuizAttemptStepComponent {
         this.router.navigate(['/error']);
         return of(undefined);
       }))
-      .subscribe();
+      .subscribe(answer => {
+        if (answer) {
+          this.correctOption.set(answer.correctOptionId);
+        }
+      });
+  }
+
+  public onNext(): void {
+    this.router.navigate(['/quiz-session', this.sessionId]);
   }
 }

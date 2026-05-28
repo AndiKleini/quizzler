@@ -4,6 +4,7 @@ export class Answer {
         public attemptId: string,
         public questionId: number,
         public selectedOptionId: number,
+        public correctOptionId: number,
         public submittedAt: string
     ) { };
 }

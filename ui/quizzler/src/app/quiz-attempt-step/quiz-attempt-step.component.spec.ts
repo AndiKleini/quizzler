@@ -15,6 +15,7 @@ const SESSION_ID = '33d24a21-3f56-42c6-a959-6567ca56139e';
 const ATTEMPT_ID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
 const QUESTION_ID = 42;
 const SELECTED_OPTION_ID = 3;
+const CORRECT_OPTION_ID = 2;
 const NOW = '2026-05-28T10:00:00Z';
 
 describe('QuizAttemptStepComponent', () => {
@@ -27,7 +28,8 @@ describe('QuizAttemptStepComponent', () => {
     mockRouter = { navigate: jest.fn().mockResolvedValue(true) };
     mockQuizAttemptService = {
       createAttempt: jest.fn(),
-      submitAnswer: jest.fn().mockReturnValue(of(new Answer(1, ATTEMPT_ID, QUESTION_ID, SELECTED_OPTION_ID, NOW)))
+      submitAnswer: jest.fn().mockReturnValue(of(
+        new Answer(1, ATTEMPT_ID, QUESTION_ID, SELECTED_OPTION_ID, CORRECT_OPTION_ID, NOW)))
     };
     TestBed.configureTestingModule({
       imports: [QuizAttemptStepComponent],
@@ -57,21 +59,36 @@ describe('QuizAttemptStepComponent', () => {
   it('render_when_route_params_present_then_passes_question_id_to_child', () => {
     setup();
 
-    const child = fixture.debugElement.query(By.directive(SinglepickComponent)).componentInstance as SinglepickComponent;
+    const child = queryChild();
     expect(child.questionId()).toEqual(QUESTION_ID);
   });
 
-  it('onAnswerSubmitted_when_child_emits_then_puts_answer_to_attempt_endpoint', () => {
+  it('render_before_answer_submitted_then_next_button_is_hidden', () => {
     setup();
 
-    const child = fixture.debugElement.query(By.directive(SinglepickComponent)).componentInstance as SinglepickComponent;
-    child.answerSubmitted.emit(SELECTED_OPTION_ID);
+    expect(queryNextButton()).toBeFalsy();
+  });
+
+  it('onAnswerSubmitted_when_child_emits_then_posts_answer_to_attempt_endpoint', () => {
+    setup();
+
+    queryChild().answerSubmitted.emit(SELECTED_OPTION_ID);
 
     expect(mockQuizAttemptService.submitAnswer).toHaveBeenCalledWith(
       SESSION_ID, ATTEMPT_ID, QUESTION_ID, SELECTED_OPTION_ID);
   });
 
-  it('onAnswerSubmitted_when_put_throws_then_redirects_to_error', () => {
+  it('onAnswerSubmitted_when_response_arrives_then_passes_correct_option_to_child_and_shows_next', () => {
+    setup();
+
+    queryChild().answerSubmitted.emit(SELECTED_OPTION_ID);
+    fixture.detectChanges();
+
+    expect(queryChild().correctOption()).toEqual(CORRECT_OPTION_ID);
+    expect(queryNextButton()).toBeTruthy();
+  });
+
+  it('onAnswerSubmitted_when_post_throws_then_redirects_to_error', () => {
     setup();
     mockQuizAttemptService.submitAnswer.mockReturnValue(throwError(() => ({ message: 'boom' })));
 
@@ -79,6 +96,27 @@ describe('QuizAttemptStepComponent', () => {
 
     expect(mockRouter.navigate).toHaveBeenCalledWith(['/error']);
   });
+
+  it('onNext_when_clicked_then_navigates_back_to_session', () => {
+    setup();
+    queryChild().answerSubmitted.emit(SELECTED_OPTION_ID);
+    fixture.detectChanges();
+
+    const button = queryNextButton();
+    expect(button).toBeTruthy();
+    button!.click();
+
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/quiz-session', SESSION_ID]);
+  });
+
+  function queryChild(): SinglepickComponent {
+    return fixture.debugElement.query(By.directive(SinglepickComponent)).componentInstance as SinglepickComponent;
+  }
+
+  function queryNextButton(): HTMLButtonElement | null {
+    const debugEl = fixture.debugElement.query(By.css('button.next-button'));
+    return debugEl ? debugEl.nativeElement as HTMLButtonElement : null;
+  }
 });
 
 function questionServiceReturningOptions(): QuestionService {

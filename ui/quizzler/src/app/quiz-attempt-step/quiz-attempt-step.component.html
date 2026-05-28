@@ -1,4 +1,6 @@
 <quizzler-singlepick
     [questionId]="questionId"
+    [correctOption]="correctOption()"
     (answerSubmitted)="onAnswerSubmitted($event)">
 </quizzler-singlepick>
+<button *ngIf="isEvaluated()" type="button" (click)="onNext()" class="next-button"> Next </button>

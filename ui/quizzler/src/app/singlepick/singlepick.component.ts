@@ -1,4 +1,4 @@
-import { Component, inject, input, output } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
   FormGroup,
@@ -9,14 +9,15 @@ import {
   ValidationErrors } from '@angular/forms';
 import { switchMap } from 'rxjs';
 import { QuestionService } from '../services/questionservice';
-import { NgFor, NgIf } from '@angular/common';
+import { NgFor, NgIf, NgClass } from '@angular/common';
 
 const optionDefaultValue = '';
+const noEvaluation = -1;
 
 @Component({
   selector: 'quizzler-singlepick',
   standalone: true,
-  imports: [ ReactiveFormsModule, NgFor, NgIf ],
+  imports: [ ReactiveFormsModule, NgFor, NgIf, NgClass ],
   templateUrl: './singlepick.component.html',
   styleUrl: './singlepick.component.css'
 })
@@ -25,6 +26,7 @@ export class SinglepickComponent {
   private questionService = inject(QuestionService);
 
   public questionId = input.required<number>();
+  public correctOption = input<number>(noEvaluation);
   public answerSubmitted = output<number>();
 
   public singlePickQuestion = toSignal(
@@ -32,6 +34,7 @@ export class SinglepickComponent {
       switchMap(id => this.questionService.getSinglePickQuestionById(id))
     )
   );
+  public isEvaluated = computed(() => this.correctOption() !== noEvaluation);
   public singlePickForm: FormGroup = this.formBuilder.group({
     selectedOption: [optionDefaultValue, [this.anyOptionSelectedValidator()]]
   });

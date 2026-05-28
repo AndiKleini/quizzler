@@ -13,7 +13,7 @@ describe('SinglepickComponent', () => {
   let fixture: ComponentFixture<SinglepickComponent>;
   let component: SinglepickComponent;
 
-  async function setup(): Promise<void> {
+  async function setup(correctOption?: number): Promise<void> {
     TestBed.configureTestingModule({
       imports: [SinglepickComponent],
       providers: [{ provide: QuestionService, useValue: questionServiceReturningOptions() }]
@@ -21,6 +21,9 @@ describe('SinglepickComponent', () => {
     fixture = TestBed.createComponent(SinglepickComponent);
     component = fixture.componentInstance;
     fixture.componentRef.setInput('questionId', QUESTION_ID);
+    if (correctOption !== undefined) {
+      fixture.componentRef.setInput('correctOption', correctOption);
+    }
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
@@ -63,6 +66,28 @@ describe('SinglepickComponent', () => {
     await setup();
 
     expect(querySubmitButton(fixture).disabled).toBeTruthy();
+  });
+
+  it.each(availableOptions)('render_when_correct_option_provided_then_displays_correct_and_false_options', async (correctOptionId) => {
+    await setup(correctOptionId);
+
+    const correctElement = fixture.debugElement.query(By.css(`#optcontainer-${correctOptionId}`));
+    expect(correctElement.classes['correct']).toBeTruthy();
+    expect(correctElement.classes['false']).toBeFalsy();
+    availableOptions.filter(o => o !== correctOptionId).forEach(o => {
+      const falseElement = fixture.debugElement.query(By.css(`#optcontainer-${o}`));
+      expect(falseElement.classes['false']).toBeTruthy();
+      expect(falseElement.classes['correct']).toBeFalsy();
+    });
+  });
+
+  it('render_when_evaluated_then_submit_button_is_replaced_by_evaluated_label', async () => {
+    await setup(2);
+
+    expect(fixture.debugElement.query(By.css('button[type=submit]'))).toBeFalsy();
+    const label = fixture.debugElement.query(By.css('.question-evaluated-label'));
+    expect(label).toBeTruthy();
+    expect(label.nativeElement.textContent.trim().toLowerCase()).toContain('evaluated');
   });
 });
 

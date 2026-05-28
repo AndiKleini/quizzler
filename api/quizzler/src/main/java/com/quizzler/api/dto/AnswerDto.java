@@ -8,13 +8,20 @@ public class AnswerDto {
     private final String attemptId;
     private final long questionId;
     private final long selectedOptionId;
+    private final long correctOptionId;
     private final Instant submittedAt;
 
-    public AnswerDto(Long id, String attemptId, long questionId, long selectedOptionId, Instant submittedAt) {
+    public AnswerDto(Long id,
+                     String attemptId,
+                     long questionId,
+                     long selectedOptionId,
+                     long correctOptionId,
+                     Instant submittedAt) {
         this.id = id;
         this.attemptId = attemptId;
         this.questionId = questionId;
         this.selectedOptionId = selectedOptionId;
+        this.correctOptionId = correctOptionId;
         this.submittedAt = submittedAt;
     }
 
@@ -32,6 +39,10 @@ public class AnswerDto {
 
     public long getSelectedOptionId() {
         return selectedOptionId;
+    }
+
+    public long getCorrectOptionId() {
+        return correctOptionId;
     }
 
     public Instant getSubmittedAt() {

@@ -35,6 +35,7 @@ public class QuizAttemptControllerTests {
     private static final String SESSION_PUBLIC_ID = "11111111-2222-3333-4444-555555555555";
     private static final String ATTEMPT_PUBLIC_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
     private static final long SELECTED_OPTION_ID = 3L;
+    private static final long CORRECT_OPTION_ID = 2L;
 
     @Autowired
     private QuestionRepository questionRepository;
@@ -58,6 +59,7 @@ public class QuizAttemptControllerTests {
         questionRepository.deleteAll();
 
         SinglePickQuestion question = new SinglePickQuestion("Title", "Text");
+        question.setCorrectOptionId(CORRECT_OPTION_ID);
         seededQuestionId = questionRepository.save(question).getId();
     }
 
@@ -96,7 +98,7 @@ public class QuizAttemptControllerTests {
                 .expectBody(AnswerDto.class)
                 .value(dto -> {
                     AnswerDto expected = new AnswerDto(
-                            dto.getId(), ATTEMPT_PUBLIC_ID, seededQuestionId, SELECTED_OPTION_ID, dto.getSubmittedAt());
+                            dto.getId(), ATTEMPT_PUBLIC_ID, seededQuestionId, SELECTED_OPTION_ID, CORRECT_OPTION_ID, dto.getSubmittedAt());
                     assertThat(dto).usingRecursiveComparison().isEqualTo(expected);
                     assertThat(dto.getId()).isNotNull();
                     assertThat(dto.getSubmittedAt()).isAfterOrEqualTo(before);
