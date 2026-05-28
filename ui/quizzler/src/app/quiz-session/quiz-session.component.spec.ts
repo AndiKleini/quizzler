@@ -87,7 +87,8 @@ describe('QuizSessionComponent', () => {
     queryStartButton(fixture).nativeElement.click();
 
     expect(mockQuizAttemptService.createAttempt).toHaveBeenCalledWith(SESSION_ID);
-    expect(mockRouter.navigate).toHaveBeenCalledWith(['/quiz-session', SESSION_ID, 'attempt-step']);
+    expect(mockRouter.navigate).toHaveBeenCalledWith(
+      ['/quiz-session', SESSION_ID, 'attempt', ATTEMPT_ID, 'question', QUESTION_ID]);
   });
 
   it('onStart_when_attempt_creation_throws_then_redirects_to_error', async () => {

@@ -55,7 +55,8 @@ export class QuizSessionComponent implements OnInit {
       }))
       .subscribe(attempt => {
         if (attempt) {
-          this.router.navigate(['/quiz-session', attempt.sessionId, 'attempt-step']);
+          this.router.navigate(
+            ['/quiz-session', attempt.sessionId, 'attempt', attempt.attemptId, 'question', attempt.questionId]);
         }
       });
   }

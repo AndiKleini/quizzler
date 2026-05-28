@@ -1,13 +1,8 @@
-<div *ngIf="singlePickQuestion" [formGroup]="singlePickForm" class="question-container">
-    <div class="question-title">{{singlePickQuestion.title}}</div>
-    <div class="question-text"> {{singlePickQuestion.text}} </div>
-    <div *ngFor='let option of singlePickQuestion.options;' class="option-item" id="optcontainer-{{option.id}}"
-        [ngClass]=
-            "{
-                'selected' : option.id.toString() === this.singlePickForm.get('selectedOption')?.value,
-                'correct': this.correctOption !== -1 && option.id === this.correctOption,
-                'false': this.correctOption !== -1 && option.id !== this.correctOption
-            }">
+<div *ngIf="singlePickQuestion() as question" [formGroup]="singlePickForm" class="question-container">
+    <div class="question-title">{{question.title}}</div>
+    <div class="question-text"> {{question.text}} </div>
+    <div *ngFor='let option of question.options;' class="option-item" id="optcontainer-{{option.id}}"
+        [class.selected]="option.id.toString() === this.singlePickForm.get('selectedOption')?.value">
         <input id="{{option.id}}" type="radio" class="option-checkbox"
             [value]="option.id"
             formControlName="selectedOption" #selectedOption>
@@ -17,6 +12,6 @@
         </div>
     </div>
     <div>
-        <button type="submit" (click)="submit()" [disabled]="singlePickForm.invalid" class="question-submit"> Evaluate </button>
+        <button type="submit" (click)="submit()" [disabled]="singlePickForm.invalid" class="question-submit"> Submit </button>
     </div>
 </div>

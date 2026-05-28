@@ -3,106 +3,66 @@ import { SinglepickComponent } from './singlepick.component';
 import { QuestionService } from '../services/questionservice';
 import { SinglePickQuestion } from '../entities/singlepickquestion';
 import { SingePickOption } from '../entities/singlepickoption';
-import { SinglePickResult } from '../entities/singlepickresult';
 import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 
+const QUESTION_ID = 7;
 const availableOptions = [1, 2, 3, 4];
+
 describe('SinglepickComponent', () => {
-  let component: SinglepickComponent;
   let fixture: ComponentFixture<SinglepickComponent>;
+  let component: SinglepickComponent;
 
-  it ('should display initally all options', async () => {
-    const mockQuestionService = returnUntouchedOptions();
-    await TestBed.configureTestingModule({
-      imports: [SinglepickComponent],
-      providers: [
-        {provide: QuestionService, useValue: mockQuestionService}
-      ]
-    }).compileComponents();
-    fixture = TestBed.createComponent(SinglepickComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-
-    expect(component.singlePickForm).toBeTruthy();
-    const selectedOption = component.singlePickForm.get('selectedOption');
-    expect(selectedOption).toBeTruthy();
-    expectNumberOfRenderedOptionsIs(4);
-  });
-  it ('should select no option by default', async () => {
-    const mockQuestionService = returnUntouchedOptions();
-    await TestBed.configureTestingModule({
-      imports: [SinglepickComponent],
-      providers: [
-        {provide: QuestionService, useValue: mockQuestionService}
-      ]
-    }).compileComponents();
-    fixture = TestBed.createComponent(SinglepickComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-
-    expect(component.singlePickForm).toBeTruthy();
-    const selectedOption = component.singlePickForm.get('selectedOption');
-    expect(selectedOption).toBeTruthy();
-    expect(selectedOption?.value).toEqual('');
-  });
-  it.each(availableOptions) ('should select first option on first click', (firstSelect) => {
-    const mockQuestionService = returnUntouchedOptions();
+  async function setup(): Promise<void> {
     TestBed.configureTestingModule({
       imports: [SinglepickComponent],
-      providers: [
-        {provide: QuestionService, useValue: mockQuestionService}
-      ]
+      providers: [{ provide: QuestionService, useValue: questionServiceReturningOptions() }]
     }).compileComponents();
     fixture = TestBed.createComponent(SinglepickComponent);
     component = fixture.componentInstance;
+    fixture.componentRef.setInput('questionId', QUESTION_ID);
     fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  }
 
-    selectOptionById(firstSelect.toString());
+  it('render_when_question_loaded_then_all_options_are_displayed', async () => {
+    await setup();
 
-    const selectedOption = component.singlePickForm.get('selectedOption');
-    expect(selectedOption).toBeTruthy();
-    expect(selectedOption?.value).toEqual(firstSelect);
+    expect(component.singlePickForm).toBeTruthy();
+    availableOptions.forEach(id => expect(document.getElementById(`${id}`)).toBeTruthy());
   });
-  it.each(availableOptions) ('should display wrong and correct options in corresponding style after evaluation', (correctOptionId) => {
-    const mockQuestionService = returnUntouchedOptions();
-    returnCorrectOptionAt(mockQuestionService, correctOptionId);
-    TestBed.configureTestingModule({
-      imports: [SinglepickComponent],
-      providers: [
-        {provide: QuestionService, useValue: mockQuestionService}
-      ]
-    }).compileComponents();
-    fixture = TestBed.createComponent(SinglepickComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
 
-    selectOptionById(correctOptionId.toString());
+  it('render_default_then_no_option_is_selected', async () => {
+    await setup();
+
+    expect(component.singlePickForm.get('selectedOption')?.value).toEqual('');
+  });
+
+  it.each(availableOptions)('selectOption_when_clicked_then_form_value_matches', async (optionId) => {
+    await setup();
+
+    selectOptionById(optionId.toString());
+
+    expect(component.singlePickForm.get('selectedOption')?.value).toEqual(optionId);
+  });
+
+  it.each(availableOptions)('submit_when_option_selected_then_emits_selected_option', async (optionId) => {
+    await setup();
+    let emitted: number | undefined;
+    component.answerSubmitted.subscribe(value => (emitted = value));
+    selectOptionById(optionId.toString());
     fixture.detectChanges();
 
     querySubmitButton(fixture).click();
-    fixture.detectChanges();
 
-    const selectedOption = component.singlePickForm.get('selectedOption');
-    expect(selectedOption).toBeTruthy();
-    expectOptionIsCorrectWithId(fixture, correctOptionId);
-    expectWrongOptionsAreFalseO(availableOptions, correctOptionId, fixture);
+    expect(emitted).toEqual(optionId);
   });
-  it ('should disable submit button in case of no option selected', async () => {
-    const mockQuestionService = returnUntouchedOptions();
-    await TestBed.configureTestingModule({
-      imports: [SinglepickComponent],
-      providers: [
-        {provide: QuestionService, useValue: mockQuestionService}
-      ]
-    }).compileComponents();
-    fixture = TestBed.createComponent(SinglepickComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
 
-    const submitBtn = querySubmitButton(fixture);
-    
-    expect(submitBtn.disabled).toBeTruthy();
+  it('submit_when_no_option_selected_then_button_is_disabled', async () => {
+    await setup();
+
+    expect(querySubmitButton(fixture).disabled).toBeTruthy();
   });
 });
 
@@ -110,46 +70,21 @@ function querySubmitButton(fixture: ComponentFixture<SinglepickComponent>) {
   return fixture.debugElement.query(By.css('button[type=submit]')).nativeElement;
 }
 
-function expectWrongOptionsAreFalseO(options: number[], correctOptionId: number, fixture: ComponentFixture<SinglepickComponent>) {
-  options.filter(option => option != correctOptionId).forEach(option => {
-    const falseElement = fixture.debugElement.query(By.css(`#optcontainer-${option}`));
-    expect(falseElement.classes['false']).toBeTruthy();
-    expect(falseElement.classes['correct']).toBeFalsy();
-  });
-}
-
-function expectOptionIsCorrectWithId(fixture: ComponentFixture<SinglepickComponent>, correctOptionId: number) {
-  const correctElement = fixture.debugElement.query(By.css(`#optcontainer-${correctOptionId}`));
-  expect(correctElement.classes['correct']).toBeTruthy();
-  expect(correctElement.classes['false']).toBeFalsy();
-}
-
-function expectNumberOfRenderedOptionsIs(numberOfExpectedOptions: number) {
-  for (let i = 1; i <= numberOfExpectedOptions; i++) {
-    const radio = document.getElementById(`${i}`);
-    expect(radio).toBeTruthy();
-  }
-}
-function returnUntouchedOptions() : QuestionService {
-  const mock = {
+function questionServiceReturningOptions(): QuestionService {
+  return {
     getSinglePickQuestionById: jest.fn().mockReturnValue(of(new SinglePickQuestion(
-      1,
-      "Question ES 1",
-      "This is the text of a single pick question !",
+      QUESTION_ID,
+      'Question ES 1',
+      'This is the text of a single pick question !',
       [
         new SingePickOption(1, 'Option 1'),
         new SingePickOption(2, 'Option 2'),
         new SingePickOption(3, 'Option 3'),
         new SingePickOption(4, 'Option 4')
-      ]))),
-    evaluate: jest.fn()
+      ])))
   } as unknown as QuestionService;
-  return mock;
 }
-function returnCorrectOptionAt(mock: QuestionService, correctOptionId: number) {
-   mock.evaluate = jest.fn().mockReturnValue(
-    new SinglePickResult(correctOptionId));
-}
+
 function selectOptionById(id: string) {
   const radio = document.getElementById(id);
   expect(radio).toBeTruthy();

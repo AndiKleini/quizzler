@@ -885,7 +885,8 @@ Risks and Technical Debts
 
 **Technical Debts**
 
-- Foreign Key not generated on quiz_attempt to session.
+- Foreign Key not generated on quiz_attempt to session. 
+- QuizzAttemptController -> rename publicId to sessionId for better readability
 
 Glossary 
 ========

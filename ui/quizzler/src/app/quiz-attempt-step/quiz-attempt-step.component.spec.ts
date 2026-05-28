@@ -1,29 +1,97 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
+import { of, throwError } from 'rxjs';
+import { By } from '@angular/platform-browser';
 
 import { QuizAttemptStepComponent } from './quiz-attempt-step.component';
+import { SinglepickComponent } from '../singlepick/singlepick.component';
+import { QuestionService } from '../services/questionservice';
+import { QuizAttemptService } from '../services/quiz-attemptservice';
+import { SinglePickQuestion } from '../entities/singlepickquestion';
+import { SingePickOption } from '../entities/singlepickoption';
+import { Answer } from '../entities/answer';
 
 const SESSION_ID = '33d24a21-3f56-42c6-a959-6567ca56139e';
-const QUESTION_ID = '42';
+const ATTEMPT_ID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
+const QUESTION_ID = 42;
+const SELECTED_OPTION_ID = 3;
+const NOW = '2026-05-28T10:00:00Z';
 
 describe('QuizAttemptStepComponent', () => {
   let fixture: ComponentFixture<QuizAttemptStepComponent>;
+  let component: QuizAttemptStepComponent;
+  let mockRouter: { navigate: jest.Mock };
+  let mockQuizAttemptService: { createAttempt: jest.Mock; submitAnswer: jest.Mock };
 
-  it('render_when_route_params_present_then_shows_session_and_question', () => {
+  function setup(): void {
+    mockRouter = { navigate: jest.fn().mockResolvedValue(true) };
+    mockQuizAttemptService = {
+      createAttempt: jest.fn(),
+      submitAnswer: jest.fn().mockReturnValue(of(new Answer(1, ATTEMPT_ID, QUESTION_ID, SELECTED_OPTION_ID, NOW)))
+    };
     TestBed.configureTestingModule({
       imports: [QuizAttemptStepComponent],
       providers: [
+        { provide: QuestionService, useValue: questionServiceReturningOptions() },
+        { provide: QuizAttemptService, useValue: mockQuizAttemptService },
+        { provide: Router, useValue: mockRouter },
         {
           provide: ActivatedRoute,
-          useValue: { snapshot: { paramMap: convertToParamMap({ sessionId: SESSION_ID, questionId: QUESTION_ID }) } }
+          useValue: {
+            snapshot: {
+              paramMap: convertToParamMap({
+                sessionId: SESSION_ID,
+                attemptId: ATTEMPT_ID,
+                questionId: QUESTION_ID.toString()
+              })
+            }
+          }
         }
       ]
     }).compileComponents();
     fixture = TestBed.createComponent(QuizAttemptStepComponent);
+    component = fixture.componentInstance;
     fixture.detectChanges();
+  }
 
-    const text: string = fixture.nativeElement.textContent;
-    expect(text).toContain(SESSION_ID);
-    expect(text).toContain(QUESTION_ID);
+  it('render_when_route_params_present_then_passes_question_id_to_child', () => {
+    setup();
+
+    const child = fixture.debugElement.query(By.directive(SinglepickComponent)).componentInstance as SinglepickComponent;
+    expect(child.questionId()).toEqual(QUESTION_ID);
+  });
+
+  it('onAnswerSubmitted_when_child_emits_then_puts_answer_to_attempt_endpoint', () => {
+    setup();
+
+    const child = fixture.debugElement.query(By.directive(SinglepickComponent)).componentInstance as SinglepickComponent;
+    child.answerSubmitted.emit(SELECTED_OPTION_ID);
+
+    expect(mockQuizAttemptService.submitAnswer).toHaveBeenCalledWith(
+      SESSION_ID, ATTEMPT_ID, QUESTION_ID, SELECTED_OPTION_ID);
+  });
+
+  it('onAnswerSubmitted_when_put_throws_then_redirects_to_error', () => {
+    setup();
+    mockQuizAttemptService.submitAnswer.mockReturnValue(throwError(() => ({ message: 'boom' })));
+
+    component.onAnswerSubmitted(SELECTED_OPTION_ID);
+
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/error']);
   });
 });
+
+function questionServiceReturningOptions(): QuestionService {
+  return {
+    getSinglePickQuestionById: jest.fn().mockReturnValue(of(new SinglePickQuestion(
+      QUESTION_ID,
+      'Question ES 1',
+      'This is the text of a single pick question !',
+      [
+        new SingePickOption(1, 'Option 1'),
+        new SingePickOption(2, 'Option 2'),
+        new SingePickOption(3, 'Option 3'),
+        new SingePickOption(4, 'Option 4')
+      ])))
+  } as unknown as QuestionService;
+}
