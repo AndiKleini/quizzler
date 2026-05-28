@@ -55,7 +55,7 @@ class AnswerServiceTests {
         Instant before = Instant.now().minus(1, ChronoUnit.SECONDS);
         AnswerDto expected = new AnswerDto(
                 ANSWER_ID, ATTEMPT_PUBLIC_ID, QUESTION_ID, SELECTED_OPTION_ID, CORRECT_OPTION_ID, before);
-        QuizSession session = new QuizSession(SESSION_PUBLIC_ID);
+        QuizSession session = new QuizSession(SESSION_PUBLIC_ID, null);
         QuizAttempt attempt = new QuizAttempt(ATTEMPT_PUBLIC_ID, session, QUESTION_ID);
         SinglePickQuestion question = new SinglePickQuestion("Title", "Text");
         question.setCorrectOptionId(CORRECT_OPTION_ID);
@@ -91,7 +91,7 @@ class AnswerServiceTests {
 
     @Test
     void submitAnswer_when_question_not_found_throws() {
-        QuizSession session = new QuizSession(SESSION_PUBLIC_ID);
+        QuizSession session = new QuizSession(SESSION_PUBLIC_ID, null);
         QuizAttempt attempt = new QuizAttempt(ATTEMPT_PUBLIC_ID, session, QUESTION_ID);
         when(quizAttemptRepository.findByPublicId(ATTEMPT_PUBLIC_ID)).thenReturn(Optional.of(attempt));
         when(questionRepository.findById(QUESTION_ID)).thenReturn(Optional.empty());

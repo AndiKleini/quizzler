@@ -888,6 +888,7 @@ Risks and Technical Debts
 - Foreign Key not generated on quiz_attempt to session. 
 - QuizzAttemptController -> rename publicId to sessionId for better readability
 - Foreign Key not generated on answer to attempt
+- In unit Tests of 
 
 Glossary 
 ========

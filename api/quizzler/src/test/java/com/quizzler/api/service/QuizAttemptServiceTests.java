@@ -6,10 +6,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.quizzler.api.domain.QuizAttempt;
 import com.quizzler.api.domain.QuizSession;
+import com.quizzler.api.domain.QuizSpecification;
 import com.quizzler.api.dto.QuizAttemptDto;
 import com.quizzler.api.repository.QuizAttemptRepository;
 import com.quizzler.api.repository.QuizSessionRepository;
@@ -27,6 +29,8 @@ import org.springframework.web.server.ResponseStatusException;
 class QuizAttemptServiceTests {
 
     private static final String SESSION_PUBLIC_ID = "11111111-2222-3333-4444-555555555555";
+    private static final long FIRST_QUESTION_ID = 42L;
+    private static final long SECOND_QUESTION_ID = 43L;
 
     @Mock
     private QuizSessionRepository quizSessionRepository;
@@ -38,14 +42,15 @@ class QuizAttemptServiceTests {
     private QuizAttemptService quizAttemptService;
 
     @Test
-    void createAttempt_persists_new_attempt_for_hardcoded_question() {
-        QuizSession session = new QuizSession(SESSION_PUBLIC_ID);
+    void createAttempt_persists_new_attempt_with_first_question_of_specification() {
+        QuizSpecification specification = new QuizSpecification(List.of(FIRST_QUESTION_ID, SECOND_QUESTION_ID));
+        QuizSession session = new QuizSession(SESSION_PUBLIC_ID, specification);
         when(quizSessionRepository.findByPublicId(SESSION_PUBLIC_ID)).thenReturn(Optional.of(session));
         when(quizAttemptRepository.save(any(QuizAttempt.class))).thenAnswer(call -> call.getArgument(0));
 
         QuizAttemptDto dto = quizAttemptService.createAttempt(SESSION_PUBLIC_ID);
 
-        QuizAttemptDto expected = new QuizAttemptDto(null, SESSION_PUBLIC_ID, QuizAttemptService.HARDCODED_QUESTION_ID);
+        QuizAttemptDto expected = new QuizAttemptDto(null, SESSION_PUBLIC_ID, FIRST_QUESTION_ID);
         assertThat(dto)
                 .usingRecursiveComparison()
                 .ignoringFields("attemptId")
@@ -64,5 +69,16 @@ class QuizAttemptServiceTests {
         assertThatThrownBy(() -> quizAttemptService.createAttempt(SESSION_PUBLIC_ID))
                 .isInstanceOfSatisfying(ResponseStatusException.class,
                         ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.NOT_FOUND));
+    }
+
+    @Test
+    void createAttempt_when_specification_has_no_questions_throws() {
+        QuizSpecification empty = new QuizSpecification(List.of());
+        QuizSession session = new QuizSession(SESSION_PUBLIC_ID, empty);
+        when(quizSessionRepository.findByPublicId(SESSION_PUBLIC_ID)).thenReturn(Optional.of(session));
+
+        assertThatThrownBy(() -> quizAttemptService.createAttempt(SESSION_PUBLIC_ID))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.CONFLICT));
     }
 }

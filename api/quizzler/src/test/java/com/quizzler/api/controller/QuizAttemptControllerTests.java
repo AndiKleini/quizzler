@@ -9,6 +9,7 @@ import java.util.List;
 import com.quizzler.api.domain.Answer;
 import com.quizzler.api.domain.QuizAttempt;
 import com.quizzler.api.domain.QuizSession;
+import com.quizzler.api.domain.QuizSpecification;
 import com.quizzler.api.domain.SinglePickQuestion;
 import com.quizzler.api.dto.AnswerDto;
 import com.quizzler.api.dto.AnswerSubmissionDto;
@@ -17,7 +18,7 @@ import com.quizzler.api.repository.AnswerRepository;
 import com.quizzler.api.repository.QuizAttemptRepository;
 import com.quizzler.api.repository.QuestionRepository;
 import com.quizzler.api.repository.QuizSessionRepository;
-import com.quizzler.api.service.QuizAttemptService;
+import com.quizzler.api.repository.QuizSpecificationRepository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,6 +43,9 @@ public class QuizAttemptControllerTests {
     private QuestionRepository questionRepository;
 
     @Autowired
+    private QuizSpecificationRepository quizSpecificationRepository;
+
+    @Autowired
     private QuizSessionRepository quizSessionRepository;
 
     @Autowired
@@ -51,22 +55,26 @@ public class QuizAttemptControllerTests {
     private AnswerRepository answerRepository;
 
     private Long seededQuestionId;
+    private QuizSpecification seededSpecification;
 
     @BeforeEach
     void seedTestData() {
         answerRepository.deleteAll();
         quizAttemptRepository.deleteAll();
         quizSessionRepository.deleteAll();
+        quizSpecificationRepository.deleteAll();
         questionRepository.deleteAll();
 
         SinglePickQuestion question = new SinglePickQuestion("Title", "Text");
         question.setCorrectOptionId(CORRECT_OPTION_ID);
         seededQuestionId = questionRepository.save(question).getId();
+        seededSpecification = quizSpecificationRepository.save(
+                new QuizSpecification(List.of(seededQuestionId)));
     }
 
     @Test
-    public void createAttempt_returns_attempt_with_hardcoded_question(@Autowired WebTestClient webTestClient) {
-        quizSessionRepository.save(new QuizSession(SESSION_PUBLIC_ID));
+    public void createAttempt_returns_attempt_with_first_question_of_specification(@Autowired WebTestClient webTestClient) {
+        quizSessionRepository.save(new QuizSession(SESSION_PUBLIC_ID, seededSpecification));
 
         webTestClient.post().uri(ATTEMPT_URI, SESSION_PUBLIC_ID).exchange()
                 .expectStatus().isCreated()
@@ -74,7 +82,7 @@ public class QuizAttemptControllerTests {
                 .value(dto -> {
                     assertThat(dto.getAttemptId()).isNotBlank();
                     assertThat(dto.getSessionId()).isEqualTo(SESSION_PUBLIC_ID);
-                    assertThat(dto.getQuestionId()).isEqualTo(QuizAttemptService.HARDCODED_QUESTION_ID);
+                    assertThat(dto.getQuestionId()).isEqualTo(seededQuestionId);
                 });
     }
 
@@ -87,7 +95,7 @@ public class QuizAttemptControllerTests {
     @Test
     public void submitAnswer_inserts_new_answer_for_attempt(@Autowired WebTestClient webTestClient) {
         QuizSession session = quizSessionRepository.save(
-                new QuizSession(SESSION_PUBLIC_ID));
+                new QuizSession(SESSION_PUBLIC_ID, seededSpecification));
         quizAttemptRepository.save(new QuizAttempt(ATTEMPT_PUBLIC_ID, session, seededQuestionId));
         AnswerSubmissionDto submission = new AnswerSubmissionDto(seededQuestionId, SELECTED_OPTION_ID);
         Instant before = Instant.now().minus(1, ChronoUnit.SECONDS);
@@ -109,7 +117,7 @@ public class QuizAttemptControllerTests {
     @Test
     public void submitAnswer_when_called_twice_inserts_two_answers(@Autowired WebTestClient webTestClient) {
         QuizSession session = quizSessionRepository.save(
-                new QuizSession(SESSION_PUBLIC_ID));
+                new QuizSession(SESSION_PUBLIC_ID, seededSpecification));
         quizAttemptRepository.save(new QuizAttempt(ATTEMPT_PUBLIC_ID, session, seededQuestionId));
         AnswerSubmissionDto first = new AnswerSubmissionDto(seededQuestionId, 1L);
         AnswerSubmissionDto second = new AnswerSubmissionDto(seededQuestionId, 2L);
