@@ -16,6 +16,12 @@ export class QuizAttemptService {
         );
     }
 
+    getAttempt(sessionId: string, attemptId: string): Observable<QuizAttempt> {
+        return this.http.get<QuizAttempt>(`${apiBaseUrl}/session/${sessionId}/attempt/${attemptId}`).pipe(
+            map(r => new QuizAttempt(r.attemptId, r.sessionId, r.questionId))
+        );
+    }
+
     submitAnswer(sessionId: string, attemptId: string, questionId: number, selectedOptionId: number): Observable<Answer> {
         return this.http.post<Answer>(
             `${apiBaseUrl}/session/${sessionId}/attempt/${attemptId}/answer`,

@@ -6,6 +6,7 @@ import com.quizzler.api.dto.QuizAttemptDto;
 import com.quizzler.api.service.AnswerService;
 import com.quizzler.api.service.QuizAttemptService;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,6 +30,12 @@ public class QuizAttemptController {
     @ResponseStatus(HttpStatus.CREATED)
     public QuizAttemptDto createAttempt(@PathVariable String publicId) {
         return quizAttemptService.createAttempt(publicId);
+    }
+
+    @GetMapping("/{attemptPublicId}")
+    public QuizAttemptDto getAttempt(@PathVariable String publicId,
+                                     @PathVariable String attemptPublicId) {
+        return quizAttemptService.getAttempt(publicId, attemptPublicId);
     }
 
     @PostMapping("/{attemptPublicId}/answer")

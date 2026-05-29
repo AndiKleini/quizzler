@@ -33,6 +33,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 public class QuizAttemptControllerTests {
 
     private static final String ATTEMPT_URI = "/session/{publicId}/attempt";
+    private static final String ATTEMPT_BY_ID_URI = "/session/{publicId}/attempt/{attemptPublicId}";
     private static final String ANSWER_URI = "/session/{publicId}/attempt/{attemptPublicId}/answer";
     private static final String SESSION_PUBLIC_ID = "11111111-2222-3333-4444-555555555555";
     private static final String ATTEMPT_PUBLIC_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
@@ -89,6 +90,36 @@ public class QuizAttemptControllerTests {
     @Test
     public void createAttempt_when_session_not_exists_returns_404(@Autowired WebTestClient webTestClient) {
         webTestClient.post().uri(ATTEMPT_URI, SESSION_PUBLIC_ID).exchange()
+                .expectStatus().isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    public void getAttempt_returns_next_unanswered_question_in_specification(@Autowired WebTestClient webTestClient) {
+        SinglePickQuestion second = new SinglePickQuestion("Title 2", "Text 2");
+        second.setCorrectOptionId(CORRECT_OPTION_ID);
+        Long secondQuestionId = questionRepository.save(second).getId();
+        QuizSpecification multiSpec = quizSpecificationRepository.save(
+                new QuizSpecification(List.of(seededQuestionId, secondQuestionId)));
+        QuizSession session = quizSessionRepository.save(new QuizSession(SESSION_PUBLIC_ID, multiSpec));
+        QuizAttempt attempt = quizAttemptRepository.save(
+                new QuizAttempt(ATTEMPT_PUBLIC_ID, session, seededQuestionId));
+        answerRepository.save(new Answer(attempt, seededQuestionId, SELECTED_OPTION_ID, Instant.now()));
+
+        webTestClient.get().uri(ATTEMPT_BY_ID_URI, SESSION_PUBLIC_ID, ATTEMPT_PUBLIC_ID).exchange()
+                .expectStatus().isOk()
+                .expectBody(QuizAttemptDto.class)
+                .value(dto -> {
+                    assertThat(dto.getAttemptId()).isEqualTo(ATTEMPT_PUBLIC_ID);
+                    assertThat(dto.getSessionId()).isEqualTo(SESSION_PUBLIC_ID);
+                    assertThat(dto.getQuestionId()).isEqualTo(secondQuestionId);
+                });
+    }
+
+    @Test
+    public void getAttempt_when_attempt_not_exists_returns_404(@Autowired WebTestClient webTestClient) {
+        quizSessionRepository.save(new QuizSession(SESSION_PUBLIC_ID, seededSpecification));
+
+        webTestClient.get().uri(ATTEMPT_BY_ID_URI, SESSION_PUBLIC_ID, ATTEMPT_PUBLIC_ID).exchange()
                 .expectStatus().isEqualTo(HttpStatus.NOT_FOUND);
     }
 

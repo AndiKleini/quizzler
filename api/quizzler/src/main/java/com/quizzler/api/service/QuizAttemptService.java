@@ -1,11 +1,15 @@
 package com.quizzler.api.service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import com.quizzler.api.domain.Answer;
 import com.quizzler.api.domain.QuizAttempt;
 import com.quizzler.api.domain.QuizSession;
 import com.quizzler.api.dto.QuizAttemptDto;
+import com.quizzler.api.repository.AnswerRepository;
 import com.quizzler.api.repository.QuizAttemptRepository;
 import com.quizzler.api.repository.QuizSessionRepository;
 import org.springframework.http.HttpStatus;
@@ -18,11 +22,14 @@ public class QuizAttemptService {
 
     private final QuizSessionRepository quizSessionRepository;
     private final QuizAttemptRepository quizAttemptRepository;
+    private final AnswerRepository answerRepository;
 
     public QuizAttemptService(QuizSessionRepository quizSessionRepository,
-                              QuizAttemptRepository quizAttemptRepository) {
+                              QuizAttemptRepository quizAttemptRepository,
+                              AnswerRepository answerRepository) {
         this.quizSessionRepository = quizSessionRepository;
         this.quizAttemptRepository = quizAttemptRepository;
+        this.answerRepository = answerRepository;
     }
 
     @Transactional
@@ -42,6 +49,30 @@ public class QuizAttemptService {
                 session,
                 questionIds.get(0));
         return toDto(quizAttemptRepository.save(attempt));
+    }
+
+    @Transactional(readOnly = true)
+    public QuizAttemptDto getAttempt(String sessionPublicId, String attemptPublicId) {
+        QuizAttempt attempt = quizAttemptRepository.findByPublicId(attemptPublicId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Attempt " + attemptPublicId + " not found"));
+
+        if (!attempt.getSession().getPublicId().equals(sessionPublicId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Attempt " + attemptPublicId + " does not belong to session " + sessionPublicId);
+        }
+
+        Set<Long> answeredQuestionIds = answerRepository.findByAttempt(attempt).stream()
+                .map(Answer::getQuestionId)
+                .collect(Collectors.toSet());
+        long nextQuestionId = attempt.getSession().getSpecification().getQuestionIds().stream()
+                .sorted((id1, id2) -> Long.compare(id1, id2))
+                .filter(id -> !answeredQuestionIds.contains(id))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Attempt " + attemptPublicId + " has no unanswered question left"));
+
+        return new QuizAttemptDto(attempt.getPublicId(), sessionPublicId, nextQuestionId);
     }
 
     private QuizAttemptDto toDto(QuizAttempt attempt) {

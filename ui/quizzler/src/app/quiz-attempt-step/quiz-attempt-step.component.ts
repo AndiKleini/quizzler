@@ -21,12 +21,12 @@ export class QuizAttemptStepComponent {
 
   public sessionId = this.route.snapshot.paramMap.get('sessionId') ?? '';
   public attemptId = this.route.snapshot.paramMap.get('attemptId') ?? '';
-  public questionId = Number(this.route.snapshot.paramMap.get('questionId'));
+  public questionId = signal(Number(this.route.snapshot.paramMap.get('questionId')));
   public correctOption = signal(noEvaluation);
   public isEvaluated = computed(() => this.correctOption() !== noEvaluation);
 
   public onAnswerSubmitted(selectedOptionId: number): void {
-    this.quizAttemptService.submitAnswer(this.sessionId, this.attemptId, this.questionId, selectedOptionId)
+    this.quizAttemptService.submitAnswer(this.sessionId, this.attemptId, this.questionId(), selectedOptionId)
       .pipe(catchError(err => {
         console.error(err?.message ?? err);
         this.router.navigate(['/error']);
@@ -40,6 +40,17 @@ export class QuizAttemptStepComponent {
   }
 
   public onNext(): void {
-    this.router.navigate(['/quiz-session', this.sessionId]);
+    this.quizAttemptService.getAttempt(this.sessionId, this.attemptId)
+      .pipe(catchError(err => {
+        console.error(err?.message ?? err);
+        this.router.navigate(['/error']);
+        return of(undefined);
+      }))
+      .subscribe(attempt => {
+        if (attempt) {
+          this.questionId.set(attempt.questionId);
+          this.correctOption.set(noEvaluation);
+        }
+      });
   }
 }

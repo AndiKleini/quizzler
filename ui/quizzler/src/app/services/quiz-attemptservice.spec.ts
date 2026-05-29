@@ -14,7 +14,8 @@ const ANSWER_ID = 7;
 const CORRECT_OPTION_ID = 2;
 const SUBMITTED_AT = '2026-05-28T10:00:00Z';
 const ATTEMPT_URL = `http://localhost:8080/session/${SESSION_ID}/attempt`;
-const ANSWER_URL = `${ATTEMPT_URL}/${ATTEMPT_ID}/answer`;
+const ATTEMPT_BY_ID_URL = `${ATTEMPT_URL}/${ATTEMPT_ID}`;
+const ANSWER_URL = `${ATTEMPT_BY_ID_URL}/answer`;
 
 describe('QuizAttemptService', () => {
   let service: QuizAttemptService;
@@ -55,6 +56,32 @@ describe('QuizAttemptService', () => {
       error: err => caught = err
     });
     httpMock.expectOne(ATTEMPT_URL)
+      .flush('Not Found', { status: 404, statusText: 'Not Found' });
+
+    expect(caught?.status).toBe(404);
+  });
+
+  it('getAttempt_when_response_is_json_payload_maps_to_quiz_attempt_instance', () => {
+    const expected = new QuizAttempt(ATTEMPT_ID, SESSION_ID, QUESTION_ID);
+    let actual: QuizAttempt | undefined;
+
+    service.getAttempt(SESSION_ID, ATTEMPT_ID).subscribe(a => actual = a);
+    const req = httpMock.expectOne(ATTEMPT_BY_ID_URL);
+    expect(req.request.method).toBe('GET');
+    req.flush({ attemptId: ATTEMPT_ID, sessionId: SESSION_ID, questionId: QUESTION_ID });
+
+    expect(actual).toBeInstanceOf(QuizAttempt);
+    expect(actual).toEqual(expected);
+  });
+
+  it('getAttempt_when_server_responds_404_propagates_error', () => {
+    let caught: { status: number } | undefined;
+
+    service.getAttempt(SESSION_ID, ATTEMPT_ID).subscribe({
+      next: () => fail('expected error'),
+      error: err => caught = err
+    });
+    httpMock.expectOne(ATTEMPT_BY_ID_URL)
       .flush('Not Found', { status: 404, statusText: 'Not Found' });
 
     expect(caught?.status).toBe(404);

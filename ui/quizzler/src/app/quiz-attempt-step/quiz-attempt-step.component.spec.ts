@@ -10,10 +10,12 @@ import { QuizAttemptService } from '../services/quiz-attemptservice';
 import { SinglePickQuestion } from '../entities/singlepickquestion';
 import { SingePickOption } from '../entities/singlepickoption';
 import { Answer } from '../entities/answer';
+import { QuizAttempt } from '../entities/quizattempt';
 
 const SESSION_ID = '33d24a21-3f56-42c6-a959-6567ca56139e';
 const ATTEMPT_ID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
 const QUESTION_ID = 42;
+const NEXT_QUESTION_ID = 43;
 const SELECTED_OPTION_ID = 3;
 const CORRECT_OPTION_ID = 2;
 const NOW = '2026-05-28T10:00:00Z';
@@ -22,14 +24,15 @@ describe('QuizAttemptStepComponent', () => {
   let fixture: ComponentFixture<QuizAttemptStepComponent>;
   let component: QuizAttemptStepComponent;
   let mockRouter: { navigate: jest.Mock };
-  let mockQuizAttemptService: { createAttempt: jest.Mock; submitAnswer: jest.Mock };
+  let mockQuizAttemptService: { createAttempt: jest.Mock; submitAnswer: jest.Mock; getAttempt: jest.Mock };
 
   function setup(): void {
     mockRouter = { navigate: jest.fn().mockResolvedValue(true) };
     mockQuizAttemptService = {
       createAttempt: jest.fn(),
       submitAnswer: jest.fn().mockReturnValue(of(
-        new Answer(1, ATTEMPT_ID, QUESTION_ID, SELECTED_OPTION_ID, CORRECT_OPTION_ID, NOW)))
+        new Answer(1, ATTEMPT_ID, QUESTION_ID, SELECTED_OPTION_ID, CORRECT_OPTION_ID, NOW))),
+      getAttempt: jest.fn().mockReturnValue(of(new QuizAttempt(ATTEMPT_ID, SESSION_ID, NEXT_QUESTION_ID)))
     };
     TestBed.configureTestingModule({
       imports: [QuizAttemptStepComponent],
@@ -97,7 +100,7 @@ describe('QuizAttemptStepComponent', () => {
     expect(mockRouter.navigate).toHaveBeenCalledWith(['/error']);
   });
 
-  it('onNext_when_clicked_then_navigates_back_to_session', () => {
+  it('onNext_when_clicked_then_fetches_next_attempt_and_renders_next_question', () => {
     setup();
     queryChild().answerSubmitted.emit(SELECTED_OPTION_ID);
     fixture.detectChanges();
@@ -105,8 +108,20 @@ describe('QuizAttemptStepComponent', () => {
     const button = queryNextButton();
     expect(button).toBeTruthy();
     button!.click();
+    fixture.detectChanges();
 
-    expect(mockRouter.navigate).toHaveBeenCalledWith(['/quiz-session', SESSION_ID]);
+    expect(mockQuizAttemptService.getAttempt).toHaveBeenCalledWith(SESSION_ID, ATTEMPT_ID);
+    expect(queryChild().questionId()).toEqual(NEXT_QUESTION_ID);
+    expect(queryNextButton()).toBeFalsy();
+  });
+
+  it('onNext_when_get_throws_then_redirects_to_error', () => {
+    setup();
+    mockQuizAttemptService.getAttempt.mockReturnValue(throwError(() => ({ message: 'boom' })));
+
+    component.onNext();
+
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/error']);
   });
 
   function queryChild(): SinglepickComponent {

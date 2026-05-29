@@ -6,13 +6,16 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import com.quizzler.api.domain.Answer;
 import com.quizzler.api.domain.QuizAttempt;
 import com.quizzler.api.domain.QuizSession;
 import com.quizzler.api.domain.QuizSpecification;
 import com.quizzler.api.dto.QuizAttemptDto;
+import com.quizzler.api.repository.AnswerRepository;
 import com.quizzler.api.repository.QuizAttemptRepository;
 import com.quizzler.api.repository.QuizSessionRepository;
 
@@ -29,14 +32,19 @@ import org.springframework.web.server.ResponseStatusException;
 class QuizAttemptServiceTests {
 
     private static final String SESSION_PUBLIC_ID = "11111111-2222-3333-4444-555555555555";
+    private static final String ATTEMPT_PUBLIC_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
     private static final long FIRST_QUESTION_ID = 42L;
     private static final long SECOND_QUESTION_ID = 43L;
+    private static final long THIRD_QUESTION_ID = 44L;
 
     @Mock
     private QuizSessionRepository quizSessionRepository;
 
     @Mock
     private QuizAttemptRepository quizAttemptRepository;
+
+    @Mock
+    private AnswerRepository answerRepository;
 
     @InjectMocks
     private QuizAttemptService quizAttemptService;
@@ -78,6 +86,59 @@ class QuizAttemptServiceTests {
         when(quizSessionRepository.findByPublicId(SESSION_PUBLIC_ID)).thenReturn(Optional.of(session));
 
         assertThatThrownBy(() -> quizAttemptService.createAttempt(SESSION_PUBLIC_ID))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.CONFLICT));
+    }
+
+    @Test
+    void getAttempt_returns_first_unanswered_question_in_order_from_specification() {
+        List<Long> unorderedQuestionList = List.of(FIRST_QUESTION_ID, THIRD_QUESTION_ID, SECOND_QUESTION_ID);
+        QuizSpecification specification = new QuizSpecification(unorderedQuestionList);
+        QuizSession session = new QuizSession(SESSION_PUBLIC_ID, specification);
+        QuizAttempt attempt = new QuizAttempt(ATTEMPT_PUBLIC_ID, session, FIRST_QUESTION_ID);
+        when(quizAttemptRepository.findByPublicId(ATTEMPT_PUBLIC_ID)).thenReturn(Optional.of(attempt));
+        when(answerRepository.findByAttempt(attempt))
+                .thenReturn(List.of(new Answer(attempt, FIRST_QUESTION_ID, 1L, Instant.now())));
+
+        QuizAttemptDto dto = quizAttemptService.getAttempt(SESSION_PUBLIC_ID, ATTEMPT_PUBLIC_ID);
+
+        assertThat(dto)
+                .usingRecursiveComparison()
+                .isEqualTo(new QuizAttemptDto(ATTEMPT_PUBLIC_ID, SESSION_PUBLIC_ID, SECOND_QUESTION_ID));
+    }
+
+    @Test
+    void getAttempt_when_attempt_not_found_throws() {
+        when(quizAttemptRepository.findByPublicId(ATTEMPT_PUBLIC_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> quizAttemptService.getAttempt(SESSION_PUBLIC_ID, ATTEMPT_PUBLIC_ID))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.NOT_FOUND));
+    }
+
+    @Test
+    void getAttempt_when_attempt_does_not_belong_to_session_throws() {
+        QuizSpecification specification = new QuizSpecification(List.of(FIRST_QUESTION_ID));
+        QuizSession otherSession = new QuizSession("other-session-id", specification);
+        QuizAttempt attempt = new QuizAttempt(ATTEMPT_PUBLIC_ID, otherSession, FIRST_QUESTION_ID);
+        when(quizAttemptRepository.findByPublicId(ATTEMPT_PUBLIC_ID)).thenReturn(Optional.of(attempt));
+
+        assertThatThrownBy(() -> quizAttemptService.getAttempt(SESSION_PUBLIC_ID, ATTEMPT_PUBLIC_ID))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.NOT_FOUND));
+    }
+
+    @Test
+    void getAttempt_when_all_questions_answered_throws() {
+        QuizSpecification specification = new QuizSpecification(List.of(FIRST_QUESTION_ID, SECOND_QUESTION_ID));
+        QuizSession session = new QuizSession(SESSION_PUBLIC_ID, specification);
+        QuizAttempt attempt = new QuizAttempt(ATTEMPT_PUBLIC_ID, session, FIRST_QUESTION_ID);
+        when(quizAttemptRepository.findByPublicId(ATTEMPT_PUBLIC_ID)).thenReturn(Optional.of(attempt));
+        when(answerRepository.findByAttempt(attempt)).thenReturn(List.of(
+                new Answer(attempt, FIRST_QUESTION_ID, 1L, Instant.now()),
+                new Answer(attempt, SECOND_QUESTION_ID, 1L, Instant.now())));
+
+        assertThatThrownBy(() -> quizAttemptService.getAttempt(SESSION_PUBLIC_ID, ATTEMPT_PUBLIC_ID))
                 .isInstanceOfSatisfying(ResponseStatusException.class,
                         ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.CONFLICT));
     }
