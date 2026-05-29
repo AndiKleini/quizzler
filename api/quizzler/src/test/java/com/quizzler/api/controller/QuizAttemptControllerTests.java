@@ -112,7 +112,21 @@ public class QuizAttemptControllerTests {
                     assertThat(dto.getAttemptId()).isEqualTo(ATTEMPT_PUBLIC_ID);
                     assertThat(dto.getSessionId()).isEqualTo(SESSION_PUBLIC_ID);
                     assertThat(dto.getQuestionId()).isEqualTo(secondQuestionId);
+                    assertThat(dto.isCompleted()).isFalse();
                 });
+    }
+
+    @Test
+    public void getAttempt_when_all_questions_answered_returns_completed(@Autowired WebTestClient webTestClient) {
+        QuizSession session = quizSessionRepository.save(new QuizSession(SESSION_PUBLIC_ID, seededSpecification));
+        QuizAttempt attempt = quizAttemptRepository.save(
+                new QuizAttempt(ATTEMPT_PUBLIC_ID, session, seededQuestionId));
+        answerRepository.save(new Answer(attempt, seededQuestionId, SELECTED_OPTION_ID, Instant.now()));
+
+        webTestClient.get().uri(ATTEMPT_BY_ID_URI, SESSION_PUBLIC_ID, ATTEMPT_PUBLIC_ID).exchange()
+                .expectStatus().isOk()
+                .expectBody(QuizAttemptDto.class)
+                .value(dto -> assertThat(dto.isCompleted()).isTrue());
     }
 
     @Test

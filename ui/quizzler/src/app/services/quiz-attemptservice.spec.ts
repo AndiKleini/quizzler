@@ -36,13 +36,13 @@ describe('QuizAttemptService', () => {
   afterEach(() => httpMock.verify());
 
   it('createAttempt_when_response_is_json_payload_maps_to_quiz_attempt_instance', () => {
-    const expected = new QuizAttempt(ATTEMPT_ID, SESSION_ID, QUESTION_ID);
+    const expected = new QuizAttempt(ATTEMPT_ID, SESSION_ID, QUESTION_ID, false);
     let actual: QuizAttempt | undefined;
 
     service.createAttempt(SESSION_ID).subscribe(a => actual = a);
     const req = httpMock.expectOne(ATTEMPT_URL);
     expect(req.request.method).toBe('POST');
-    req.flush({ attemptId: ATTEMPT_ID, sessionId: SESSION_ID, questionId: QUESTION_ID });
+    req.flush({ attemptId: ATTEMPT_ID, sessionId: SESSION_ID, questionId: QUESTION_ID, completed: false });
 
     expect(actual).toBeInstanceOf(QuizAttempt);
     expect(actual).toEqual(expected);
@@ -62,16 +62,26 @@ describe('QuizAttemptService', () => {
   });
 
   it('getAttempt_when_response_is_json_payload_maps_to_quiz_attempt_instance', () => {
-    const expected = new QuizAttempt(ATTEMPT_ID, SESSION_ID, QUESTION_ID);
+    const expected = new QuizAttempt(ATTEMPT_ID, SESSION_ID, QUESTION_ID, false);
     let actual: QuizAttempt | undefined;
 
     service.getAttempt(SESSION_ID, ATTEMPT_ID).subscribe(a => actual = a);
     const req = httpMock.expectOne(ATTEMPT_BY_ID_URL);
     expect(req.request.method).toBe('GET');
-    req.flush({ attemptId: ATTEMPT_ID, sessionId: SESSION_ID, questionId: QUESTION_ID });
+    req.flush({ attemptId: ATTEMPT_ID, sessionId: SESSION_ID, questionId: QUESTION_ID, completed: false });
 
     expect(actual).toBeInstanceOf(QuizAttempt);
     expect(actual).toEqual(expected);
+  });
+
+  it('getAttempt_when_response_signals_completed_maps_completed_flag', () => {
+    let actual: QuizAttempt | undefined;
+
+    service.getAttempt(SESSION_ID, ATTEMPT_ID).subscribe(a => actual = a);
+    httpMock.expectOne(ATTEMPT_BY_ID_URL)
+      .flush({ attemptId: ATTEMPT_ID, sessionId: SESSION_ID, questionId: 0, completed: true });
+
+    expect(actual?.completed).toBe(true);
   });
 
   it('getAttempt_when_server_responds_404_propagates_error', () => {

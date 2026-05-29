@@ -115,6 +115,19 @@ describe('QuizAttemptStepComponent', () => {
     expect(queryNextButton()).toBeFalsy();
   });
 
+  it('onNext_when_response_signals_completed_then_navigates_to_final_route', () => {
+    setup();
+    mockQuizAttemptService.getAttempt.mockReturnValue(
+      of(new QuizAttempt(ATTEMPT_ID, SESSION_ID, 0, true)));
+    queryChild().answerSubmitted.emit(SELECTED_OPTION_ID);
+    fixture.detectChanges();
+
+    queryNextButton()!.click();
+
+    expect(mockRouter.navigate).toHaveBeenCalledWith(
+      ['/quiz-session', SESSION_ID, 'attempt', ATTEMPT_ID]);
+  });
+
   it('onNext_when_get_throws_then_redirects_to_error', () => {
     setup();
     mockQuizAttemptService.getAttempt.mockReturnValue(throwError(() => ({ message: 'boom' })));

@@ -2,6 +2,7 @@ export class QuizAttempt {
     constructor(
         public attemptId: string,
         public sessionId: string,
-        public questionId: number
+        public questionId: number,
+        public completed = false
     ) { };
 }

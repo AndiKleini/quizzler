@@ -58,7 +58,7 @@ class QuizAttemptServiceTests {
 
         QuizAttemptDto dto = quizAttemptService.createAttempt(SESSION_PUBLIC_ID);
 
-        QuizAttemptDto expected = new QuizAttemptDto(null, SESSION_PUBLIC_ID, FIRST_QUESTION_ID);
+        QuizAttemptDto expected = new QuizAttemptDto(null, SESSION_PUBLIC_ID, FIRST_QUESTION_ID, false);
         assertThat(dto)
                 .usingRecursiveComparison()
                 .ignoringFields("attemptId")
@@ -104,7 +104,7 @@ class QuizAttemptServiceTests {
 
         assertThat(dto)
                 .usingRecursiveComparison()
-                .isEqualTo(new QuizAttemptDto(ATTEMPT_PUBLIC_ID, SESSION_PUBLIC_ID, SECOND_QUESTION_ID));
+                .isEqualTo(new QuizAttemptDto(ATTEMPT_PUBLIC_ID, SESSION_PUBLIC_ID, SECOND_QUESTION_ID, false));
     }
 
     @Test
@@ -129,17 +129,18 @@ class QuizAttemptServiceTests {
     }
 
     @Test
-    void getAttempt_when_all_questions_answered_throws() {
+    void getAttempt_when_all_questions_answered_returns_completed() {
         QuizSpecification specification = new QuizSpecification(List.of(FIRST_QUESTION_ID, SECOND_QUESTION_ID));
         QuizSession session = new QuizSession(SESSION_PUBLIC_ID, specification);
         QuizAttempt attempt = new QuizAttempt(ATTEMPT_PUBLIC_ID, session, FIRST_QUESTION_ID);
+        QuizAttemptDto expected = new QuizAttemptDto(ATTEMPT_PUBLIC_ID, SESSION_PUBLIC_ID, 0L, true);
         when(quizAttemptRepository.findByPublicId(ATTEMPT_PUBLIC_ID)).thenReturn(Optional.of(attempt));
         when(answerRepository.findByAttempt(attempt)).thenReturn(List.of(
                 new Answer(attempt, FIRST_QUESTION_ID, 1L, Instant.now()),
                 new Answer(attempt, SECOND_QUESTION_ID, 1L, Instant.now())));
 
-        assertThatThrownBy(() -> quizAttemptService.getAttempt(SESSION_PUBLIC_ID, ATTEMPT_PUBLIC_ID))
-                .isInstanceOfSatisfying(ResponseStatusException.class,
-                        ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.CONFLICT));
+        QuizAttemptDto dto = quizAttemptService.getAttempt(SESSION_PUBLIC_ID, ATTEMPT_PUBLIC_ID);
+
+        assertThat(dto).usingRecursiveComparison().isEqualTo(expected);
     }
 }

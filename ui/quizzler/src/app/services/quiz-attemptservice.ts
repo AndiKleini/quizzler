@@ -12,13 +12,13 @@ export class QuizAttemptService {
 
     createAttempt(sessionId: string): Observable<QuizAttempt> {
         return this.http.post<QuizAttempt>(`${apiBaseUrl}/session/${sessionId}/attempt`, null).pipe(
-            map(r => new QuizAttempt(r.attemptId, r.sessionId, r.questionId))
+            map(r => new QuizAttempt(r.attemptId, r.sessionId, r.questionId, r.completed))
         );
     }
 
     getAttempt(sessionId: string, attemptId: string): Observable<QuizAttempt> {
         return this.http.get<QuizAttempt>(`${apiBaseUrl}/session/${sessionId}/attempt/${attemptId}`).pipe(
-            map(r => new QuizAttempt(r.attemptId, r.sessionId, r.questionId))
+            map(r => new QuizAttempt(r.attemptId, r.sessionId, r.questionId, r.completed))
         );
     }
 

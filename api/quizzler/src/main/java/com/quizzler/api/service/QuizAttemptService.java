@@ -1,6 +1,7 @@
 package com.quizzler.api.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -65,20 +66,23 @@ public class QuizAttemptService {
         Set<Long> answeredQuestionIds = answerRepository.findByAttempt(attempt).stream()
                 .map(Answer::getQuestionId)
                 .collect(Collectors.toSet());
-        long nextQuestionId = attempt.getSession().getSpecification().getQuestionIds().stream()
+        Optional<Long> nextQuestionId = attempt.getSession().getSpecification().getQuestionIds().stream()
                 .sorted((id1, id2) -> Long.compare(id1, id2))
                 .filter(id -> !answeredQuestionIds.contains(id))
-                .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,
-                        "Attempt " + attemptPublicId + " has no unanswered question left"));
+                .findFirst();
 
-        return new QuizAttemptDto(attempt.getPublicId(), sessionPublicId, nextQuestionId);
+        return new QuizAttemptDto(
+                attempt.getPublicId(),
+                sessionPublicId,
+                nextQuestionId.orElse(0L),
+                nextQuestionId.isEmpty());
     }
 
     private QuizAttemptDto toDto(QuizAttempt attempt) {
         return new QuizAttemptDto(
                 attempt.getPublicId(),
                 attempt.getSession().getPublicId(),
-                attempt.getQuestionId());
+                attempt.getQuestionId(),
+                false);
     }
 }

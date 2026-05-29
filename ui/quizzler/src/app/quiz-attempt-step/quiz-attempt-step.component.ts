@@ -47,10 +47,15 @@ export class QuizAttemptStepComponent {
         return of(undefined);
       }))
       .subscribe(attempt => {
-        if (attempt) {
-          this.questionId.set(attempt.questionId);
-          this.correctOption.set(noEvaluation);
+        if (!attempt) {
+          return;
         }
+        if (attempt.completed) {
+          this.router.navigate(['/quiz-session', this.sessionId, 'attempt', this.attemptId]);
+          return;
+        }
+        this.questionId.set(attempt.questionId);
+        this.correctOption.set(noEvaluation);
       });
   }
 }
