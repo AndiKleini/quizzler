@@ -8,7 +8,9 @@ The quizzers get an url that offers the first question in the session. For sake 
 
 # solution
 - A session has to be created in the database (via insert ... no frontend solution in place yet).
-- The session gets assigned randomly one question from the database.
-- The session has an unguessable Id that is put into a link and shared with the quizzers
-- After the single question is answered the session is closed for the user on the server. Then the link is not working anymore.
+- The session gets assigned one question from the database (quiz specification)
+- The session has an unguessable Id that is put into a link and shared with the quizzers.
+- The quizzers can now start an attempt.
+- After stating the attempt the single question is displayed, can be answered and the result can be displayed.
+- By clicking on the next button another attempt can be started.
 
