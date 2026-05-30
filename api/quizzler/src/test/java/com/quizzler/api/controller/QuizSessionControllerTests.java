@@ -7,6 +7,7 @@ import java.util.List;
 import com.quizzler.api.domain.QuizSession;
 import com.quizzler.api.domain.QuizSpecification;
 import com.quizzler.api.dto.QuizSessionDto;
+import com.quizzler.api.repository.QuizAttemptPurchaseRepository;
 import com.quizzler.api.repository.QuizSessionRepository;
 import com.quizzler.api.repository.QuizSpecificationRepository;
 
@@ -32,10 +33,14 @@ public class QuizSessionControllerTests {
     @Autowired
     private QuizSpecificationRepository quizSpecificationRepository;
 
+    @Autowired
+    private QuizAttemptPurchaseRepository quizAttemptPurchaseRepository;
+
     private QuizSpecification seededSpecification;
 
     @BeforeEach
     void seedTestData() {
+quizAttemptPurchaseRepository.deleteAll();
         quizSessionRepository.deleteAll();
         quizSpecificationRepository.deleteAll();
         seededSpecification = quizSpecificationRepository.save(

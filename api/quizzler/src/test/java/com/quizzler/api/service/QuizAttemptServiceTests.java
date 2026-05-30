@@ -12,10 +12,12 @@ import java.util.Optional;
 
 import com.quizzler.api.domain.Answer;
 import com.quizzler.api.domain.QuizAttempt;
+import com.quizzler.api.domain.QuizAttemptPurchase;
 import com.quizzler.api.domain.QuizSession;
 import com.quizzler.api.domain.QuizSpecification;
 import com.quizzler.api.dto.QuizAttemptDto;
 import com.quizzler.api.repository.AnswerRepository;
+import com.quizzler.api.repository.QuizAttemptPurchaseRepository;
 import com.quizzler.api.repository.QuizAttemptRepository;
 import com.quizzler.api.repository.QuizSessionRepository;
 
@@ -33,6 +35,7 @@ class QuizAttemptServiceTests {
 
     private static final String SESSION_PUBLIC_ID = "11111111-2222-3333-4444-555555555555";
     private static final String ATTEMPT_PUBLIC_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+    private static final String PURCHASE_PUBLIC_ID = "99999999-8888-7777-6666-555555555555";
     private static final long FIRST_QUESTION_ID = 42L;
     private static final long SECOND_QUESTION_ID = 43L;
     private static final long THIRD_QUESTION_ID = 44L;
@@ -42,6 +45,9 @@ class QuizAttemptServiceTests {
 
     @Mock
     private QuizAttemptRepository quizAttemptRepository;
+
+    @Mock
+    private QuizAttemptPurchaseRepository quizAttemptPurchaseRepository;
 
     @Mock
     private AnswerRepository answerRepository;
@@ -54,9 +60,11 @@ class QuizAttemptServiceTests {
         QuizSpecification specification = new QuizSpecification(List.of(FIRST_QUESTION_ID, SECOND_QUESTION_ID));
         QuizSession session = new QuizSession(SESSION_PUBLIC_ID, specification);
         when(quizSessionRepository.findByPublicId(SESSION_PUBLIC_ID)).thenReturn(Optional.of(session));
+        when(quizAttemptPurchaseRepository.findByPublicId(PURCHASE_PUBLIC_ID))
+                .thenReturn(Optional.of(new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, session)));
         when(quizAttemptRepository.save(any(QuizAttempt.class))).thenAnswer(call -> call.getArgument(0));
 
-        QuizAttemptDto dto = quizAttemptService.createAttempt(SESSION_PUBLIC_ID);
+        QuizAttemptDto dto = quizAttemptService.createAttempt(SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID);
 
         QuizAttemptDto expected = new QuizAttemptDto(null, SESSION_PUBLIC_ID, FIRST_QUESTION_ID, false);
         assertThat(dto)
@@ -74,9 +82,35 @@ class QuizAttemptServiceTests {
     void createAttempt_when_session_not_found_throws() {
         when(quizSessionRepository.findByPublicId(SESSION_PUBLIC_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> quizAttemptService.createAttempt(SESSION_PUBLIC_ID))
+        assertThatThrownBy(() -> quizAttemptService.createAttempt(SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID))
                 .isInstanceOfSatisfying(ResponseStatusException.class,
                         ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.NOT_FOUND));
+    }
+
+    @Test
+    void createAttempt_when_purchase_not_found_throws() {
+        QuizSpecification specification = new QuizSpecification(List.of(FIRST_QUESTION_ID));
+        QuizSession session = new QuizSession(SESSION_PUBLIC_ID, specification);
+        when(quizSessionRepository.findByPublicId(SESSION_PUBLIC_ID)).thenReturn(Optional.of(session));
+        when(quizAttemptPurchaseRepository.findByPublicId(PURCHASE_PUBLIC_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> quizAttemptService.createAttempt(SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.NOT_FOUND));
+    }
+
+    @Test
+    void createAttempt_when_purchase_belongs_to_other_session_throws() {
+        QuizSpecification specification = new QuizSpecification(List.of(FIRST_QUESTION_ID));
+        QuizSession session = new QuizSession(SESSION_PUBLIC_ID, specification);
+        QuizSession otherSession = new QuizSession("other-session-id", specification);
+        when(quizSessionRepository.findByPublicId(SESSION_PUBLIC_ID)).thenReturn(Optional.of(session));
+        when(quizAttemptPurchaseRepository.findByPublicId(PURCHASE_PUBLIC_ID))
+                .thenReturn(Optional.of(new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, otherSession)));
+
+        assertThatThrownBy(() -> quizAttemptService.createAttempt(SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.FORBIDDEN));
     }
 
     @Test
@@ -84,8 +118,10 @@ class QuizAttemptServiceTests {
         QuizSpecification empty = new QuizSpecification(List.of());
         QuizSession session = new QuizSession(SESSION_PUBLIC_ID, empty);
         when(quizSessionRepository.findByPublicId(SESSION_PUBLIC_ID)).thenReturn(Optional.of(session));
+        when(quizAttemptPurchaseRepository.findByPublicId(PURCHASE_PUBLIC_ID))
+                .thenReturn(Optional.of(new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, session)));
 
-        assertThatThrownBy(() -> quizAttemptService.createAttempt(SESSION_PUBLIC_ID))
+        assertThatThrownBy(() -> quizAttemptService.createAttempt(SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID))
                 .isInstanceOfSatisfying(ResponseStatusException.class,
                         ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.CONFLICT));
     }

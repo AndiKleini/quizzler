@@ -10,8 +10,8 @@ const apiBaseUrl = 'http://localhost:8080';
 export class QuizAttemptService {
     private http = inject(HttpClient);
 
-    createAttempt(sessionId: string): Observable<QuizAttempt> {
-        return this.http.post<QuizAttempt>(`${apiBaseUrl}/session/${sessionId}/attempt`, null).pipe(
+    createAttempt(sessionId: string, purchaseId: string): Observable<QuizAttempt> {
+        return this.http.post<QuizAttempt>(`${apiBaseUrl}/session/${sessionId}/attempt`, { purchaseId }).pipe(
             map(r => new QuizAttempt(r.attemptId, r.sessionId, r.questionId, r.completed))
         );
     }

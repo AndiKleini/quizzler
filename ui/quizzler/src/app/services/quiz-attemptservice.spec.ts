@@ -8,6 +8,7 @@ import { Answer } from '../entities/answer';
 
 const SESSION_ID = '33d24a21-3f56-42c6-a959-6567ca56139e';
 const ATTEMPT_ID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
+const PURCHASE_ID = '99999999-8888-7777-6666-555555555555';
 const QUESTION_ID = 42;
 const SELECTED_OPTION_ID = 3;
 const ANSWER_ID = 7;
@@ -35,13 +36,14 @@ describe('QuizAttemptService', () => {
 
   afterEach(() => httpMock.verify());
 
-  it('createAttempt_when_response_is_json_payload_maps_to_quiz_attempt_instance', () => {
+  it('createAttempt_when_response_is_json_payload_posts_purchase_id_and_maps_to_quiz_attempt_instance', () => {
     const expected = new QuizAttempt(ATTEMPT_ID, SESSION_ID, QUESTION_ID, false);
     let actual: QuizAttempt | undefined;
 
-    service.createAttempt(SESSION_ID).subscribe(a => actual = a);
+    service.createAttempt(SESSION_ID, PURCHASE_ID).subscribe(a => actual = a);
     const req = httpMock.expectOne(ATTEMPT_URL);
     expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ purchaseId: PURCHASE_ID });
     req.flush({ attemptId: ATTEMPT_ID, sessionId: SESSION_ID, questionId: QUESTION_ID, completed: false });
 
     expect(actual).toBeInstanceOf(QuizAttempt);
@@ -51,7 +53,7 @@ describe('QuizAttemptService', () => {
   it('createAttempt_when_server_responds_404_propagates_error', () => {
     let caught: { status: number } | undefined;
 
-    service.createAttempt(SESSION_ID).subscribe({
+    service.createAttempt(SESSION_ID, PURCHASE_ID).subscribe({
       next: () => fail('expected error'),
       error: err => caught = err
     });

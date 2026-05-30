@@ -3,6 +3,7 @@ package com.quizzler.api.controller;
 import com.quizzler.api.dto.AnswerDto;
 import com.quizzler.api.dto.AnswerSubmissionDto;
 import com.quizzler.api.dto.QuizAttemptDto;
+import com.quizzler.api.dto.QuizAttemptRequestDto;
 import com.quizzler.api.service.AnswerService;
 import com.quizzler.api.service.QuizAttemptService;
 import org.springframework.http.HttpStatus;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/session/{publicId}/attempt")
+@RequestMapping("/session/{sessionId}/attempt")
 public class QuizAttemptController {
 
     private final QuizAttemptService quizAttemptService;
@@ -28,19 +29,20 @@ public class QuizAttemptController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public QuizAttemptDto createAttempt(@PathVariable String publicId) {
-        return quizAttemptService.createAttempt(publicId);
+    public QuizAttemptDto createAttempt(@PathVariable String sessionId,
+                                        @RequestBody QuizAttemptRequestDto request) {
+        return quizAttemptService.createAttempt(sessionId, request.getPurchaseId());
     }
 
     @GetMapping("/{attemptPublicId}")
-    public QuizAttemptDto getAttempt(@PathVariable String publicId,
+    public QuizAttemptDto getAttempt(@PathVariable String sessionId,
                                      @PathVariable String attemptPublicId) {
-        return quizAttemptService.getAttempt(publicId, attemptPublicId);
+        return quizAttemptService.getAttempt(sessionId, attemptPublicId);
     }
 
     @PostMapping("/{attemptPublicId}/answer")
     @ResponseStatus(HttpStatus.CREATED)
-    public AnswerDto submitAnswer(@PathVariable String publicId,
+    public AnswerDto submitAnswer(@PathVariable String sessionId,
                                   @PathVariable String attemptPublicId,
                                   @RequestBody AnswerSubmissionDto submission) {
         return answerService.submitAnswer(attemptPublicId, submission);

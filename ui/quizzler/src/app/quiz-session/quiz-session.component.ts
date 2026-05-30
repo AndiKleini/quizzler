@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, map, of } from 'rxjs';
 import { QuizSession } from '../entities/quizsession';
 import { SessionService } from '../services/quiz-sessionservice';
-import { QuizAttemptService } from '../services/quiz-attemptservice';
+import { QuizAttemptPurchaseService } from '../services/quiz-attempt-purchaseservice';
 
 @Component({
   selector: 'quizzler-quiz-session',
@@ -30,7 +30,7 @@ export class QuizSessionComponent implements OnInit {
 
   private route = inject(ActivatedRoute);
   private sessionService = inject(SessionService);
-  private quizAttemptService = inject(QuizAttemptService);
+  private quizAttemptPurchaseService = inject(QuizAttemptPurchaseService);
   private router = inject(Router);
   private id: string | null = this.route.snapshot.paramMap.get('sessionId');
 
@@ -38,20 +38,20 @@ export class QuizSessionComponent implements OnInit {
   public quizSession = signal(QuizSession.getDefaultQuizSession());
   public isNotFound = computed(() => this.quizSession().isDefault());
 
-  public onStart(): void {
+  public onBuyNow(): void {
     if (!this.id) {
       return;
     }
-    this.quizAttemptService.createAttempt(this.id)
+    this.quizAttemptPurchaseService.createPurchase(this.id)
       .pipe(catchError(err => {
         console.error(err?.message ?? err);
         this.router.navigate(['/error']);
         return of(undefined);
       }))
-      .subscribe(attempt => {
-        if (attempt) {
+      .subscribe(purchase => {
+        if (purchase) {
           this.router.navigate(
-            ['/quiz-session', attempt.sessionId, 'attempt', attempt.attemptId, 'question', attempt.questionId]);
+            ['/quiz-session', purchase.sessionId, 'quiz-attempt-purchase', purchase.purchaseId]);
         }
       });
   }

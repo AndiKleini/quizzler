@@ -889,6 +889,7 @@ Risks and Technical Debts
 - QuizzAttemptController -> rename publicId to sessionId for better readability
 - Foreign Key not generated on answer to attempt
 - Transactional annotation on QuizAttemptService are only necessary for test run against h2
+- Need to delete all QuizAttemptsPurchases from h2 database in setup test data of QuizSessionControllerTests (maybe this is not necessary)
 
 Glossary 
 ========

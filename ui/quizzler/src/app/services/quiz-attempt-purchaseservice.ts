@@ -1,0 +1,17 @@
+import { Injectable, inject } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { map, Observable } from "rxjs";
+import { QuizAttemptPurchase } from "../entities/quizattemptpurchase";
+
+const apiBaseUrl = 'http://localhost:8080';
+
+@Injectable({ providedIn: 'root' })
+export class QuizAttemptPurchaseService {
+    private http = inject(HttpClient);
+
+    createPurchase(sessionId: string): Observable<QuizAttemptPurchase> {
+        return this.http.post<QuizAttemptPurchase>(`${apiBaseUrl}/session/${sessionId}/quiz-attempt-purchase`, null).pipe(
+            map(r => new QuizAttemptPurchase(r.purchaseId, r.sessionId))
+        );
+    }
+}

@@ -8,9 +8,11 @@ import java.util.stream.Collectors;
 
 import com.quizzler.api.domain.Answer;
 import com.quizzler.api.domain.QuizAttempt;
+import com.quizzler.api.domain.QuizAttemptPurchase;
 import com.quizzler.api.domain.QuizSession;
 import com.quizzler.api.dto.QuizAttemptDto;
 import com.quizzler.api.repository.AnswerRepository;
+import com.quizzler.api.repository.QuizAttemptPurchaseRepository;
 import com.quizzler.api.repository.QuizAttemptRepository;
 import com.quizzler.api.repository.QuizSessionRepository;
 import org.springframework.http.HttpStatus;
@@ -23,21 +25,32 @@ public class QuizAttemptService {
 
     private final QuizSessionRepository quizSessionRepository;
     private final QuizAttemptRepository quizAttemptRepository;
+    private final QuizAttemptPurchaseRepository quizAttemptPurchaseRepository;
     private final AnswerRepository answerRepository;
 
     public QuizAttemptService(QuizSessionRepository quizSessionRepository,
                               QuizAttemptRepository quizAttemptRepository,
+                              QuizAttemptPurchaseRepository quizAttemptPurchaseRepository,
                               AnswerRepository answerRepository) {
         this.quizSessionRepository = quizSessionRepository;
         this.quizAttemptRepository = quizAttemptRepository;
+        this.quizAttemptPurchaseRepository = quizAttemptPurchaseRepository;
         this.answerRepository = answerRepository;
     }
 
     @Transactional
-    public QuizAttemptDto createAttempt(String sessionPublicId) {
+    public QuizAttemptDto createAttempt(String sessionPublicId, String purchaseId) {
         QuizSession session = quizSessionRepository.findByPublicId(sessionPublicId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Session " + sessionPublicId + " not found"));
+
+        QuizAttemptPurchase purchase = quizAttemptPurchaseRepository.findByPublicId(purchaseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Purchase " + purchaseId + " not found"));
+        if (!purchase.getSession().getPublicId().equals(sessionPublicId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Purchase " + purchaseId + " does not belong to session " + sessionPublicId);
+        }
 
         List<Long> questionIds = session.getSpecification().getQuestionIds();
         if (questionIds.isEmpty()) {

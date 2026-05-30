@@ -8,13 +8,16 @@ import java.util.List;
 
 import com.quizzler.api.domain.Answer;
 import com.quizzler.api.domain.QuizAttempt;
+import com.quizzler.api.domain.QuizAttemptPurchase;
 import com.quizzler.api.domain.QuizSession;
 import com.quizzler.api.domain.QuizSpecification;
 import com.quizzler.api.domain.SinglePickQuestion;
 import com.quizzler.api.dto.AnswerDto;
 import com.quizzler.api.dto.AnswerSubmissionDto;
 import com.quizzler.api.dto.QuizAttemptDto;
+import com.quizzler.api.dto.QuizAttemptRequestDto;
 import com.quizzler.api.repository.AnswerRepository;
+import com.quizzler.api.repository.QuizAttemptPurchaseRepository;
 import com.quizzler.api.repository.QuizAttemptRepository;
 import com.quizzler.api.repository.QuestionRepository;
 import com.quizzler.api.repository.QuizSessionRepository;
@@ -37,6 +40,7 @@ public class QuizAttemptControllerTests {
     private static final String ANSWER_URI = "/session/{publicId}/attempt/{attemptPublicId}/answer";
     private static final String SESSION_PUBLIC_ID = "11111111-2222-3333-4444-555555555555";
     private static final String ATTEMPT_PUBLIC_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+    private static final String PURCHASE_PUBLIC_ID = "99999999-8888-7777-6666-555555555555";
     private static final long SELECTED_OPTION_ID = 3L;
     private static final long CORRECT_OPTION_ID = 2L;
 
@@ -53,6 +57,9 @@ public class QuizAttemptControllerTests {
     private QuizAttemptRepository quizAttemptRepository;
 
     @Autowired
+    private QuizAttemptPurchaseRepository quizAttemptPurchaseRepository;
+
+    @Autowired
     private AnswerRepository answerRepository;
 
     private Long seededQuestionId;
@@ -62,6 +69,7 @@ public class QuizAttemptControllerTests {
     void seedTestData() {
         answerRepository.deleteAll();
         quizAttemptRepository.deleteAll();
+        quizAttemptPurchaseRepository.deleteAll();
         quizSessionRepository.deleteAll();
         quizSpecificationRepository.deleteAll();
         questionRepository.deleteAll();
@@ -75,9 +83,12 @@ public class QuizAttemptControllerTests {
 
     @Test
     public void createAttempt_returns_attempt_with_first_question_of_specification(@Autowired WebTestClient webTestClient) {
-        quizSessionRepository.save(new QuizSession(SESSION_PUBLIC_ID, seededSpecification));
+        QuizSession session = quizSessionRepository.save(new QuizSession(SESSION_PUBLIC_ID, seededSpecification));
+        quizAttemptPurchaseRepository.save(new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, session));
 
-        webTestClient.post().uri(ATTEMPT_URI, SESSION_PUBLIC_ID).exchange()
+        webTestClient.post().uri(ATTEMPT_URI, SESSION_PUBLIC_ID)
+                .bodyValue(new QuizAttemptRequestDto(PURCHASE_PUBLIC_ID))
+                .exchange()
                 .expectStatus().isCreated()
                 .expectBody(QuizAttemptDto.class)
                 .value(dto -> {
@@ -89,8 +100,32 @@ public class QuizAttemptControllerTests {
 
     @Test
     public void createAttempt_when_session_not_exists_returns_404(@Autowired WebTestClient webTestClient) {
-        webTestClient.post().uri(ATTEMPT_URI, SESSION_PUBLIC_ID).exchange()
+        webTestClient.post().uri(ATTEMPT_URI, SESSION_PUBLIC_ID)
+                .bodyValue(new QuizAttemptRequestDto(PURCHASE_PUBLIC_ID))
+                .exchange()
                 .expectStatus().isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    public void createAttempt_when_purchase_not_exists_returns_404(@Autowired WebTestClient webTestClient) {
+        quizSessionRepository.save(new QuizSession(SESSION_PUBLIC_ID, seededSpecification));
+
+        webTestClient.post().uri(ATTEMPT_URI, SESSION_PUBLIC_ID)
+                .bodyValue(new QuizAttemptRequestDto(PURCHASE_PUBLIC_ID))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    public void createAttempt_when_purchase_belongs_to_other_session_returns_403(@Autowired WebTestClient webTestClient) {
+        QuizSession session = quizSessionRepository.save(new QuizSession(SESSION_PUBLIC_ID, seededSpecification));
+        QuizSession otherSession = quizSessionRepository.save(new QuizSession("other-session-id", seededSpecification));
+        quizAttemptPurchaseRepository.save(new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, otherSession));
+
+        webTestClient.post().uri(ATTEMPT_URI, session.getPublicId())
+                .bodyValue(new QuizAttemptRequestDto(PURCHASE_PUBLIC_ID))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.FORBIDDEN);
     }
 
     @Test
