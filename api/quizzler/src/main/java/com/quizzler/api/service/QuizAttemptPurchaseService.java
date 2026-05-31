@@ -1,15 +1,20 @@
 package com.quizzler.api.service;
 
+import java.time.Instant;
 import java.util.UUID;
 
 import com.quizzler.api.client.PaymentApiClient;
 import com.quizzler.api.domain.QuizAttemptPurchase;
+import com.quizzler.api.domain.QuizAttemptPurchaseConfirmation;
 import com.quizzler.api.domain.QuizSession;
 import com.quizzler.api.dto.PaymentInitiationDto;
+import com.quizzler.api.dto.QuizAttemptPurchaseConfirmationDto;
 import com.quizzler.api.dto.QuizAttemptPurchaseDto;
+import com.quizzler.api.repository.QuizAttemptPurchaseConfirmationRepository;
 import com.quizzler.api.repository.QuizAttemptPurchaseRepository;
 import com.quizzler.api.repository.QuizSessionRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,17 +27,20 @@ public class QuizAttemptPurchaseService {
 
     private final QuizSessionRepository quizSessionRepository;
     private final QuizAttemptPurchaseRepository quizAttemptPurchaseRepository;
+    private final QuizAttemptPurchaseConfirmationRepository quizAttemptPurchaseConfirmationRepository;
     private final PaymentApiClient paymentApiClient;
     private final String apiBaseUrl;
     private final String uiBaseUrl;
 
     public QuizAttemptPurchaseService(QuizSessionRepository quizSessionRepository,
                                       QuizAttemptPurchaseRepository quizAttemptPurchaseRepository,
+                                      QuizAttemptPurchaseConfirmationRepository quizAttemptPurchaseConfirmationRepository,
                                       PaymentApiClient paymentApiClient,
                                       @Value("${quizzler.api.base-url}") String apiBaseUrl,
                                       @Value("${quizzler.ui.base-url}") String uiBaseUrl) {
         this.quizSessionRepository = quizSessionRepository;
         this.quizAttemptPurchaseRepository = quizAttemptPurchaseRepository;
+        this.quizAttemptPurchaseConfirmationRepository = quizAttemptPurchaseConfirmationRepository;
         this.paymentApiClient = paymentApiClient;
         this.apiBaseUrl = apiBaseUrl;
         this.uiBaseUrl = uiBaseUrl;
@@ -69,5 +77,31 @@ public class QuizAttemptPurchaseService {
         String paymentId = paymentApiClient.createPayment(
                 purchase.getPublicId(), PRICE, redirectUrl, webhookSuccessUrl, webhookCancelUrl);
         return new PaymentInitiationDto(paymentId);
+    }
+
+    @Transactional
+    public QuizAttemptPurchaseConfirmationDto confirmPurchase(String sessionPublicId, String purchaseId) {
+        System.out.println("Confirming purchase " + purchaseId + " for session " + sessionPublicId);
+        quizSessionRepository.findAll().forEach(s -> System.out.println("Session in DB: " + s.getPublicId()));
+        quizAttemptPurchaseRepository.findAll().forEach(p -> System.out.println("Purchase in DB: " + p.getPublicId() + ", session: " + p.getSession().getPublicId()));  
+        QuizAttemptPurchase purchase = quizAttemptPurchaseRepository.findByPublicId(purchaseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Purchase " + purchaseId + " not found"));
+        if (!purchase.getSession().getPublicId().equals(sessionPublicId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Purchase " + purchaseId + " does not belong to session " + sessionPublicId);
+        }
+
+        // A duplicate confirmation is rejected by the unique quiz_attempt_purchase_id constraint at
+        // insert time, so we let the database enforce it rather than issuing an extra existence query.
+        try {
+            QuizAttemptPurchaseConfirmation saved = quizAttemptPurchaseConfirmationRepository.saveAndFlush(
+                    new QuizAttemptPurchaseConfirmation(UUID.randomUUID().toString(), purchase, Instant.now()));
+            return new QuizAttemptPurchaseConfirmationDto(
+                    saved.getPublicId(), purchase.getPublicId(), saved.getCreatedAt());
+        } catch (DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Purchase " + purchaseId + " is already confirmed", ex);
+        }
     }
 }

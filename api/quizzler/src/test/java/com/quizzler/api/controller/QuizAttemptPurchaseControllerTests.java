@@ -5,7 +5,11 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import java.beans.Transient;
 import java.util.List;
+import java.util.UUID;
+
+import javax.transaction.Transactional;
 
 import com.quizzler.api.client.PaymentApiClient;
 import com.quizzler.api.domain.QuizAttemptPurchase;
@@ -14,6 +18,7 @@ import com.quizzler.api.domain.QuizSpecification;
 import com.quizzler.api.domain.SinglePickQuestion;
 import com.quizzler.api.dto.QuizAttemptPurchaseDto;
 import com.quizzler.api.repository.QuestionRepository;
+import com.quizzler.api.repository.QuizAttemptPurchaseConfirmationRepository;
 import com.quizzler.api.repository.QuizAttemptPurchaseRepository;
 import com.quizzler.api.repository.QuizSessionRepository;
 import com.quizzler.api.repository.QuizSpecificationRepository;
@@ -33,6 +38,7 @@ public class QuizAttemptPurchaseControllerTests {
 
     private static final String PURCHASE_URI = "/session/{publicId}/quiz-attempt-purchase";
     private static final String PAYMENT_URI = "/session/{publicId}/quiz-attempt-purchase/{purchaseId}/payment";
+    private static final String CONFIRMATION_URI = "/session/{publicId}/quiz-attempt-purchase/{purchaseId}/confirmation";
     private static final String SESSION_PUBLIC_ID = "11111111-2222-3333-4444-555555555555";
     private static final String PURCHASE_PUBLIC_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
     private static final String PAYMENT_ID = "22222222-3333-4444-5555-666666666666";
@@ -49,6 +55,9 @@ public class QuizAttemptPurchaseControllerTests {
     @Autowired
     private QuizAttemptPurchaseRepository quizAttemptPurchaseRepository;
 
+    @Autowired
+    private QuizAttemptPurchaseConfirmationRepository quizAttemptPurchaseConfirmationRepository;
+
     @MockBean
     private PaymentApiClient paymentApiClient;
 
@@ -56,6 +65,7 @@ public class QuizAttemptPurchaseControllerTests {
 
     @BeforeEach
     void seedTestData() {
+        quizAttemptPurchaseConfirmationRepository.deleteAll();
         quizAttemptPurchaseRepository.deleteAll();
         quizSessionRepository.deleteAll();
         quizSpecificationRepository.deleteAll();
@@ -105,6 +115,41 @@ public class QuizAttemptPurchaseControllerTests {
         quizSessionRepository.save(new QuizSession(SESSION_PUBLIC_ID, seededSpecification));
 
         webTestClient.post().uri(PAYMENT_URI, SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID).exchange()
+                .expectStatus().isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    public void confirmPurchase_persists_confirmation_for_purchase(@Autowired WebTestClient webTestClient) {
+        QuizSession session = quizSessionRepository.saveAndFlush(new QuizSession(SESSION_PUBLIC_ID, seededSpecification));
+        quizAttemptPurchaseRepository.saveAndFlush(new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, session));
+
+        webTestClient.post().uri(CONFIRMATION_URI, SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID).exchange()
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.confirmationId").isNotEmpty()
+                .jsonPath("$.purchaseId").isEqualTo(PURCHASE_PUBLIC_ID);
+
+        assertThat(quizAttemptPurchaseConfirmationRepository.count()).isEqualTo(1);
+        assertThat(quizAttemptPurchaseConfirmationRepository
+            .existsByPurchasePublicId(PURCHASE_PUBLIC_ID)).isTrue();
+    }
+
+    @Test
+    public void confirmPurchase_when_already_confirmed_returns_409(@Autowired WebTestClient webTestClient) {
+        QuizSession session = quizSessionRepository.save(new QuizSession(SESSION_PUBLIC_ID, seededSpecification));
+        quizAttemptPurchaseRepository.save(new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, session));
+        webTestClient.post().uri(CONFIRMATION_URI, SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID).exchange()
+                .expectStatus().isCreated();
+
+        webTestClient.post().uri(CONFIRMATION_URI, SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID).exchange()
+                .expectStatus().isEqualTo(HttpStatus.CONFLICT);
+    }
+
+    @Test
+    public void confirmPurchase_when_purchase_not_exists_returns_404(@Autowired WebTestClient webTestClient) {
+        quizSessionRepository.save(new QuizSession(SESSION_PUBLIC_ID, seededSpecification));
+
+        webTestClient.post().uri(CONFIRMATION_URI, SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID).exchange()
                 .expectStatus().isEqualTo(HttpStatus.NOT_FOUND);
     }
 }

@@ -12,10 +12,13 @@ import java.util.Optional;
 
 import com.quizzler.api.client.PaymentApiClient;
 import com.quizzler.api.domain.QuizAttemptPurchase;
+import com.quizzler.api.domain.QuizAttemptPurchaseConfirmation;
 import com.quizzler.api.domain.QuizSession;
 import com.quizzler.api.domain.QuizSpecification;
 import com.quizzler.api.dto.PaymentInitiationDto;
+import com.quizzler.api.dto.QuizAttemptPurchaseConfirmationDto;
 import com.quizzler.api.dto.QuizAttemptPurchaseDto;
+import com.quizzler.api.repository.QuizAttemptPurchaseConfirmationRepository;
 import com.quizzler.api.repository.QuizAttemptPurchaseRepository;
 import com.quizzler.api.repository.QuizSessionRepository;
 
@@ -25,6 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -45,6 +49,9 @@ class QuizAttemptPurchaseServiceTests {
     private QuizAttemptPurchaseRepository quizAttemptPurchaseRepository;
 
     @Mock
+    private QuizAttemptPurchaseConfirmationRepository quizAttemptPurchaseConfirmationRepository;
+
+    @Mock
     private PaymentApiClient paymentApiClient;
 
     private QuizAttemptPurchaseService quizAttemptPurchaseService;
@@ -52,7 +59,8 @@ class QuizAttemptPurchaseServiceTests {
     @BeforeEach
     void setUp() {
         quizAttemptPurchaseService = new QuizAttemptPurchaseService(
-                quizSessionRepository, quizAttemptPurchaseRepository, paymentApiClient,
+                quizSessionRepository, quizAttemptPurchaseRepository,
+                quizAttemptPurchaseConfirmationRepository, paymentApiClient,
                 API_BASE_URL, UI_BASE_URL);
     }
 
@@ -123,5 +131,62 @@ class QuizAttemptPurchaseServiceTests {
                 .isInstanceOfSatisfying(ResponseStatusException.class,
                         ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.FORBIDDEN));
         verifyNoInteractions(paymentApiClient);
+    }
+
+    @Test
+    void confirmPurchase_when_purchase_matches_session_persists_confirmation() {
+        QuizSession session = new QuizSession(SESSION_PUBLIC_ID, new QuizSpecification(List.of(42L)));
+        QuizAttemptPurchase purchase = new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, session);
+        when(quizAttemptPurchaseRepository.findByPublicId(PURCHASE_PUBLIC_ID)).thenReturn(Optional.of(purchase));
+        when(quizAttemptPurchaseConfirmationRepository.saveAndFlush(any(QuizAttemptPurchaseConfirmation.class)))
+                .thenAnswer(call -> call.getArgument(0));
+
+        QuizAttemptPurchaseConfirmationDto dto =
+                quizAttemptPurchaseService.confirmPurchase(SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID);
+
+        assertThat(dto.getPurchaseId()).isEqualTo(PURCHASE_PUBLIC_ID);
+        assertThat(dto.getConfirmationId()).isNotBlank();
+        assertThat(dto.getCreatedAt()).isNotNull();
+
+        ArgumentCaptor<QuizAttemptPurchaseConfirmation> saved =
+                ArgumentCaptor.forClass(QuizAttemptPurchaseConfirmation.class);
+        verify(quizAttemptPurchaseConfirmationRepository).saveAndFlush(saved.capture());
+        assertThat(saved.getValue().getPurchase()).isSameAs(purchase);
+        assertThat(saved.getValue().getPublicId()).isEqualTo(dto.getConfirmationId());
+    }
+
+    @Test
+    void confirmPurchase_when_purchase_not_found_throws() {
+        when(quizAttemptPurchaseRepository.findByPublicId(PURCHASE_PUBLIC_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> quizAttemptPurchaseService.confirmPurchase(SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.NOT_FOUND));
+        verifyNoInteractions(quizAttemptPurchaseConfirmationRepository);
+    }
+
+    @Test
+    void confirmPurchase_when_purchase_belongs_to_other_session_throws() {
+        QuizSession otherSession = new QuizSession(OTHER_SESSION_PUBLIC_ID, new QuizSpecification(List.of(42L)));
+        QuizAttemptPurchase purchase = new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, otherSession);
+        when(quizAttemptPurchaseRepository.findByPublicId(PURCHASE_PUBLIC_ID)).thenReturn(Optional.of(purchase));
+
+        assertThatThrownBy(() -> quizAttemptPurchaseService.confirmPurchase(SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.FORBIDDEN));
+        verifyNoInteractions(quizAttemptPurchaseConfirmationRepository);
+    }
+
+    @Test
+    void confirmPurchase_when_already_confirmed_throws_conflict() {
+        QuizSession session = new QuizSession(SESSION_PUBLIC_ID, new QuizSpecification(List.of(42L)));
+        QuizAttemptPurchase purchase = new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, session);
+        when(quizAttemptPurchaseRepository.findByPublicId(PURCHASE_PUBLIC_ID)).thenReturn(Optional.of(purchase));
+        when(quizAttemptPurchaseConfirmationRepository.saveAndFlush(any(QuizAttemptPurchaseConfirmation.class)))
+                .thenThrow(new DataIntegrityViolationException("duplicate"));
+
+        assertThatThrownBy(() -> quizAttemptPurchaseService.confirmPurchase(SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.CONFLICT));
     }
 }
