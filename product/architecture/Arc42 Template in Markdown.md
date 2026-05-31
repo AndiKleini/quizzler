@@ -647,6 +647,98 @@ This section lists the design principles applied when creating Java Spring Boot 
 
 
 
+**Integration of two REST APIs (service-to-service calls)**
+This section describes how one of our Spring Boot services consumes another service's REST API. The concept is cross-cutting because every outbound integration in the system follows the same shape. The reference example is the quizzler API calling the payment API to create a payment: `QuizAttemptPurchaseService.initiatePayment` delegates the actual HTTP call to a dedicated `PaymentApiClient`, which talks to `api/payment` (`com.quizzler.payment`).
+
+- *Outbound calls live in a dedicated client adapter, never inline in a service*: every remote API is wrapped in a `*ApiClient` `@Component` (e.g. `PaymentApiClient`) that owns the `RestTemplate` and the remote base URL. The service depends on the client through ordinary constructor injection and stays unaware of HTTP verbs, URLs, JSON and status codes. The integration concern is therefore isolated in one class, and the service remains a pure unit test by mocking the client (`@Mock PaymentApiClient`).
+- *The remote base URL is externalized configuration, never hardcoded*: the collaborating API's host is injected with `@Value("${payment.api.base-url}")` and declared in `application.properties` (`payment.api.base-url=http://localhost:8081`). The test profile points the same property at a stub/mock, so no environment assumptions leak into Java code.
+- *A single shared `RestTemplate` bean*: the HTTP client is built once in `RestClientConfig` from a `RestTemplateBuilder` and reused by every adapter, giving one place to configure timeouts, interceptors and message converters.
+- *The wire format is its own pair of client-side DTOs, decoupled from both domains*: the request and response of the call are dedicated classes owned by the **calling** side (`PaymentCreationRequest`, `PaymentCreationResponse`), independent of the payment service's internal DTOs and of the quizzler domain entities. The response DTO is a *tolerant reader* — annotated `@JsonIgnoreProperties(ignoreUnknown = true)` so it consumes only the fields it needs and remote additions never break deserialization.
+- *Remote failures are translated into local HTTP semantics*: a missing or malformed response is converted into a `ResponseStatusException(HttpStatus.BAD_GATEWAY)`, so a downstream outage surfaces to *our* clients as a meaningful `502` instead of a raw exception leaking through the controller.
+- *The service orchestrates, the client transports*: the service does the domain work first — load and authorize the purchase, then derive the callback URLs from configured base URLs — and only then hands plain values to the client. Mapping domain values onto the wire request stays on the service/client seam, mirroring the "DTOs are the wire contract" rule used for inbound requests.
+- *Integration is bidirectional via callbacks (redirect + webhooks)*: because payment settlement is asynchronous, the two services are both client and server to each other. On the outbound call the quizzler API passes URLs that point back at itself and the UI (`redirectUrl`, `webhookSuccessUrl`, `webhookCancelUrl`); the payment API later calls *back* into the quizzler API's own REST surface (`POST /session/{sessionId}/quiz-attempt-purchase/{purchaseId}/confirmation`) to report the outcome. The callback endpoints are plain controllers that obey every inbound REST principle above.
+
+The `PaymentApiClient` is the reference adapter — it owns the `RestTemplate`, externalizes the base URL, maps to/from the wire DTOs and translates failures:
+
+```java
+@Component
+public class PaymentApiClient {
+
+    private final RestTemplate restTemplate;
+    private final String baseUrl;
+
+    public PaymentApiClient(RestTemplate restTemplate,
+                            @Value("${payment.api.base-url}") String baseUrl) {
+        this.restTemplate = restTemplate;
+        this.baseUrl = baseUrl;
+    }
+
+    public String createPayment(String transactionId,
+                                int price,
+                                String redirectUrl,
+                                String webhookSuccessUrl,
+                                String webhookCancelUrl) {
+        PaymentCreationRequest request = new PaymentCreationRequest(
+                transactionId, price, redirectUrl, webhookSuccessUrl, webhookCancelUrl);
+        PaymentCreationResponse response = restTemplate.postForObject(
+                baseUrl + "/payment", request, PaymentCreationResponse.class);
+        if (response == null || response.getPaymentId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                    "Payment API did not return a payment id");
+        }
+        return response.getPaymentId();
+    }
+}
+```
+
+The `RestTemplate` is provided once as a shared bean, and the response DTO is a tolerant reader so unknown remote fields are ignored:
+
+```java
+@Configuration
+public class RestClientConfig {
+
+    @Bean
+    public RestTemplate restTemplate(RestTemplateBuilder builder) {
+        return builder.build();
+    }
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class PaymentCreationResponse {
+    private String paymentId;
+    public String getPaymentId() { return paymentId; }
+    public void setPaymentId(String paymentId) { this.paymentId = paymentId; }
+}
+```
+
+The service stays free of HTTP details: it does the domain work, builds the callback URLs from configured base URLs, and delegates the transport to the client:
+
+```java
+@Transactional(readOnly = true)
+public PaymentInitiationDto initiatePayment(String sessionPublicId, String purchaseId) {
+    QuizAttemptPurchase purchase = quizAttemptPurchaseRepository.findByPublicId(purchaseId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Purchase " + purchaseId + " not found"));
+    if (!purchase.getSession().getPublicId().equals(sessionPublicId)) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                "Purchase " + purchaseId + " does not belong to session " + sessionPublicId);
+    }
+
+    String redirectUrl = apiBaseUrl + "/session/" + sessionPublicId
+            + "/quiz-attempt-purchase/" + purchase.getPublicId() + "/pymentconfirmation";
+    String webhookSuccessUrl = uiBaseUrl + "/quiz-session/" + sessionPublicId
+            + "/quiz-attempt-purchase-confirmed/";
+    String webhookCancelUrl = uiBaseUrl + "/quiz-session/" + sessionPublicId
+            + "/quiz-attempt-purchase-failed/";
+
+    String paymentId = paymentApiClient.createPayment(
+            purchase.getPublicId(), PRICE, redirectUrl, webhookSuccessUrl, webhookCancelUrl);
+    return new PaymentInitiationDto(paymentId);
+}
+```
+
+
+
 **Unit testing**
 This section captures the conventions used for unit tests across the system. They apply to all back-end JUnit tests; the same spirit applies to Angular Jest tests where the tooling allows.
 
