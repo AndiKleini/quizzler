@@ -821,6 +821,8 @@ Design Decisions
   - *Rationale*: yields a complete, tamper-evident audit trail (every state change is a timestamped, retained fact rather than an overwrite); makes concurrent transitions easy to reason about and detect (the unique constraint is the authoritative guard against races); and aligns with the REST design principle of treating state changes as the creation of immutable sub-resources.
   - *Trade-off*: reads that need the current status must aggregate across the three tables instead of reading a single column, and the cross-kind exclusion is enforced in application code rather than by a single-row state machine.
 
+- **Monetary amounts are modelled as integer values in cents.** Every price/amount in the system — across persistence, API DTOs and the wire format, and the frontend transport — is a whole number representing the smallest currency unit (euro cents); e.g. a price of €2.00 is the integer `200`. This avoids the binary floating-point rounding errors inherent in `float`/`double` for money and keeps amounts exact, comparable and safe to sum across the API boundary. Conversion to a human-readable major-unit representation (e.g. `2.00 €`) happens only at the presentation layer.
+
 Quality Requirements 
 ====================
 

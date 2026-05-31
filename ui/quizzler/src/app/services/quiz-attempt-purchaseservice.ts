@@ -11,7 +11,7 @@ export class QuizAttemptPurchaseService {
 
     createPurchase(sessionId: string): Observable<QuizAttemptPurchase> {
         return this.http.post<QuizAttemptPurchase>(`${apiBaseUrl}/session/${sessionId}/quiz-attempt-purchase`, null).pipe(
-            map(r => new QuizAttemptPurchase(r.purchaseId, r.sessionId))
+            map(r => new QuizAttemptPurchase(r.purchaseId, r.sessionId, r.price))
         );
     }
 }

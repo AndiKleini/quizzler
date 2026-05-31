@@ -50,6 +50,7 @@ class QuizAttemptPurchaseServiceTests {
 
         assertThat(dto.getSessionId()).isEqualTo(SESSION_PUBLIC_ID);
         assertThat(dto.getPurchaseId()).isNotBlank();
+        assertThat(dto.getPrice()).isEqualTo(200);
 
         ArgumentCaptor<QuizAttemptPurchase> saved = ArgumentCaptor.forClass(QuizAttemptPurchase.class);
         verify(quizAttemptPurchaseRepository).save(saved.capture());

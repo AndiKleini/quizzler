@@ -11,15 +11,20 @@ const SESSION_ID = '33d24a21-3f56-42c6-a959-6567ca56139e';
 const ATTEMPT_ID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
 const PURCHASE_ID = '99999999-8888-7777-6666-555555555555';
 const QUESTION_ID = 42;
+const PRICE_IN_CENTS = 200;
 
 describe('QuizAttemptPurchaseComponent', () => {
   let fixture: ComponentFixture<QuizAttemptPurchaseComponent>;
   let component: QuizAttemptPurchaseComponent;
-  let mockRouter: { navigate: jest.Mock };
+  let mockRouter: { navigate: jest.Mock; getCurrentNavigation: jest.Mock };
   let mockQuizAttemptService: { createAttempt: jest.Mock };
+  let originalLocation: Location;
 
   function setup(): void {
-    mockRouter = { navigate: jest.fn().mockResolvedValue(true) };
+    mockRouter = {
+      navigate: jest.fn().mockResolvedValue(true),
+      getCurrentNavigation: jest.fn().mockReturnValue({ extras: { state: { price: PRICE_IN_CENTS } } })
+    };
     mockQuizAttemptService = {
       createAttempt: jest.fn().mockReturnValue(of(new QuizAttempt(ATTEMPT_ID, SESSION_ID, QUESTION_ID)))
     };
@@ -31,9 +36,7 @@ describe('QuizAttemptPurchaseComponent', () => {
         {
           provide: ActivatedRoute,
           useValue: {
-            snapshot: {
-              paramMap: convertToParamMap({ sessionId: SESSION_ID, purchaseId: PURCHASE_ID })
-            }
+            snapshot: { paramMap: convertToParamMap({ sessionId: SESSION_ID, purchaseId: PURCHASE_ID }) }
           }
         }
       ]
@@ -43,10 +46,39 @@ describe('QuizAttemptPurchaseComponent', () => {
     fixture.detectChanges();
   }
 
-  it('onStart_create_attempt_with_purchase_id_and_navigates_to_attempt_step', () => {
+  beforeEach(() => {
+    originalLocation = window.location;
+  });
+
+  afterEach(() => {
+    Object.defineProperty(window, 'location', { configurable: true, value: originalLocation });
+  });
+
+  it('displays_the_price_in_euros_from_the_navigation_state', () => {
     setup();
 
-    queryStartButton()!.click();
+    expect(priceText()).toContain('2.00 €');
+  });
+
+  it('next_button_is_deactivated', () => {
+    setup();
+
+    expect(nextButton()!.disabled).toBe(true);
+  });
+
+  it('onStartPayment_redirects_to_payment_ui_with_purchase_id', () => {
+    setup();
+    Object.defineProperty(window, 'location', { configurable: true, value: { href: '' } });
+
+    startPaymentButton()!.click();
+
+    expect(window.location.href).toBe(`http://localhost:4201/payment/${PURCHASE_ID}`);
+  });
+
+  it('onStart_creates_attempt_with_purchase_id_and_navigates_to_attempt_step', () => {
+    setup();
+
+    component.onStart();
 
     expect(mockQuizAttemptService.createAttempt).toHaveBeenCalledWith(SESSION_ID, PURCHASE_ID);
     expect(mockRouter.navigate).toHaveBeenCalledWith(
@@ -62,8 +94,17 @@ describe('QuizAttemptPurchaseComponent', () => {
     expect(mockRouter.navigate).toHaveBeenCalledWith(['/error']);
   });
 
-  function queryStartButton(): HTMLButtonElement | null {
-    const debugEl = fixture.debugElement.query(By.css('button'));
+  function priceText(): string {
+    return fixture.debugElement.query(By.css('.price')).nativeElement.textContent;
+  }
+
+  function startPaymentButton(): HTMLButtonElement | null {
+    const debugEl = fixture.debugElement.queryAll(By.css('button'))[0];
+    return debugEl ? debugEl.nativeElement as HTMLButtonElement : null;
+  }
+
+  function nextButton(): HTMLButtonElement | null {
+    const debugEl = fixture.debugElement.queryAll(By.css('button'))[1];
     return debugEl ? debugEl.nativeElement as HTMLButtonElement : null;
   }
 });

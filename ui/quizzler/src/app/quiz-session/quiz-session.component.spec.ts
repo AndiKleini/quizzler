@@ -9,6 +9,7 @@ import { QuizAttemptPurchase } from '../entities/quizattemptpurchase';
 
 const SESSION_ID = '33d24a21-3f56-42c6-a959-6567ca56139e';
 const PURCHASE_ID = '99999999-8888-7777-6666-555555555555';
+const PRICE_IN_CENTS = 200;
 
 describe('QuizSessionComponent', () => {
   let fixture: ComponentFixture<QuizSessionComponent>;
@@ -76,9 +77,9 @@ describe('QuizSessionComponent', () => {
     expect(queryLoadingMessage(fixture)).toBeFalsy();
   });
 
-  it('onBuyNow_when_purchase_created_then_navigates_to_quiz_attempt_purchase', async () => {
+  it('onBuyNow_when_purchase_created_then_navigates_to_quiz_attempt_purchase_with_price_in_state', async () => {
     const loaded = new QuizSession(SESSION_ID);
-    const purchase = new QuizAttemptPurchase(PURCHASE_ID, SESSION_ID);
+    const purchase = new QuizAttemptPurchase(PURCHASE_ID, SESSION_ID, PRICE_IN_CENTS);
     mockQuizAttemptPurchaseService = { createPurchase: jest.fn().mockReturnValue(of(purchase)) };
     setupFixtureWith(sessionServiceReturning(loaded));
     await fixture.whenStable();
@@ -87,7 +88,8 @@ describe('QuizSessionComponent', () => {
 
     expect(mockQuizAttemptPurchaseService.createPurchase).toHaveBeenCalledWith(SESSION_ID);
     expect(mockRouter.navigate).toHaveBeenCalledWith(
-      ['/quiz-session', SESSION_ID, 'quiz-attempt-purchase', PURCHASE_ID]);
+      ['/quiz-session', SESSION_ID, 'quiz-attempt-purchase', PURCHASE_ID],
+      { state: { price: PRICE_IN_CENTS } });
   });
 
   it('onBuyNow_when_purchase_creation_throws_then_redirects_to_error', async () => {
@@ -103,7 +105,7 @@ describe('QuizSessionComponent', () => {
 
   function setupFixtureWith(mockSessionService: SessionService): void {
     mockRouter = { navigate: jest.fn().mockResolvedValue(true) };
-    mockQuizAttemptPurchaseService ??= { createPurchase: jest.fn().mockReturnValue(of(new QuizAttemptPurchase(PURCHASE_ID, SESSION_ID))) };
+    mockQuizAttemptPurchaseService ??= { createPurchase: jest.fn().mockReturnValue(of(new QuizAttemptPurchase(PURCHASE_ID, SESSION_ID, PRICE_IN_CENTS))) };
     TestBed.configureTestingModule({
       imports: [QuizSessionComponent],
       providers: [

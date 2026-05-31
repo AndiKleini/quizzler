@@ -15,6 +15,8 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class QuizAttemptPurchaseService {
 
+    private static final int PRICE = 200;
+
     private final QuizSessionRepository quizSessionRepository;
     private final QuizAttemptPurchaseRepository quizAttemptPurchaseRepository;
 
@@ -32,6 +34,6 @@ public class QuizAttemptPurchaseService {
 
         QuizAttemptPurchase purchase = new QuizAttemptPurchase(UUID.randomUUID().toString(), session);
         QuizAttemptPurchase saved = quizAttemptPurchaseRepository.save(purchase);
-        return new QuizAttemptPurchaseDto(saved.getPublicId(), session.getPublicId());
+        return new QuizAttemptPurchaseDto(saved.getPublicId(), session.getPublicId(), PRICE);
     }
 }

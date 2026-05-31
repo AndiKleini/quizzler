@@ -51,7 +51,8 @@ export class QuizSessionComponent implements OnInit {
       .subscribe(purchase => {
         if (purchase) {
           this.router.navigate(
-            ['/quiz-session', purchase.sessionId, 'quiz-attempt-purchase', purchase.purchaseId]);
+            ['/quiz-session', purchase.sessionId, 'quiz-attempt-purchase', purchase.purchaseId],
+            { state: { price: purchase.price } });
         }
       });
   }

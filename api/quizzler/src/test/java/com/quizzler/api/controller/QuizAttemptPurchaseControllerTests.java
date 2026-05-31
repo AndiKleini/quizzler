@@ -62,7 +62,10 @@ public class QuizAttemptPurchaseControllerTests {
                 .expectBody(QuizAttemptPurchaseDto.class)
                 .value(dto -> {
                     assertThat(dto.getPurchaseId()).isNotBlank();
-                    assertThat(dto.getSessionId()).isEqualTo(SESSION_PUBLIC_ID);
+                    assertThat(dto).
+                        usingRecursiveComparison().
+                        ignoringFields("purchaseId").
+                        isEqualTo(new QuizAttemptPurchaseDto(dto.getPurchaseId(), SESSION_PUBLIC_ID, 200));
                 });
     }
 
