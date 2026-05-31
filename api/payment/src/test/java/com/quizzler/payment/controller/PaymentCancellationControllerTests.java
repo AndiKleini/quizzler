@@ -26,6 +26,9 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 @AutoConfigureWebTestClient
 public class PaymentCancellationControllerTests {
 
+    private static final String HTTP_EXAMPLE_COM_REDIRECT = "http://example.com/redirect";
+    private static final String HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS = "http://example.com/webhook/success";
+    private static final String HTTP_EXAMPLE_COM_WEBHOOK_CANCEL = "http://example.com/webhook/cancel";  
     private static final String CANCELLATION_URI = "/payment/{paymentId}/cancellation";
     private static final String PAYMENT_PUBLIC_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
     private static final String TRANSACTION_ID = "txn-12345";
@@ -49,7 +52,15 @@ public class PaymentCancellationControllerTests {
     @Test
     public void cancelPayment_inserts_cancellation_for_payment(@Autowired WebTestClient webTestClient) {
         Instant before = Instant.now().minus(1, ChronoUnit.SECONDS);
-        paymentRepository.save(new Payment(PAYMENT_PUBLIC_ID, TRANSACTION_ID, 1999, Instant.now()));
+        paymentRepository.save(
+            new Payment(
+                PAYMENT_PUBLIC_ID, 
+                TRANSACTION_ID,
+                 1999, 
+                 Instant.now(), 
+                 HTTP_EXAMPLE_COM_REDIRECT,
+                 HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS,
+                 HTTP_EXAMPLE_COM_WEBHOOK_CANCEL));
 
         webTestClient.post().uri(CANCELLATION_URI, PAYMENT_PUBLIC_ID).exchange()
                 .expectStatus().isCreated()
@@ -71,7 +82,15 @@ public class PaymentCancellationControllerTests {
 
     @Test
     public void cancelPayment_when_payment_already_confirmed_returns_409(@Autowired WebTestClient webTestClient) {
-        Payment payment = paymentRepository.save(new Payment(PAYMENT_PUBLIC_ID, TRANSACTION_ID, 1999, Instant.now()));
+        Payment payment = paymentRepository.save(
+            new Payment(
+                PAYMENT_PUBLIC_ID, 
+                TRANSACTION_ID,
+                 1999, 
+                 Instant.now(), 
+                 HTTP_EXAMPLE_COM_REDIRECT,
+                 HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS,
+                 HTTP_EXAMPLE_COM_WEBHOOK_CANCEL));
         paymentConfirmationRepository.save(
                 new PaymentConfirmation(UUID.randomUUID().toString(), payment, Instant.now()));
 
@@ -81,7 +100,15 @@ public class PaymentCancellationControllerTests {
 
     @Test
     public void cancelPayment_when_payment_already_cancelled_returns_409(@Autowired WebTestClient webTestClient) {
-        Payment payment = paymentRepository.save(new Payment(PAYMENT_PUBLIC_ID, TRANSACTION_ID, 1999, Instant.now()));
+        Payment payment = paymentRepository.save(
+            new Payment(
+                PAYMENT_PUBLIC_ID, 
+                TRANSACTION_ID,
+                 1999, 
+                 Instant.now(), 
+                 HTTP_EXAMPLE_COM_REDIRECT,
+                 HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS,
+                 HTTP_EXAMPLE_COM_WEBHOOK_CANCEL));
         paymentCancellationRepository.save(
                 new PaymentCancellation(UUID.randomUUID().toString(), payment, Instant.now()));
 

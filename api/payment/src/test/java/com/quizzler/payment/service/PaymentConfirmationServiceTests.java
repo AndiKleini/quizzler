@@ -28,6 +28,9 @@ import org.springframework.web.server.ResponseStatusException;
 @ExtendWith(MockitoExtension.class)
 class PaymentConfirmationServiceTests {
 
+    private static final String HTTP_EXAMPLE_COM_REDIRECT = "http://example.com/redirect";
+    private static final String HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS = "http://example.com/webhook/success";
+    private static final String HTTP_EXAMPLE_COM_WEBHOOK_CANCEL = "http://example.com/webhook/cancel";  
     private static final String PAYMENT_PUBLIC_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
     private static final String TRANSACTION_ID = "txn-12345";
 
@@ -46,7 +49,14 @@ class PaymentConfirmationServiceTests {
     @Test
     void confirmPayment_inserts_confirmation_with_insertion_timestamp() {
         Instant before = Instant.now().minus(1, ChronoUnit.SECONDS);
-        Payment payment = new Payment(PAYMENT_PUBLIC_ID, TRANSACTION_ID, 1999, Instant.now());
+        Payment payment = new Payment(
+                PAYMENT_PUBLIC_ID,
+                TRANSACTION_ID,
+                1999,
+                Instant.now(),
+                HTTP_EXAMPLE_COM_REDIRECT,
+                HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS,
+                HTTP_EXAMPLE_COM_WEBHOOK_CANCEL);
         when(paymentRepository.findByPublicId(PAYMENT_PUBLIC_ID)).thenReturn(Optional.of(payment));
         when(paymentCancellationRepository.existsByPayment(payment)).thenReturn(false);
         when(paymentConfirmationRepository.saveAndFlush(any(PaymentConfirmation.class)))
@@ -72,7 +82,13 @@ class PaymentConfirmationServiceTests {
 
     @Test
     void confirmPayment_when_payment_already_cancelled_throws() {
-        Payment payment = new Payment(PAYMENT_PUBLIC_ID, TRANSACTION_ID, 1999, Instant.now());
+        Payment payment = new Payment(
+                PAYMENT_PUBLIC_ID, 
+                TRANSACTION_ID, 
+                1999, Instant.now(), 
+                HTTP_EXAMPLE_COM_REDIRECT, 
+                HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS, 
+                HTTP_EXAMPLE_COM_WEBHOOK_CANCEL);
         when(paymentRepository.findByPublicId(PAYMENT_PUBLIC_ID)).thenReturn(Optional.of(payment));
         when(paymentCancellationRepository.existsByPayment(payment)).thenReturn(true);
 
@@ -83,7 +99,15 @@ class PaymentConfirmationServiceTests {
 
     @Test
     void confirmPayment_when_confirmation_insert_violates_unique_constraint_throws_conflict() {
-        Payment payment = new Payment(PAYMENT_PUBLIC_ID, TRANSACTION_ID, 1999, Instant.now());
+        Payment payment = 
+                new Payment(
+                        PAYMENT_PUBLIC_ID, 
+                        TRANSACTION_ID, 
+                        1999, 
+                        Instant.now(), 
+                        HTTP_EXAMPLE_COM_REDIRECT, 
+                        HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS, 
+                        HTTP_EXAMPLE_COM_WEBHOOK_CANCEL);
         when(paymentRepository.findByPublicId(PAYMENT_PUBLIC_ID)).thenReturn(Optional.of(payment));
         when(paymentCancellationRepository.existsByPayment(payment)).thenReturn(false);
         when(paymentConfirmationRepository.saveAndFlush(any(PaymentConfirmation.class)))

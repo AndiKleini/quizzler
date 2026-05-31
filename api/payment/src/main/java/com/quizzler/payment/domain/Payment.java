@@ -34,14 +34,33 @@ public class Payment {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "redirect_url", nullable = false, updatable = false)
+    private String redirectUrl;
+
+    @Column(name = "webhook_success_url", nullable = false, updatable = false)
+    private String webhookSuccessUrl;
+
+    @Column(name = "webhook_cancel_url", nullable = false, updatable = false)
+    private String webhookCancelUrl;
+
     protected Payment() {
     }
 
-    public Payment(String publicId, String transactionId, int price, Instant createdAt) {
+    public Payment(
+        String publicId, 
+        String transactionId, 
+        int price, 
+        Instant createdAt, 
+        String httpExampleComRedirect, 
+        String httpExampleComWebhookSuccess, 
+        String httpExampleComWebhookCancel) {
         this.publicId = publicId;
         this.transactionId = transactionId;
         this.price = price;
         this.createdAt = createdAt;
+        this.redirectUrl = httpExampleComRedirect;
+        this.webhookSuccessUrl = httpExampleComWebhookSuccess;
+        this.webhookCancelUrl = httpExampleComWebhookCancel;
     }
 
     public Long getId() {

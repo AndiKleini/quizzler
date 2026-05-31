@@ -23,6 +23,6 @@ public class PaymentController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PaymentDto createPayment(@RequestBody PaymentRequestDto request) {
-        return paymentService.createPayment(request.getTransactionId(), request.getPrice());
+        return paymentService.createPayment(request);
     }
 }

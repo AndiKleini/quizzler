@@ -22,6 +22,9 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 @AutoConfigureWebTestClient
 public class PaymentControllerTests {
 
+    private static final String HTTP_EXAMPLE_COM_REDIRECT = "http://example.com/redirect";
+    private static final String HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS = "http://example.com/webhook/success";
+    private static final String HTTP_EXAMPLE_COM_WEBHOOK_CANCEL = "http://example.com/webhook/cancel";  
     private static final String PAYMENT_URI = "/payment";
     private static final String TRANSACTION_ID = "txn-12345";
     private static final int PRICE = 1999;
@@ -47,14 +50,20 @@ public class PaymentControllerTests {
         Instant before = Instant.now().minus(1, ChronoUnit.SECONDS);
 
         webTestClient.post().uri(PAYMENT_URI)
-                .bodyValue(new PaymentRequestDto(TRANSACTION_ID, PRICE))
+                .bodyValue(
+                    new PaymentRequestDto(
+                        TRANSACTION_ID, PRICE, 
+                        HTTP_EXAMPLE_COM_REDIRECT, 
+                        HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS, 
+                        HTTP_EXAMPLE_COM_WEBHOOK_CANCEL))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody(PaymentDto.class)
                 .value(dto -> {
+                    assertThat(dto).usingRecursiveComparison().
+                        ignoringFields("paymentId", "createdAt").
+                        isEqualTo(new PaymentDto(null, TRANSACTION_ID, PRICE, null));
                     assertThat(dto.getPaymentId()).isNotBlank();
-                    assertThat(dto.getTransactionId()).isEqualTo(TRANSACTION_ID);
-                    assertThat(dto.getPrice()).isEqualTo(PRICE);
                     assertThat(dto.getCreatedAt()).isAfterOrEqualTo(before);
                 });
     }
