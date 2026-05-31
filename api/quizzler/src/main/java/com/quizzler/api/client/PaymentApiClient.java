@@ -23,13 +23,20 @@ public class PaymentApiClient {
     }
 
     /**
-     * @param transactionId identifier of the purchase this payment settles
-     * @param price         amount in cents
+     * @param transactionId     identifier of the purchase this payment settles
+     * @param price             amount in cents
+     * @param redirectUrl       where the payment UI sends the user back to after payment
+     * @param webhookSuccessUrl webhook the payment provider calls once the payment is settled
+     * @param webhookCancelUrl  webhook the payment provider calls once the payment is cancelled
      * @return the payment id assigned by the payment API
      */
-    public String createPayment(String transactionId, int price) {
-        // TODO: enter redirection URL here and handle it in the payment controller (requires changes to the payment API)
-        PaymentCreationRequest request = new PaymentCreationRequest(transactionId, price);
+    public String createPayment(String transactionId,
+                                int price,
+                                String redirectUrl,
+                                String webhookSuccessUrl,
+                                String webhookCancelUrl) {
+        PaymentCreationRequest request = new PaymentCreationRequest(
+                transactionId, price, redirectUrl, webhookSuccessUrl, webhookCancelUrl);
         PaymentCreationResponse response = restTemplate.postForObject(
                 baseUrl + "/payment", request, PaymentCreationResponse.class);
         if (response == null || response.getPaymentId() == null) {

@@ -19,6 +19,9 @@ class PaymentApiClientTests {
     private static final String TRANSACTION_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
     private static final int PRICE = 200;
     private static final String PAYMENT_ID = "11111111-2222-3333-4444-555555555555";
+    private static final String REDIRECT_URL = "http://localhost:8080/session/s/quiz-attempt-purchase/p/pymentconfirmation";
+    private static final String WEBHOOK_SUCCESS_URL = "http://localhost:4200/quiz-session/s/quiz-attempt-purchase-confirmed/";
+    private static final String WEBHOOK_CANCEL_URL = "http://localhost:4200/quiz-session/s/quiz-attempt-purchase-failed/";
 
     private MockRestServiceServer server;
     private PaymentApiClient paymentApiClient;
@@ -31,17 +34,21 @@ class PaymentApiClientTests {
     }
 
     @Test
-    void createPayment_posts_transaction_and_price_and_returns_payment_id() {
+    void createPayment_posts_transaction_price_and_urls_and_returns_payment_id() {
         server.expect(requestTo(BASE_URL + "/payment"))
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(jsonPath("$.transactionId").value(TRANSACTION_ID))
                 .andExpect(jsonPath("$.price").value(PRICE))
+                .andExpect(jsonPath("$.redirectUrl").value(REDIRECT_URL))
+                .andExpect(jsonPath("$.webhookSuccessUrl").value(WEBHOOK_SUCCESS_URL))
+                .andExpect(jsonPath("$.webhookCancelUrl").value(WEBHOOK_CANCEL_URL))
                 .andRespond(withSuccess(
                         "{\"paymentId\":\"" + PAYMENT_ID + "\",\"transactionId\":\"" + TRANSACTION_ID
                                 + "\",\"price\":" + PRICE + ",\"createdAt\":\"2026-05-31T00:00:00Z\"}",
                         MediaType.APPLICATION_JSON));
 
-        String paymentId = paymentApiClient.createPayment(TRANSACTION_ID, PRICE);
+        String paymentId = paymentApiClient.createPayment(
+                TRANSACTION_ID, PRICE, REDIRECT_URL, WEBHOOK_SUCCESS_URL, WEBHOOK_CANCEL_URL);
 
         assertThat(paymentId).isEqualTo(PAYMENT_ID);
         server.verify();

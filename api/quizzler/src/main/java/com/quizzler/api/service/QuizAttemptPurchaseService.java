@@ -9,6 +9,7 @@ import com.quizzler.api.dto.PaymentInitiationDto;
 import com.quizzler.api.dto.QuizAttemptPurchaseDto;
 import com.quizzler.api.repository.QuizAttemptPurchaseRepository;
 import com.quizzler.api.repository.QuizSessionRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,13 +23,19 @@ public class QuizAttemptPurchaseService {
     private final QuizSessionRepository quizSessionRepository;
     private final QuizAttemptPurchaseRepository quizAttemptPurchaseRepository;
     private final PaymentApiClient paymentApiClient;
+    private final String apiBaseUrl;
+    private final String uiBaseUrl;
 
     public QuizAttemptPurchaseService(QuizSessionRepository quizSessionRepository,
                                       QuizAttemptPurchaseRepository quizAttemptPurchaseRepository,
-                                      PaymentApiClient paymentApiClient) {
+                                      PaymentApiClient paymentApiClient,
+                                      @Value("${quizzler.api.base-url}") String apiBaseUrl,
+                                      @Value("${quizzler.ui.base-url}") String uiBaseUrl) {
         this.quizSessionRepository = quizSessionRepository;
         this.quizAttemptPurchaseRepository = quizAttemptPurchaseRepository;
         this.paymentApiClient = paymentApiClient;
+        this.apiBaseUrl = apiBaseUrl;
+        this.uiBaseUrl = uiBaseUrl;
     }
 
     @Transactional
@@ -52,7 +59,15 @@ public class QuizAttemptPurchaseService {
                     "Purchase " + purchaseId + " does not belong to session " + sessionPublicId);
         }
 
-        String paymentId = paymentApiClient.createPayment(purchase.getPublicId(), PRICE);
+        String redirectUrl = apiBaseUrl + "/session/" + sessionPublicId
+                + "/quiz-attempt-purchase/" + purchase.getPublicId() + "/pymentconfirmation";
+        String webhookSuccessUrl = uiBaseUrl + "/quiz-session/" + sessionPublicId
+                + "/quiz-attempt-purchase-confirmed/";
+        String webhookCancelUrl = uiBaseUrl + "/quiz-session/" + sessionPublicId
+                + "/quiz-attempt-purchase-failed/";
+
+        String paymentId = paymentApiClient.createPayment(
+                purchase.getPublicId(), PRICE, redirectUrl, webhookSuccessUrl, webhookCancelUrl);
         return new PaymentInitiationDto(paymentId);
     }
 }

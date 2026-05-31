@@ -1,6 +1,8 @@
 package com.quizzler.api.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -89,7 +91,8 @@ public class QuizAttemptPurchaseControllerTests {
     public void initiatePayment_creates_payment_for_purchase_and_returns_payment_id(@Autowired WebTestClient webTestClient) {
         QuizSession session = quizSessionRepository.save(new QuizSession(SESSION_PUBLIC_ID, seededSpecification));
         quizAttemptPurchaseRepository.save(new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, session));
-        when(paymentApiClient.createPayment(PURCHASE_PUBLIC_ID, 200)).thenReturn(PAYMENT_ID);
+        when(paymentApiClient.createPayment(eq(PURCHASE_PUBLIC_ID), eq(200), anyString(), anyString(), anyString()))
+                .thenReturn(PAYMENT_ID);
 
         webTestClient.post().uri(PAYMENT_URI, SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID).exchange()
                 .expectStatus().isCreated()

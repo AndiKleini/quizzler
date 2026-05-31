@@ -19,10 +19,10 @@ import com.quizzler.api.dto.QuizAttemptPurchaseDto;
 import com.quizzler.api.repository.QuizAttemptPurchaseRepository;
 import com.quizzler.api.repository.QuizSessionRepository;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -35,6 +35,8 @@ class QuizAttemptPurchaseServiceTests {
     private static final String OTHER_SESSION_PUBLIC_ID = "99999999-8888-7777-6666-555555555555";
     private static final String PURCHASE_PUBLIC_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
     private static final String PAYMENT_ID = "22222222-3333-4444-5555-666666666666";
+    private static final String API_BASE_URL = "http://api.test";
+    private static final String UI_BASE_URL = "http://ui.test";
 
     @Mock
     private QuizSessionRepository quizSessionRepository;
@@ -45,8 +47,14 @@ class QuizAttemptPurchaseServiceTests {
     @Mock
     private PaymentApiClient paymentApiClient;
 
-    @InjectMocks
     private QuizAttemptPurchaseService quizAttemptPurchaseService;
+
+    @BeforeEach
+    void setUp() {
+        quizAttemptPurchaseService = new QuizAttemptPurchaseService(
+                quizSessionRepository, quizAttemptPurchaseRepository, paymentApiClient,
+                API_BASE_URL, UI_BASE_URL);
+    }
 
     @Test
     void createPurchase_persists_new_purchase_for_session() {
@@ -77,11 +85,18 @@ class QuizAttemptPurchaseServiceTests {
     }
 
     @Test
-    void initiatePayment_when_purchase_matches_session_creates_payment_and_returns_payment_id() {
+    void initiatePayment_when_purchase_matches_session_creates_payment_with_callback_urls_and_returns_payment_id() {
         QuizSession session = new QuizSession(SESSION_PUBLIC_ID, new QuizSpecification(List.of(42L)));
         QuizAttemptPurchase purchase = new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, session);
         when(quizAttemptPurchaseRepository.findByPublicId(PURCHASE_PUBLIC_ID)).thenReturn(Optional.of(purchase));
-        when(paymentApiClient.createPayment(PURCHASE_PUBLIC_ID, 200)).thenReturn(PAYMENT_ID);
+        String redirectUrl = API_BASE_URL + "/session/" + SESSION_PUBLIC_ID
+                + "/quiz-attempt-purchase/" + PURCHASE_PUBLIC_ID + "/pymentconfirmation";
+        String webhookSuccessUrl = UI_BASE_URL + "/quiz-session/" + SESSION_PUBLIC_ID
+                + "/quiz-attempt-purchase-confirmed/";
+        String webhookCancelUrl = UI_BASE_URL + "/quiz-session/" + SESSION_PUBLIC_ID
+                + "/quiz-attempt-purchase-failed/";
+        when(paymentApiClient.createPayment(
+                PURCHASE_PUBLIC_ID, 200, redirectUrl, webhookSuccessUrl, webhookCancelUrl)).thenReturn(PAYMENT_ID);
 
         PaymentInitiationDto dto = quizAttemptPurchaseService.initiatePayment(SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID);
 
