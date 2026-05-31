@@ -14,4 +14,11 @@ export class QuizAttemptPurchaseService {
             map(r => new QuizAttemptPurchase(r.purchaseId, r.sessionId, r.price))
         );
     }
+
+    initiatePayment(sessionId: string, purchaseId: string): Observable<string> {
+        return this.http.post<{ paymentId: string }>(
+            `${apiBaseUrl}/session/${sessionId}/quiz-attempt-purchase/${purchaseId}/payment`, null).pipe(
+            map(r => r.paymentId)
+        );
+    }
 }

@@ -4,14 +4,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
 
+import com.quizzler.api.client.PaymentApiClient;
 import com.quizzler.api.domain.QuizAttemptPurchase;
 import com.quizzler.api.domain.QuizSession;
 import com.quizzler.api.domain.QuizSpecification;
+import com.quizzler.api.dto.PaymentInitiationDto;
 import com.quizzler.api.dto.QuizAttemptPurchaseDto;
 import com.quizzler.api.repository.QuizAttemptPurchaseRepository;
 import com.quizzler.api.repository.QuizSessionRepository;
@@ -29,12 +32,18 @@ import org.springframework.web.server.ResponseStatusException;
 class QuizAttemptPurchaseServiceTests {
 
     private static final String SESSION_PUBLIC_ID = "11111111-2222-3333-4444-555555555555";
+    private static final String OTHER_SESSION_PUBLIC_ID = "99999999-8888-7777-6666-555555555555";
+    private static final String PURCHASE_PUBLIC_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+    private static final String PAYMENT_ID = "22222222-3333-4444-5555-666666666666";
 
     @Mock
     private QuizSessionRepository quizSessionRepository;
 
     @Mock
     private QuizAttemptPurchaseRepository quizAttemptPurchaseRepository;
+
+    @Mock
+    private PaymentApiClient paymentApiClient;
 
     @InjectMocks
     private QuizAttemptPurchaseService quizAttemptPurchaseService;
@@ -65,5 +74,39 @@ class QuizAttemptPurchaseServiceTests {
         assertThatThrownBy(() -> quizAttemptPurchaseService.createPurchase(SESSION_PUBLIC_ID))
                 .isInstanceOfSatisfying(ResponseStatusException.class,
                         ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.NOT_FOUND));
+    }
+
+    @Test
+    void initiatePayment_when_purchase_matches_session_creates_payment_and_returns_payment_id() {
+        QuizSession session = new QuizSession(SESSION_PUBLIC_ID, new QuizSpecification(List.of(42L)));
+        QuizAttemptPurchase purchase = new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, session);
+        when(quizAttemptPurchaseRepository.findByPublicId(PURCHASE_PUBLIC_ID)).thenReturn(Optional.of(purchase));
+        when(paymentApiClient.createPayment(PURCHASE_PUBLIC_ID, 200)).thenReturn(PAYMENT_ID);
+
+        PaymentInitiationDto dto = quizAttemptPurchaseService.initiatePayment(SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID);
+
+        assertThat(dto.getPaymentId()).isEqualTo(PAYMENT_ID);
+    }
+
+    @Test
+    void initiatePayment_when_purchase_not_found_throws() {
+        when(quizAttemptPurchaseRepository.findByPublicId(PURCHASE_PUBLIC_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> quizAttemptPurchaseService.initiatePayment(SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.NOT_FOUND));
+        verifyNoInteractions(paymentApiClient);
+    }
+
+    @Test
+    void initiatePayment_when_purchase_belongs_to_other_session_throws() {
+        QuizSession otherSession = new QuizSession(OTHER_SESSION_PUBLIC_ID, new QuizSpecification(List.of(42L)));
+        QuizAttemptPurchase purchase = new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, otherSession);
+        when(quizAttemptPurchaseRepository.findByPublicId(PURCHASE_PUBLIC_ID)).thenReturn(Optional.of(purchase));
+
+        assertThatThrownBy(() -> quizAttemptPurchaseService.initiatePayment(SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.FORBIDDEN));
+        verifyNoInteractions(paymentApiClient);
     }
 }

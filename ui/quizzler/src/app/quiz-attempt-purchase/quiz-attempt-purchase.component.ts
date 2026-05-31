@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { QuizAttemptService } from '../services/quiz-attemptservice';
+import { QuizAttemptPurchaseService } from '../services/quiz-attempt-purchaseservice';
 
 const paymentUiBaseUrl = 'http://localhost:4201';
 const centsPerEuro = 100;
@@ -16,6 +17,7 @@ export class QuizAttemptPurchaseComponent {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private quizAttemptService = inject(QuizAttemptService);
+  private quizAttemptPurchaseService = inject(QuizAttemptPurchaseService);
 
   public sessionId = this.route.snapshot.paramMap.get('sessionId') ?? '';
   public purchaseId = this.route.snapshot.paramMap.get('purchaseId') ?? '';
@@ -26,10 +28,17 @@ export class QuizAttemptPurchaseComponent {
   }
 
   public onStartPayment(): void {
-
-    // TODO start payment here and navigate to payment detail page after successful payment initiation. For now, we just navigate to the payment UI with the purchase ID as a path parameter, where the user can confirm or cancel the payment. The payment detail page will then call the appropriate API to confirm or cancel the payment.
-
-    window.location.href = `${paymentUiBaseUrl}/payment/${this.purchaseId}`;
+    this.quizAttemptPurchaseService.initiatePayment(this.sessionId, this.purchaseId)
+      .pipe(catchError(err => {
+        console.error(err?.message ?? err);
+        this.router.navigate(['/error']);
+        return of(undefined);
+      }))
+      .subscribe(paymentId => {
+        if (paymentId) {
+          window.location.href = `${paymentUiBaseUrl}/payment/${paymentId}`;
+        }
+      });
   }
 
   public onStart(): void {

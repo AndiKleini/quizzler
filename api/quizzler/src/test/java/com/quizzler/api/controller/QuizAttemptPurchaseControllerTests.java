@@ -1,9 +1,12 @@
 package com.quizzler.api.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 
+import com.quizzler.api.client.PaymentApiClient;
+import com.quizzler.api.domain.QuizAttemptPurchase;
 import com.quizzler.api.domain.QuizSession;
 import com.quizzler.api.domain.QuizSpecification;
 import com.quizzler.api.domain.SinglePickQuestion;
@@ -18,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -26,7 +30,10 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 public class QuizAttemptPurchaseControllerTests {
 
     private static final String PURCHASE_URI = "/session/{publicId}/quiz-attempt-purchase";
+    private static final String PAYMENT_URI = "/session/{publicId}/quiz-attempt-purchase/{purchaseId}/payment";
     private static final String SESSION_PUBLIC_ID = "11111111-2222-3333-4444-555555555555";
+    private static final String PURCHASE_PUBLIC_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+    private static final String PAYMENT_ID = "22222222-3333-4444-5555-666666666666";
 
     @Autowired
     private QuestionRepository questionRepository;
@@ -39,6 +46,9 @@ public class QuizAttemptPurchaseControllerTests {
 
     @Autowired
     private QuizAttemptPurchaseRepository quizAttemptPurchaseRepository;
+
+    @MockBean
+    private PaymentApiClient paymentApiClient;
 
     private QuizSpecification seededSpecification;
 
@@ -72,6 +82,26 @@ public class QuizAttemptPurchaseControllerTests {
     @Test
     public void createPurchase_when_session_not_exists_returns_404(@Autowired WebTestClient webTestClient) {
         webTestClient.post().uri(PURCHASE_URI, SESSION_PUBLIC_ID).exchange()
+                .expectStatus().isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    public void initiatePayment_creates_payment_for_purchase_and_returns_payment_id(@Autowired WebTestClient webTestClient) {
+        QuizSession session = quizSessionRepository.save(new QuizSession(SESSION_PUBLIC_ID, seededSpecification));
+        quizAttemptPurchaseRepository.save(new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, session));
+        when(paymentApiClient.createPayment(PURCHASE_PUBLIC_ID, 200)).thenReturn(PAYMENT_ID);
+
+        webTestClient.post().uri(PAYMENT_URI, SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID).exchange()
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.paymentId").isEqualTo(PAYMENT_ID);
+    }
+
+    @Test
+    public void initiatePayment_when_purchase_not_exists_returns_404(@Autowired WebTestClient webTestClient) {
+        quizSessionRepository.save(new QuizSession(SESSION_PUBLIC_ID, seededSpecification));
+
+        webTestClient.post().uri(PAYMENT_URI, SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID).exchange()
                 .expectStatus().isEqualTo(HttpStatus.NOT_FOUND);
     }
 }

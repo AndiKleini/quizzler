@@ -1,5 +1,6 @@
 package com.quizzler.api.controller;
 
+import com.quizzler.api.dto.PaymentInitiationDto;
 import com.quizzler.api.dto.QuizAttemptPurchaseDto;
 import com.quizzler.api.service.QuizAttemptPurchaseService;
 import org.springframework.http.HttpStatus;
@@ -23,5 +24,12 @@ public class QuizAttemptPurchaseController {
     @ResponseStatus(HttpStatus.CREATED)
     public QuizAttemptPurchaseDto createPurchase(@PathVariable String sessionId) {
         return quizAttemptPurchaseService.createPurchase(sessionId);
+    }
+
+    @PostMapping("/{purchaseId}/payment")
+    @ResponseStatus(HttpStatus.CREATED)
+    public PaymentInitiationDto initiatePayment(@PathVariable String sessionId,
+                                                @PathVariable String purchaseId) {
+        return quizAttemptPurchaseService.initiatePayment(sessionId, purchaseId);
     }
 }
