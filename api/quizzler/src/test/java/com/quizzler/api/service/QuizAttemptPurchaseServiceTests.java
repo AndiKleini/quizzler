@@ -97,10 +97,10 @@ class QuizAttemptPurchaseServiceTests {
         QuizSession session = new QuizSession(SESSION_PUBLIC_ID, new QuizSpecification(List.of(42L)));
         QuizAttemptPurchase purchase = new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, session);
         when(quizAttemptPurchaseRepository.findByPublicId(PURCHASE_PUBLIC_ID)).thenReturn(Optional.of(purchase));
-        String redirectUrl = API_BASE_URL + "/session/" + SESSION_PUBLIC_ID
-                + "/quiz-attempt-purchase/" + PURCHASE_PUBLIC_ID + "/pymentconfirmation";
-        String webhookSuccessUrl = UI_BASE_URL + "/quiz-session/" + SESSION_PUBLIC_ID
+        String redirectUrl = UI_BASE_URL + "/quiz-session/" + SESSION_PUBLIC_ID
                 + "/quiz-attempt-purchase-confirmed/";
+        String webhookSuccessUrl = API_BASE_URL + "/session/" + SESSION_PUBLIC_ID
+                + "/quiz-attempt-purchase/" + PURCHASE_PUBLIC_ID + "/confirmation";
         String webhookCancelUrl = UI_BASE_URL + "/quiz-session/" + SESSION_PUBLIC_ID
                 + "/quiz-attempt-purchase-failed/";
         when(paymentApiClient.createPayment(

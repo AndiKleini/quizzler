@@ -67,10 +67,10 @@ public class QuizAttemptPurchaseService {
                     "Purchase " + purchaseId + " does not belong to session " + sessionPublicId);
         }
 
-        String redirectUrl = apiBaseUrl + "/session/" + sessionPublicId
-                + "/quiz-attempt-purchase/" + purchase.getPublicId() + "/pymentconfirmation";
-        String webhookSuccessUrl = uiBaseUrl + "/quiz-session/" + sessionPublicId
+        String redirectUrl = uiBaseUrl + "/quiz-session/" + sessionPublicId
                 + "/quiz-attempt-purchase-confirmed/";
+        String webhookSuccessUrl = apiBaseUrl + "/session/" + sessionPublicId
+                + "/quiz-attempt-purchase/" + purchase.getPublicId() + "/confirmation";
         String webhookCancelUrl = uiBaseUrl + "/quiz-session/" + sessionPublicId
                 + "/quiz-attempt-purchase-failed/";
 
