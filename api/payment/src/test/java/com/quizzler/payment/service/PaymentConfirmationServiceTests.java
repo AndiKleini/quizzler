@@ -3,12 +3,14 @@ package com.quizzler.payment.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
+import com.quizzler.payment.client.ConfirmationWebhookClient;
 import com.quizzler.payment.domain.Payment;
 import com.quizzler.payment.domain.PaymentConfirmation;
 import com.quizzler.payment.dto.PaymentConfirmationDto;
@@ -43,6 +45,9 @@ class PaymentConfirmationServiceTests {
     @Mock
     private PaymentCancellationRepository paymentCancellationRepository;
 
+    @Mock
+    private ConfirmationWebhookClient confirmationWebhookClient;
+
     @InjectMocks
     private PaymentConfirmationService paymentConfirmationService;
 
@@ -69,6 +74,7 @@ class PaymentConfirmationServiceTests {
         assertThat(dto).usingRecursiveComparison().isEqualTo(expected);
         assertThat(dto.getConfirmationId()).isNotBlank();
         assertThat(dto.getCreatedAt()).isAfterOrEqualTo(before);
+        verify(confirmationWebhookClient).notifyConfirmation(HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS);
     }
 
     @Test

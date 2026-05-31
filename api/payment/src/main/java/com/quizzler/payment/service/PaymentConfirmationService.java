@@ -3,6 +3,7 @@ package com.quizzler.payment.service;
 import java.time.Instant;
 import java.util.UUID;
 
+import com.quizzler.payment.client.ConfirmationWebhookClient;
 import com.quizzler.payment.domain.Payment;
 import com.quizzler.payment.domain.PaymentConfirmation;
 import com.quizzler.payment.dto.PaymentConfirmationDto;
@@ -21,13 +22,16 @@ public class PaymentConfirmationService {
     private final PaymentRepository paymentRepository;
     private final PaymentConfirmationRepository paymentConfirmationRepository;
     private final PaymentCancellationRepository paymentCancellationRepository;
+    private final ConfirmationWebhookClient confirmationWebhookClient;
 
     public PaymentConfirmationService(PaymentRepository paymentRepository,
                                       PaymentConfirmationRepository paymentConfirmationRepository,
-                                      PaymentCancellationRepository paymentCancellationRepository) {
+                                      PaymentCancellationRepository paymentCancellationRepository,
+                                      ConfirmationWebhookClient confirmationWebhookClient) {
         this.paymentRepository = paymentRepository;
         this.paymentConfirmationRepository = paymentConfirmationRepository;
         this.paymentCancellationRepository = paymentCancellationRepository;
+        this.confirmationWebhookClient = confirmationWebhookClient;
     }
 
     @Transactional
@@ -42,13 +46,19 @@ public class PaymentConfirmationService {
 
         // A duplicate confirmation is rejected by the unique payment_id constraint at insert time,
         // so we let the database enforce it rather than issuing an extra existence query.
+        PaymentConfirmation saved;
         try {
-            PaymentConfirmation saved = paymentConfirmationRepository.saveAndFlush(
+            saved = paymentConfirmationRepository.saveAndFlush(
                     new PaymentConfirmation(UUID.randomUUID().toString(), payment, Instant.now()));
-            return new PaymentConfirmationDto(saved.getPublicId(), payment.getPublicId(), saved.getCreatedAt());
         } catch (DataIntegrityViolationException ex) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Payment " + paymentId + " is already confirmed", ex);
         }
+
+        // Once the confirmation is persisted, notify the merchant by calling back the success-webhook
+        // URL it supplied at payment creation. A webhook failure surfaces as 502 and rolls the
+        // confirmation back, so the caller can safely retry the whole operation.
+        confirmationWebhookClient.notifyConfirmation(payment.getWebhookSuccessUrl());
+        return new PaymentConfirmationDto(saved.getPublicId(), payment.getPublicId(), saved.getCreatedAt());
     }
 }

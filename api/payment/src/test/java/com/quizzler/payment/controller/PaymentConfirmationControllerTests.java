@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
+import com.quizzler.payment.client.ConfirmationWebhookClient;
 import com.quizzler.payment.domain.Payment;
 import com.quizzler.payment.domain.PaymentCancellation;
 import com.quizzler.payment.domain.PaymentConfirmation;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -41,6 +43,9 @@ public class PaymentConfirmationControllerTests {
 
     @Autowired
     private PaymentCancellationRepository paymentCancellationRepository;
+
+    @MockBean
+    private ConfirmationWebhookClient confirmationWebhookClient;
 
     @BeforeEach
     void clearData() {

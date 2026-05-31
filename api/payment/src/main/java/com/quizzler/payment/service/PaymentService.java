@@ -20,12 +20,6 @@ public class PaymentService {
     }
 
     @Transactional
-    public PaymentDto createPayment(String transactionId, int price) {
-        Payment payment = new Payment(UUID.randomUUID().toString(), transactionId, price, Instant.now());
-        Payment saved = paymentRepository.save(payment);
-        return new PaymentDto(saved.getPublicId(), saved.getTransactionId(), saved.getPrice(), saved.getCreatedAt());
-    }
-
     public PaymentDto createPayment(PaymentRequestDto request) {
         Payment payment = 
         new Payment(

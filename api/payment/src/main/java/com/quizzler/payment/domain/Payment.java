@@ -83,4 +83,8 @@ public class Payment {
     public Instant getCreatedAt() {
         return createdAt;
     }
+
+    public String getWebhookSuccessUrl() {
+        return webhookSuccessUrl;
+    }
 }
