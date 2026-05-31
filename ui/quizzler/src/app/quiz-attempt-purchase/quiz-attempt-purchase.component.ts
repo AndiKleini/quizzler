@@ -1,7 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, of } from 'rxjs';
-import { QuizAttemptService } from '../services/quiz-attemptservice';
 import { QuizAttemptPurchaseService } from '../services/quiz-attempt-purchaseservice';
 
 const paymentUiBaseUrl = 'http://localhost:4201';
@@ -16,7 +15,6 @@ const centsPerEuro = 100;
 export class QuizAttemptPurchaseComponent {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private quizAttemptService = inject(QuizAttemptService);
   private quizAttemptPurchaseService = inject(QuizAttemptPurchaseService);
 
   public sessionId = this.route.snapshot.paramMap.get('sessionId') ?? '';
@@ -37,21 +35,6 @@ export class QuizAttemptPurchaseComponent {
       .subscribe(paymentId => {
         if (paymentId) {
           window.location.href = `${paymentUiBaseUrl}/payment/${paymentId}`;
-        }
-      });
-  }
-
-  public onStart(): void {
-    this.quizAttemptService.createAttempt(this.sessionId, this.purchaseId)
-      .pipe(catchError(err => {
-        console.error(err?.message ?? err);
-        this.router.navigate(['/error']);
-        return of(undefined);
-      }))
-      .subscribe(attempt => {
-        if (attempt) {
-          this.router.navigate(
-            ['/quiz-session', attempt.sessionId, 'attempt', attempt.attemptId, 'question', attempt.questionId]);
         }
       });
   }

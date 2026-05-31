@@ -152,4 +152,27 @@ public class QuizAttemptPurchaseControllerTests {
         webTestClient.post().uri(CONFIRMATION_URI, SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID).exchange()
                 .expectStatus().isEqualTo(HttpStatus.NOT_FOUND);
     }
+
+    @Test
+    public void getConfirmation_when_purchase_confirmed_returns_confirmation(@Autowired WebTestClient webTestClient) {
+        QuizSession session = quizSessionRepository.saveAndFlush(new QuizSession(SESSION_PUBLIC_ID, seededSpecification));
+        quizAttemptPurchaseRepository.saveAndFlush(new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, session));
+        webTestClient.post().uri(CONFIRMATION_URI, SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID).exchange()
+                .expectStatus().isCreated();
+
+        webTestClient.get().uri(CONFIRMATION_URI, SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID).exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.confirmationId").isNotEmpty()
+                .jsonPath("$.purchaseId").isEqualTo(PURCHASE_PUBLIC_ID);
+    }
+
+    @Test
+    public void getConfirmation_when_not_confirmed_yet_returns_404(@Autowired WebTestClient webTestClient) {
+        QuizSession session = quizSessionRepository.saveAndFlush(new QuizSession(SESSION_PUBLIC_ID, seededSpecification));
+        quizAttemptPurchaseRepository.saveAndFlush(new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, session));
+
+        webTestClient.get().uri(CONFIRMATION_URI, SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID).exchange()
+                .expectStatus().isEqualTo(HttpStatus.NOT_FOUND);
+    }
 }

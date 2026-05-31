@@ -2,6 +2,7 @@ import { Injectable, inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { map, Observable } from "rxjs";
 import { QuizAttemptPurchase } from "../entities/quizattemptpurchase";
+import { QuizAttemptPurchaseConfirmation } from "../entities/quizattemptpurchaseconfirmation";
 
 const apiBaseUrl = 'http://localhost:8080';
 
@@ -12,6 +13,13 @@ export class QuizAttemptPurchaseService {
     createPurchase(sessionId: string): Observable<QuizAttemptPurchase> {
         return this.http.post<QuizAttemptPurchase>(`${apiBaseUrl}/session/${sessionId}/quiz-attempt-purchase`, null).pipe(
             map(r => new QuizAttemptPurchase(r.purchaseId, r.sessionId, r.price))
+        );
+    }
+
+    getConfirmation(sessionId: string, purchaseId: string): Observable<QuizAttemptPurchaseConfirmation> {
+        return this.http.get<QuizAttemptPurchaseConfirmation>(
+            `${apiBaseUrl}/session/${sessionId}/quiz-attempt-purchase/${purchaseId}/confirmation`).pipe(
+            map(r => new QuizAttemptPurchaseConfirmation(r.confirmationId, r.purchaseId, r.createdAt))
         );
     }
 

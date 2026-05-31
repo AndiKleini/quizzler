@@ -5,6 +5,7 @@ import com.quizzler.api.dto.QuizAttemptPurchaseConfirmationDto;
 import com.quizzler.api.dto.QuizAttemptPurchaseDto;
 import com.quizzler.api.service.QuizAttemptPurchaseService;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,5 +40,11 @@ public class QuizAttemptPurchaseController {
     public QuizAttemptPurchaseConfirmationDto confirmPurchase(@PathVariable String sessionId,
                                                               @PathVariable String purchaseId) {
         return quizAttemptPurchaseService.confirmPurchase(sessionId, purchaseId);
+    }
+
+    @GetMapping("/{purchaseId}/confirmation")
+    public QuizAttemptPurchaseConfirmationDto getConfirmation(@PathVariable String sessionId,
+                                                              @PathVariable String purchaseId) {
+        return quizAttemptPurchaseService.getConfirmation(sessionId, purchaseId);
     }
 }

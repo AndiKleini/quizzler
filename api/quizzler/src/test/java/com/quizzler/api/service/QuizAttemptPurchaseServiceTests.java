@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,6 +39,7 @@ class QuizAttemptPurchaseServiceTests {
     private static final String SESSION_PUBLIC_ID = "11111111-2222-3333-4444-555555555555";
     private static final String OTHER_SESSION_PUBLIC_ID = "99999999-8888-7777-6666-555555555555";
     private static final String PURCHASE_PUBLIC_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+    private static final String CONFIRMATION_PUBLIC_ID = "cccccccc-dddd-eeee-ffff-000000000000";
     private static final String PAYMENT_ID = "22222222-3333-4444-5555-666666666666";
     private static final String API_BASE_URL = "http://api.test";
     private static final String UI_BASE_URL = "http://ui.test";
@@ -98,7 +100,7 @@ class QuizAttemptPurchaseServiceTests {
         QuizAttemptPurchase purchase = new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, session);
         when(quizAttemptPurchaseRepository.findByPublicId(PURCHASE_PUBLIC_ID)).thenReturn(Optional.of(purchase));
         String redirectUrl = UI_BASE_URL + "/quiz-session/" + SESSION_PUBLIC_ID
-                + "/quiz-attempt-purchase-confirmed/";
+                + "/quiz-attempt-purchase-confirmed/?purchaseId=" + PURCHASE_PUBLIC_ID;
         String webhookSuccessUrl = API_BASE_URL + "/session/" + SESSION_PUBLIC_ID
                 + "/quiz-attempt-purchase/" + PURCHASE_PUBLIC_ID + "/confirmation";
         String webhookCancelUrl = UI_BASE_URL + "/quiz-session/" + SESSION_PUBLIC_ID
@@ -188,5 +190,47 @@ class QuizAttemptPurchaseServiceTests {
         assertThatThrownBy(() -> quizAttemptPurchaseService.confirmPurchase(SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID))
                 .isInstanceOfSatisfying(ResponseStatusException.class,
                         ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.CONFLICT));
+    }
+
+    @Test
+    void getConfirmation_when_purchase_confirmed_returns_confirmation() {
+        QuizSession session = new QuizSession(SESSION_PUBLIC_ID, new QuizSpecification(List.of(42L)));
+        QuizAttemptPurchase purchase = new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, session);
+        QuizAttemptPurchaseConfirmation confirmation =
+                new QuizAttemptPurchaseConfirmation(CONFIRMATION_PUBLIC_ID, purchase, Instant.now());
+        when(quizAttemptPurchaseRepository.findByPublicId(PURCHASE_PUBLIC_ID)).thenReturn(Optional.of(purchase));
+        when(quizAttemptPurchaseConfirmationRepository.findByPurchasePublicId(PURCHASE_PUBLIC_ID))
+                .thenReturn(Optional.of(confirmation));
+
+        QuizAttemptPurchaseConfirmationDto dto =
+                quizAttemptPurchaseService.getConfirmation(SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID);
+
+        assertThat(dto).usingRecursiveComparison().isEqualTo(new QuizAttemptPurchaseConfirmationDto(
+                CONFIRMATION_PUBLIC_ID, PURCHASE_PUBLIC_ID, confirmation.getCreatedAt()));
+    }
+
+    @Test
+    void getConfirmation_when_not_confirmed_yet_throws_not_found() {
+        QuizSession session = new QuizSession(SESSION_PUBLIC_ID, new QuizSpecification(List.of(42L)));
+        QuizAttemptPurchase purchase = new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, session);
+        when(quizAttemptPurchaseRepository.findByPublicId(PURCHASE_PUBLIC_ID)).thenReturn(Optional.of(purchase));
+        when(quizAttemptPurchaseConfirmationRepository.findByPurchasePublicId(PURCHASE_PUBLIC_ID))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> quizAttemptPurchaseService.getConfirmation(SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.NOT_FOUND));
+    }
+
+    @Test
+    void getConfirmation_when_purchase_belongs_to_other_session_throws() {
+        QuizSession otherSession = new QuizSession(OTHER_SESSION_PUBLIC_ID, new QuizSpecification(List.of(42L)));
+        QuizAttemptPurchase purchase = new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, otherSession);
+        when(quizAttemptPurchaseRepository.findByPublicId(PURCHASE_PUBLIC_ID)).thenReturn(Optional.of(purchase));
+
+        assertThatThrownBy(() -> quizAttemptPurchaseService.getConfirmation(SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.FORBIDDEN));
+        verifyNoInteractions(quizAttemptPurchaseConfirmationRepository);
     }
 }

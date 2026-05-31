@@ -40,7 +40,7 @@ public class QuizSessionControllerTests {
 
     @BeforeEach
     void seedTestData() {
-quizAttemptPurchaseRepository.deleteAll();
+        quizAttemptPurchaseRepository.deleteAll();
         quizSessionRepository.deleteAll();
         quizSpecificationRepository.deleteAll();
         seededSpecification = quizSpecificationRepository.save(

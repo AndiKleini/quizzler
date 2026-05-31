@@ -68,7 +68,7 @@ public class QuizAttemptPurchaseService {
         }
 
         String redirectUrl = uiBaseUrl + "/quiz-session/" + sessionPublicId
-                + "/quiz-attempt-purchase-confirmed/";
+                + "/quiz-attempt-purchase-confirmed/?purchaseId=" + purchase.getPublicId();
         String webhookSuccessUrl = apiBaseUrl + "/session/" + sessionPublicId
                 + "/quiz-attempt-purchase/" + purchase.getPublicId() + "/confirmation";
         String webhookCancelUrl = uiBaseUrl + "/quiz-session/" + sessionPublicId
@@ -103,5 +103,23 @@ public class QuizAttemptPurchaseService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Purchase " + purchaseId + " is already confirmed", ex);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public QuizAttemptPurchaseConfirmationDto getConfirmation(String sessionPublicId, String purchaseId) {
+        QuizAttemptPurchase purchase = quizAttemptPurchaseRepository.findByPublicId(purchaseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Purchase " + purchaseId + " not found"));
+        if (!purchase.getSession().getPublicId().equals(sessionPublicId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Purchase " + purchaseId + " does not belong to session " + sessionPublicId);
+        }
+
+        QuizAttemptPurchaseConfirmation confirmation = quizAttemptPurchaseConfirmationRepository
+                .findByPurchasePublicId(purchaseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Purchase " + purchaseId + " is not confirmed yet"));
+        return new QuizAttemptPurchaseConfirmationDto(
+                confirmation.getPublicId(), purchase.getPublicId(), confirmation.getCreatedAt());
     }
 }
