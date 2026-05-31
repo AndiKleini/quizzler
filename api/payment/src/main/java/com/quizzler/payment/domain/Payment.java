@@ -87,4 +87,8 @@ public class Payment {
     public String getWebhookSuccessUrl() {
         return webhookSuccessUrl;
     }
+
+    public String getRedirectUrl() {
+        return redirectUrl;
+    }
 }

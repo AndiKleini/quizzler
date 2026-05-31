@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { PaymentService } from '../services/paymentservice';
@@ -15,7 +15,7 @@ export enum PaymentOutcome {
   templateUrl: './payment-detail.component.html',
   styleUrl: './payment-detail.component.css'
 })
-export class PaymentDetailComponent {
+export class PaymentDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private paymentService = inject(PaymentService);
@@ -24,6 +24,25 @@ export class PaymentDetailComponent {
   public readonly PaymentOutcome = PaymentOutcome;
   public paymentId = this.route.snapshot.paramMap.get('paymentId') ?? '';
   public outcome = signal<PaymentOutcome>(PaymentOutcome.Pending);
+  public price = signal<number | undefined>(undefined);
+
+  // URL to return the user to once the payment is settled (supplied by the merchant).
+  private redirectUrl = '';
+
+  public ngOnInit(): void {
+    this.paymentService.getPayment(this.paymentId)
+      .pipe(catchError(err => {
+        console.error(err?.message ?? err);
+        this.router.navigate(['/error']);
+        return of(undefined);
+      }))
+      .subscribe(payment => {
+        if (payment) {
+          this.price.set(payment.price);
+          this.redirectUrl = payment.redirectUrl;
+        }
+      });
+  }
 
   public onConfirm(): void {
     this.paymentService.confirmPayment(this.paymentId)
@@ -35,8 +54,14 @@ export class PaymentDetailComponent {
       .subscribe(confirmation => {
         if (confirmation) {
           this.outcome.set(PaymentOutcome.Confirmed);
+          this.redirect(this.redirectUrl);
         }
       });
+  }
+
+  // Full-page navigation to the merchant's redirect URL (a different origin than this app).
+  protected redirect(url: string): void {
+    window.location.href = url;
   }
 
   public onCancel(): void {

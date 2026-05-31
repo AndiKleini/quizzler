@@ -1,6 +1,7 @@
 import { Injectable, inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { map, Observable } from "rxjs";
+import { Payment } from "../entities/payment";
 import { PaymentConfirmation } from "../entities/payment-confirmation";
 import { PaymentCancellation } from "../entities/payment-cancellation";
 
@@ -9,6 +10,12 @@ const apiBaseUrl = 'http://localhost:8081';
 @Injectable({ providedIn: 'root' })
 export class PaymentService {
     private http = inject(HttpClient);
+
+    getPayment(paymentId: string): Observable<Payment> {
+        return this.http.get<Payment>(`${apiBaseUrl}/payment/${paymentId}`).pipe(
+            map(r => new Payment(r.price, r.redirectUrl))
+        );
+    }
 
     confirmPayment(paymentId: string): Observable<PaymentConfirmation> {
         return this.http.post<PaymentConfirmation>(`${apiBaseUrl}/payment/${paymentId}/confirmation`, null).pipe(

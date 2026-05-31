@@ -1,5 +1,9 @@
 <h2>Payment {{ paymentId }}</h2>
 
+@if (price() !== undefined) {
+  <p>Amount: {{ price() }}</p>
+}
+
 @if (outcome() === PaymentOutcome.Pending) {
   <button type="button" (click)="onConfirm()">Confirm</button>
   <button type="button" (click)="onCancel()">Cancel</button>

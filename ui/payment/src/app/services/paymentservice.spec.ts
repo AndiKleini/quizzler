@@ -3,6 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { PaymentService } from './paymentservice';
+import { Payment } from '../entities/payment';
 import { PaymentConfirmation } from '../entities/payment-confirmation';
 import { PaymentCancellation } from '../entities/payment-cancellation';
 
@@ -10,6 +11,9 @@ const PAYMENT_ID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
 const CONFIRMATION_ID = '11111111-2222-3333-4444-555555555555';
 const CANCELLATION_ID = '99999999-8888-7777-6666-555555555555';
 const CREATED_AT = '2026-05-30T10:00:00Z';
+const PRICE = 1999;
+const REDIRECT_URL = 'http://localhost:4200/quiz-session/s/quiz-attempt-purchase-confirmed/';
+const PAYMENT_URL = `http://localhost:8081/payment/${PAYMENT_ID}`;
 const CONFIRMATION_URL = `http://localhost:8081/payment/${PAYMENT_ID}/confirmation`;
 const CANCELLATION_URL = `http://localhost:8081/payment/${PAYMENT_ID}/cancellation`;
 
@@ -30,6 +34,19 @@ describe('PaymentService', () => {
   });
 
   afterEach(() => httpMock.verify());
+
+  it('getPayment_when_response_is_json_payload_maps_to_payment_instance', () => {
+    const expected = new Payment(PRICE, REDIRECT_URL);
+    let actual: Payment | undefined;
+
+    service.getPayment(PAYMENT_ID).subscribe(p => actual = p);
+    const req = httpMock.expectOne(PAYMENT_URL);
+    expect(req.request.method).toBe('GET');
+    req.flush({ price: PRICE, redirectUrl: REDIRECT_URL });
+
+    expect(actual).toBeInstanceOf(Payment);
+    expect(actual).toEqual(expected);
+  });
 
   it('confirmPayment_when_response_is_json_payload_maps_to_payment_confirmation_instance', () => {
     const expected = new PaymentConfirmation(CONFIRMATION_ID, PAYMENT_ID, CREATED_AT);

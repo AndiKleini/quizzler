@@ -1,14 +1,17 @@
 package com.quizzler.payment.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 
 import com.quizzler.payment.domain.Payment;
+import com.quizzler.payment.dto.PaymentDetailDto;
 import com.quizzler.payment.dto.PaymentDto;
 import com.quizzler.payment.dto.PaymentRequestDto;
 import com.quizzler.payment.repository.PaymentRepository;
@@ -19,6 +22,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentServiceTests {
@@ -28,6 +33,7 @@ class PaymentServiceTests {
     private static final String HTTP_EXAMPLE_COM_WEBHOOK_CANCEL = "http://example.com/webhook/cancel";
     private static final String TRANSACTION_ID = "txn-12345";
     private static final int PRICE = 1999;
+    private static final String PAYMENT_PUBLIC_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 
     @Mock
     private PaymentRepository paymentRepository;
@@ -92,5 +98,32 @@ class PaymentServiceTests {
             ignoringFields( "createdAt").isEqualTo(
                 expectedToBeSaved);
         assertThat(saved.getValue().getCreatedAt()).isAfterOrEqualTo(before);
+    }
+
+    @Test
+    void getPayment_when_payment_exists_returns_price_and_redirect_url() {
+        Payment payment = new Payment(
+                PAYMENT_PUBLIC_ID,
+                TRANSACTION_ID,
+                PRICE,
+                Instant.now(),
+                HTTP_EXAMPLE_COM_REDIRECT,
+                HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS,
+                HTTP_EXAMPLE_COM_WEBHOOK_CANCEL);
+        when(paymentRepository.findByPublicId(PAYMENT_PUBLIC_ID)).thenReturn(Optional.of(payment));
+
+        PaymentDetailDto dto = paymentService.getPayment(PAYMENT_PUBLIC_ID);
+
+        assertThat(dto).usingRecursiveComparison()
+                .isEqualTo(new PaymentDetailDto(PRICE, HTTP_EXAMPLE_COM_REDIRECT));
+    }
+
+    @Test
+    void getPayment_when_payment_not_found_throws() {
+        when(paymentRepository.findByPublicId(PAYMENT_PUBLIC_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> paymentService.getPayment(PAYMENT_PUBLIC_ID))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        ex -> assertThat(ex.getStatus()).isEqualTo(HttpStatus.NOT_FOUND));
     }
 }
