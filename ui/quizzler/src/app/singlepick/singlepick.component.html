@@ -1,6 +1,6 @@
-<div *ngIf="singlePickQuestion() as question" [formGroup]="singlePickForm" class="question-container">
-    <div class="question-title">{{question.title}}</div>
-    <div class="question-text"> {{question.text}} </div>
+<div *ngIf="singlePickQuestion() as question" [formGroup]="singlePickForm" class="card">
+    <div class="title">{{question.title}}</div>
+    <div class="subtitle"> {{question.text}} </div>
     <div *ngFor='let option of question.options;' class="option-item" id="optcontainer-{{option.id}}"
         [ngClass]="{
             'selected': option.id.toString() === this.singlePickForm.get('selectedOption')?.value,
@@ -16,7 +16,10 @@
         </div>
     </div>
     <div>
-        <button *ngIf="!isEvaluated()" type="submit" (click)="submit()" [disabled]="singlePickForm.invalid" class="question-submit"> Submit </button>
-        <span *ngIf="isEvaluated()" class="question-evaluated-label"> evaluated </span>
+        <button *ngIf="!isEvaluated()" type="submit" (click)="submit()" [disabled]="singlePickForm.invalid" class="btn btn-primary btn-block"> Submit </button>
+        <p *ngIf="isEvaluated()" class="message question-evaluated-label"
+            [ngClass]="isAnswerCorrect() ? 'message-correct' : 'message-error'">
+            {{ isAnswerCorrect() ? 'Correct' : 'Wrong' }}
+        </p>
     </div>
 </div>

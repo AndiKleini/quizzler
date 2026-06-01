@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Congratulations trophy">
+  <!-- confetti -->
+  <circle cx="28" cy="42" r="5" fill="#0066B3"/>
+  <circle cx="172" cy="58" r="5" fill="#00A0E3"/>
+  <circle cx="46" cy="124" r="4" fill="#28a745"/>
+  <circle cx="158" cy="132" r="4" fill="#003B70"/>
+  <rect x="150" y="24" width="9" height="9" rx="2" fill="#28a745" transform="rotate(20 154 28)"/>
+  <rect x="34" y="72" width="9" height="9" rx="2" fill="#00A0E3" transform="rotate(-18 38 76)"/>
+  <rect x="118" y="158" width="8" height="8" rx="2" fill="#0066B3" transform="rotate(25 122 162)"/>
+
+  <!-- handles -->
+  <path d="M68 52 C 44 52, 44 92, 74 86" fill="none" stroke="#E0A800" stroke-width="7" stroke-linecap="round"/>
+  <path d="M132 52 C 156 52, 156 92, 126 86" fill="none" stroke="#E0A800" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- cup -->
+  <path d="M64 46 H136 L130 74 A34 34 0 0 1 70 74 Z" fill="#FFC93C"/>
+  <path d="M64 46 H136 V52 H64 Z" fill="#E0A800"/>
+
+  <!-- stem and base -->
+  <rect x="92" y="98" width="16" height="20" fill="#FFC93C"/>
+  <rect x="78" y="116" width="44" height="9" rx="3" fill="#E0A800"/>
+  <rect x="70" y="124" width="60" height="11" rx="3" fill="#FFC93C"/>
+
+  <!-- star -->
+  <path d="M100 56 l4.6 9.3 10.3 1.5 -7.4 7.3 1.7 10.2 -9.2 -4.8 -9.2 4.8 1.7 -10.2 -7.4 -7.3 10.3 -1.5 z" fill="#003B70"/>
+</svg>

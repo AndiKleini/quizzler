@@ -1,12 +1,18 @@
 :root {
-    --primary: #003B70;
-    --secondary: #0066B3;
-    --accent: #00A0E3;
-    --correct: #28a745;
-    --false:  #c61717;
-    --text: #333333;
-    --light-bg: #f8f9fa;
-    --border: #dee2e6;
+    --primary: #000000;
+    --secondary: #FFED00;
+    --accent: #FFE600;
+    --success: #2E7D32;
+    --danger:  #B00020;
+    --text: #1A1A1A;
+    --dark: #000000;
+    --light-bg: #FFFCE6;
+    --border: #ece8c0;
+
+    --radius: 8px;
+    --radius-sm: 6px;
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    --gap: 20px;
 }
 
 body {
@@ -17,4 +23,117 @@ body {
     margin: 0 auto;
     padding: 20px;
     background-color: var(--light-bg);
+}
+
+h1, h2 {
+    color: var(--primary);
+    font-weight: 600;
+    text-align: center;
+}
+
+/* Card — the white rounded panel every view sits in */
+.card {
+    background-color: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border-top: 4px solid var(--secondary);
+    padding: 25px;
+    margin-bottom: var(--gap);
+}
+
+/* Headings inside a card */
+.title {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: var(--gap);
+    color: var(--primary);
+    text-align: center;
+}
+
+.subtitle {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: var(--gap);
+    color: var(--primary);
+}
+
+/* Buttons */
+.btn {
+    padding: 15px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    font-weight: 600;
+    min-width: 200px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background-color: var(--secondary);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: var(--primary);
+    color: var(--secondary);
+}
+
+.btn-secondary {
+    background-color: white;
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: #FFF7B0;
+}
+
+.btn-block {
+    display: block;
+    margin: 0 auto;
+}
+
+/* Icon sitting inside a button — inherits the button's text color */
+.btn-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    vertical-align: text-bottom;
+}
+
+/* Status / message text */
+.message {
+    padding: 15px;
+    text-align: center;
+    color: var(--text);
+}
+
+.message-success {
+    color: var(--success);
+    font-weight: 600;
+}
+
+.message-error {
+    color: var(--danger);
+    font-weight: 600;
+}
+
+/* Inline value emphasis (e.g. amount) */
+.value {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+/* Row of buttons inside a card */
+.button-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
 }

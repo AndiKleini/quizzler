@@ -1,2 +1,13 @@
-<p class="price">Price: {{ priceLabel }}</p>
-<button type="button" (click)="onStartPayment()">Start payment</button>
+<div class="card">
+    <p class="message">One step away from purchasing this quiz attempt !</p>
+    <p class="message">Price: <span class="value price">{{ priceLabel }}</span></p>
+    <button type="button" (click)="onStartPayment()" class="btn btn-primary btn-block">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <ellipse cx="12" cy="6" rx="7" ry="2.3"/>
+            <path d="M5 6 v12 a7 2.3 0 0 0 14 0 V6"/>
+            <path d="M5 10 a7 2.3 0 0 0 14 0"/>
+            <path d="M5 14 a7 2.3 0 0 0 14 0"/>
+        </svg>Start payment
+    </button>
+</div>

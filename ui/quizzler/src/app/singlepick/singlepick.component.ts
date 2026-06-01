@@ -35,6 +35,9 @@ export class SinglepickComponent {
     )
   );
   public isEvaluated = computed(() => this.correctOption() !== noEvaluation);
+  public isAnswerCorrect = computed(() =>
+    this.isEvaluated() &&
+    Number(this.singlePickForm.get('selectedOption')?.value) === this.correctOption());
   public singlePickForm: FormGroup = this.formBuilder.group({
     selectedOption: [optionDefaultValue, [this.anyOptionSelectedValidator()]]
   });

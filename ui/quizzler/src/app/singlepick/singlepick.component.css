@@ -1,25 +1,5 @@
-.question-container {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    padding: 25px;
-    margin-bottom: 20px;
-}
-
-.question-text {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 20px;
-    color: var(--primary);
-}
-
-.question-title {
-    font-size: 28px;
-    font-weight: 600;
-    margin-bottom: 20px;
-    color: var(--primary);
-}
-
+/* Single-pick specific: option list mechanics and answer-state highlighting.
+   Shared look (card, titles, button) comes from global styles.css. */
 .options-list {
     list-style-type: none;
     padding: 0;
@@ -29,7 +9,7 @@
     margin-bottom: 12px;
     padding: 15px;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: flex-start;
     cursor: pointer;
@@ -51,6 +31,12 @@
     flex: 1;
 }
 
+.option-label {
+    font-weight: 600;
+    display: inline-block;
+    min-width: 24px;
+}
+
 .selected {
     border: 2px solid var(--secondary);
     background-color: rgba(0, 102, 179, 0.05);
@@ -64,21 +50,4 @@
 .false {
     border: 2px solid var(--false);
     background-color: rgba(200, 23, 44, 0.05);
-}
-
-.option-label {
-    font-weight: 600;
-    display: inline-block;
-    min-width: 24px;
-}
-
-.question-submit {
-    margin-bottom: 12px;
-    padding: 15px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-weight: 600;
-    min-width: 200px;
-    display: block;
-    margin: 0 auto;
 }

@@ -1,14 +1,18 @@
-<h2>Payment {{ paymentId }}</h2>
+<div class="card">
+    <h2 class="title">Payment {{ paymentId }}</h2>
 
-@if (price() !== undefined) {
-  <p>Amount: {{ price() }}</p>
-}
+    @if (price() !== undefined) {
+      <p class="message">Amount: <span class="value">{{ price() }}</span></p>
+    }
 
-@if (outcome() === PaymentOutcome.Pending) {
-  <button type="button" (click)="onConfirm()">Confirm</button>
-  <button type="button" (click)="onCancel()">Cancel</button>
-} @else if (outcome() === PaymentOutcome.Confirmed) {
-  <p>Payment confirmed.</p>
-} @else if (outcome() === PaymentOutcome.Cancelled) {
-  <p>Payment cancelled.</p>
-}
+    @if (outcome() === PaymentOutcome.Pending) {
+      <div class="button-row">
+        <button type="button" (click)="onConfirm()" class="btn btn-primary">Confirm</button>
+        <button type="button" (click)="onCancel()" class="btn btn-secondary">Cancel</button>
+      </div>
+    } @else if (outcome() === PaymentOutcome.Confirmed) {
+      <p class="message message-success">Payment confirmed.</p>
+    } @else if (outcome() === PaymentOutcome.Cancelled) {
+      <p class="message message-error">Payment cancelled.</p>
+    }
+</div>

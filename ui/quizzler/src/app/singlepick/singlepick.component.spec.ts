@@ -81,13 +81,34 @@ describe('SinglepickComponent', () => {
     });
   });
 
-  it('render_when_evaluated_then_submit_button_is_replaced_by_evaluated_label', async () => {
-    await setup(2);
+  it('render_when_evaluated_and_answer_correct_then_submit_replaced_by_green_correct_label', async () => {
+    await setup();
+    selectOptionById('2');
+    fixture.detectChanges();
+    fixture.componentRef.setInput('correctOption', 2);
+    fixture.detectChanges();
 
     expect(fixture.debugElement.query(By.css('button[type=submit]'))).toBeFalsy();
     const label = fixture.debugElement.query(By.css('.question-evaluated-label'));
     expect(label).toBeTruthy();
-    expect(label.nativeElement.textContent.trim().toLowerCase()).toContain('evaluated');
+    expect(label.nativeElement.textContent.trim()).toEqual('Correct');
+    expect(label.classes['message-correct']).toBeTruthy();
+    expect(label.classes['message-error']).toBeFalsy();
+  });
+
+  it('render_when_evaluated_and_answer_wrong_then_submit_replaced_by_red_wrong_label', async () => {
+    await setup();
+    selectOptionById('2');
+    fixture.detectChanges();
+    fixture.componentRef.setInput('correctOption', 3);
+    fixture.detectChanges();
+
+    expect(fixture.debugElement.query(By.css('button[type=submit]'))).toBeFalsy();
+    const label = fixture.debugElement.query(By.css('.question-evaluated-label'));
+    expect(label).toBeTruthy();
+    expect(label.nativeElement.textContent.trim()).toEqual('Wrong');
+    expect(label.classes['message-error']).toBeTruthy();
+    expect(label.classes['message-correct']).toBeFalsy();
   });
 });
 
