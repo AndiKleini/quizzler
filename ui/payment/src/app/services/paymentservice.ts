@@ -4,8 +4,9 @@ import { map, Observable } from "rxjs";
 import { Payment } from "../entities/payment";
 import { PaymentConfirmation } from "../entities/payment-confirmation";
 import { PaymentCancellation } from "../entities/payment-cancellation";
+import { environment } from "../../environments/environment";
 
-const apiBaseUrl = 'http://localhost:8081';
+const apiBaseUrl = environment.apiBaseUrl;
 
 @Injectable({ providedIn: 'root' })
 export class PaymentService {

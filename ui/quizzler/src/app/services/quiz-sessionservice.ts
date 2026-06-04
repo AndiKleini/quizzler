@@ -2,8 +2,9 @@ import { Injectable, inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { catchError, map, Observable, of, throwError } from "rxjs";
 import { QuizSession } from "../entities/quizsession";
+import { environment } from "../../environments/environment";
 
-const apiBaseUrl = 'http://localhost:8080';
+const apiBaseUrl = environment.apiBaseUrl;
 
 @Injectable({ providedIn: 'root' })
 export class SessionService {

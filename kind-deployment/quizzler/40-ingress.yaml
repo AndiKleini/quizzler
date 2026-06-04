@@ -1,0 +1,31 @@
+# Ingress rules for the quizzler capability.
+#   quizzler.localhost      -> quizzler-ui  (the SPA)
+#   api.quizzler.localhost  -> quizzler-api (consumed by the SPA from the browser)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: quizzler
+  namespace: quizzler
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: quizzler.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: quizzler-ui
+                port:
+                  number: 80
+    - host: api.quizzler.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: quizzler-api
+                port:
+                  number: 8080

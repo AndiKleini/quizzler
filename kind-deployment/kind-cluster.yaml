@@ -1,0 +1,28 @@
+# Single-node KIND cluster for the whole quizzler system.
+#
+# The node is labelled ingress-ready=true so the ingress-nginx "kind" provider
+# manifest schedules its controller here, and host ports 80/443 are mapped into
+# the node so the browser can reach every ingress host on localhost:80.
+#
+# Create with:  kind create cluster --config kind-cluster.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: quizzler
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      # HTTP — all ingress hosts (quizzler.localhost, api.quizzler.localhost,
+      # payment.localhost, api.payment.localhost) are served here.
+      - containerPort: 80
+        hostPort: 80
+        protocol: TCP
+      # HTTPS (reserved; the ingress rules are HTTP-only for this test step).
+      - containerPort: 443
+        hostPort: 443
+        protocol: TCP

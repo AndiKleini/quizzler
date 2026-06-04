@@ -3,8 +3,9 @@ import { HttpClient } from "@angular/common/http";
 import { map, Observable } from "rxjs";
 import { QuizAttempt } from "../entities/quizattempt";
 import { Answer } from "../entities/answer";
+import { environment } from "../../environments/environment";
 
-const apiBaseUrl = 'http://localhost:8080';
+const apiBaseUrl = environment.apiBaseUrl;
 
 @Injectable({ providedIn: 'root' })
 export class QuizAttemptService {

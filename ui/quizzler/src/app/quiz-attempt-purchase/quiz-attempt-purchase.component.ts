@@ -2,8 +2,9 @@ import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { QuizAttemptPurchaseService } from '../services/quiz-attempt-purchaseservice';
+import { environment } from '../../environments/environment';
 
-const paymentUiBaseUrl = 'http://localhost:4201';
+const paymentUiBaseUrl = environment.paymentUiBaseUrl;
 const centsPerEuro = 100;
 
 @Component({

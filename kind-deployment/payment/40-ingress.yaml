@@ -1,0 +1,31 @@
+# Ingress rules for the payment capability.
+#   payment.localhost      -> payment-ui  (the SPA)
+#   api.payment.localhost  -> payment-api (consumed by the SPA from the browser)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: payment
+  namespace: payment
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: payment.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: payment-ui
+                port:
+                  number: 80
+    - host: api.payment.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: payment-api
+                port:
+                  number: 8081

@@ -11,8 +11,12 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install --no-audit --no-fund
 
+# NG_CONFIGURATION selects the Angular build configuration and therefore the
+# baked-in base URLs: `production` (default) -> localhost for docker-compose,
+# `kind` -> the host-based ingress URLs (api.quizzler.localhost, payment.localhost).
+ARG NG_CONFIGURATION=production
 COPY . .
-RUN npm run build
+RUN npm run build -- --configuration=${NG_CONFIGURATION}
 
 # --- Runtime stage ---------------------------------------------------------
 # Serve the static bundle through nginx. The application builder emits the app

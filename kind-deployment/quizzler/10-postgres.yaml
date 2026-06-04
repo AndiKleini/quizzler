@@ -1,0 +1,87 @@
+# quizzler-db: single-instance PostgreSQL (public image), the only pod that does
+# NOT run two replicas. Backed by a PVC so the seeded data survives pod restarts.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: quizzler-db-data
+  namespace: quizzler
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: quizzler-db-credentials
+  namespace: quizzler
+type: Opaque
+stringData:
+  POSTGRES_DB: quizzler
+  POSTGRES_USER: quizzler
+  POSTGRES_PASSWORD: quizzler
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quizzler-db
+  namespace: quizzler
+  labels:
+    app: quizzler-db
+spec:
+  replicas: 1
+  strategy:
+    # A single instance bound to a RWO volume must not run two pods at once.
+    type: Recreate
+  selector:
+    matchLabels:
+      app: quizzler-db
+  template:
+    metadata:
+      labels:
+        app: quizzler-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: quizzler-db-credentials
+          env:
+            # Keep data in a subdirectory so the volume's lost+found does not
+            # collide with Postgres' empty-dir initialisation check.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "quizzler", "-d", "quizzler"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "quizzler", "-d", "quizzler"]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: quizzler-db-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: quizzler-db
+  namespace: quizzler
+spec:
+  selector:
+    app: quizzler-db
+  ports:
+    - port: 5432
+      targetPort: 5432
