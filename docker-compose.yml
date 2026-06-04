@@ -1,0 +1,112 @@
+# Whole-system bring-up for local testing.
+#
+# This is the "first testing step" toward the KIND deployment: every container
+# is exposed on localhost so the browser-facing URLs the Angular apps hard-code
+# (http://localhost:8080, :8081, :4200, :4201) resolve without any code change.
+#
+# Host port map:
+#   quizzler-ui   -> http://localhost:4200
+#   payment-ui    -> http://localhost:4201
+#   quizzler-api  -> http://localhost:8080
+#   payment-api   -> http://localhost:8081
+#   quizzler-db   -> localhost:5432
+#   payment-db    -> localhost:5433
+#
+# Seed: quizzler-api's existing SeedDataInitializer (a CommandLineRunner) seeds
+# the quizzler database on first startup against an empty schema, so quizzler-db
+# comes up seeded once the stack is healthy. It is idempotent on restarts.
+
+services:
+  # --- Infrastructure: PostgreSQL (public image) ---------------------------
+  quizzler-db:
+    image: postgres:16-alpine
+    container_name: quizzler-db-dc
+    environment:
+      POSTGRES_DB: quizzler
+      POSTGRES_USER: quizzler
+      POSTGRES_PASSWORD: quizzler
+    ports:
+      - "5432:5432"
+    volumes:
+      - quizzler-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quizzler -d quizzler"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  payment-db:
+    image: postgres:16-alpine
+    container_name: payment-db-dc
+    environment:
+      POSTGRES_DB: payment
+      POSTGRES_USER: payment
+      POSTGRES_PASSWORD: payment
+    ports:
+      - "5433:5432"
+    volumes:
+      - payment-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payment -d payment"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # --- Backends ------------------------------------------------------------
+  quizzler-api:
+    build:
+      context: ./api/quizzler
+    container_name: quizzler-api-dc
+    depends_on:
+      quizzler-db:
+        condition: service_healthy
+    environment:
+      # Reach the database over the compose network.
+      SPRING_DATASOURCE_URL: jdbc:postgresql://quizzler-db:5432/quizzler
+      SPRING_DATASOURCE_USERNAME: quizzler
+      SPRING_DATASOURCE_PASSWORD: quizzler
+      # Server-to-server: quizzler-api -> payment-api (in-cluster DNS).
+      PAYMENT_API_BASE_URL: http://payment-api:8081
+      # Handed to payment-api as the success webhook, called back in-cluster.
+      QUIZZLER_API_BASE_URL: http://quizzler-api:8080
+      # Browser redirect target after payment -> must be the host-exposed URL.
+      QUIZZLER_UI_BASE_URL: http://localhost:4200
+    ports:
+      - "8080:8080"
+
+  payment-api:
+    build:
+      context: ./api/payment
+    container_name: payment-api-dc
+    depends_on:
+      payment-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://payment-db:5432/payment
+      SPRING_DATASOURCE_USERNAME: payment
+      SPRING_DATASOURCE_PASSWORD: payment
+    ports:
+      - "8081:8081"
+
+  # --- Frontends (static bundles served by nginx) --------------------------
+  quizzler-ui:
+    build:
+      context: ./ui/quizzler
+    container_name: quizzler-ui-dc
+    depends_on:
+      - quizzler-api
+    ports:
+      - "4200:80"
+
+  payment-ui:
+    build:
+      context: ./ui/payment
+    container_name: payment-ui-dc
+    depends_on:
+      - payment-api
+    ports:
+      - "4201:80"
+
+volumes:
+  quizzler-db-data:
+  payment-db-data:
