@@ -80,8 +80,13 @@ metadata:
   name: quizzler-db
   namespace: quizzler
 spec:
+  # NodePort so the DB is reachable from the host on localhost:5432 via the
+  # cluster's extraPortMapping (30432 -> 5432). In-cluster clients keep using
+  # the service DNS quizzler-db:5432 on the ClusterIP unchanged.
+  type: NodePort
   selector:
     app: quizzler-db
   ports:
     - port: 5432
       targetPort: 5432
+      nodePort: 30432

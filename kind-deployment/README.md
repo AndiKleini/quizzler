@@ -53,6 +53,32 @@ to reuse the most recently built tag (reload + re-apply only).
 | http://payment.localhost | `payment-ui` |
 | http://api.payment.localhost | `payment-api` |
 
+## Connecting to the databases
+
+Both PostgreSQL instances are exposed on the host as `NodePort` services mapped
+in through the cluster (so no `port-forward` process is needed):
+
+| Database | Host | Port | DB / user / password |
+|----------|------|------|----------------------|
+| quizzler-db | localhost | 5432 | quizzler / quizzler / quizzler |
+| payment-db  | localhost | 5433 | payment / payment / payment |
+
+Point DBeaver / pgAdmin / `psql` at e.g. `postgresql://quizzler:quizzler@localhost:5432/quizzler`.
+
+> The host-port mappings (30432→5432, 30433→5433) live in `kind-cluster.yaml`
+> and are applied at cluster creation. If the cluster already exists you must
+> recreate it (`kind delete cluster --name quizzler` then `./deploy.sh`) for the
+> new ports to take effect. Ensure host ports 5432/5433 are free (stop the
+> docker-compose stack or a local Postgres first). In-cluster apps are unaffected
+> — they keep reaching the DBs via the ClusterIP service DNS.
+
+For a one-off connection without exposing ports you can instead use:
+
+```bash
+kubectl -n quizzler port-forward svc/quizzler-db 5432:5432
+kubectl -n payment  port-forward svc/payment-db  5433:5432
+```
+
 ## Routing model
 
 `ingress-nginx` listens on node port 80 (mapped to host 80) and routes by host:

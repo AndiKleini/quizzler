@@ -77,8 +77,13 @@ metadata:
   name: payment-db
   namespace: payment
 spec:
+  # NodePort so the DB is reachable from the host on localhost:5433 via the
+  # cluster's extraPortMapping (30433 -> 5433). In-cluster clients keep using
+  # the service DNS payment-db:5432 on the ClusterIP unchanged.
+  type: NodePort
   selector:
     app: payment-db
   ports:
     - port: 5432
       targetPort: 5432
+      nodePort: 30433

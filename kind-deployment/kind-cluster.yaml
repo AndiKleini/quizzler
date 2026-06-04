@@ -26,3 +26,11 @@ nodes:
       - containerPort: 443
         hostPort: 443
         protocol: TCP
+      # PostgreSQL NodePorts, exposed on localhost for external management tools
+      # (DBeaver, pgAdmin, psql). quizzler-db -> 5432, payment-db -> 5433.
+      - containerPort: 30432
+        hostPort: 5432
+        protocol: TCP
+      - containerPort: 30433
+        hostPort: 5433
+        protocol: TCP
