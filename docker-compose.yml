@@ -52,7 +52,24 @@ services:
       timeout: 5s
       retries: 10
 
-  # --- Backends ------------------------------------------------------------
+  # --- Infrastructure: RabbitMQ (public image) -----------------------------------------------
+  quizzler-mq:
+    image: rabbitmq:3-management-alpine
+    container_name: quizzler-mq-dc
+    ports:
+      - "5672:5672"   # AMQP protocol
+      - "15672:15672" # Management UI (guest:guest, but we override to quizzler-mq/quizzler-mq below)
+    environment:
+      RABBITMQ_DEFAULT_USER: quizzler-mq
+      RABBITMQ_DEFAULT_PASS: quizzler-mq
+      RabbitMQ_DEFAULT_VHOST: quizzler
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmqctl -q status || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10   
+  
+    # --- Backends ------------------------------------------------------------
   quizzler-api:
     build:
       context: ./api/quizzler
