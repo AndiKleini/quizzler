@@ -5,11 +5,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import java.beans.Transient;
 import java.util.List;
-import java.util.UUID;
-
-import javax.transaction.Transactional;
 
 import com.quizzler.api.client.PaymentApiClient;
 import com.quizzler.api.domain.QuizAttemptPurchase;
