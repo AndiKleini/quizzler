@@ -34,3 +34,11 @@ nodes:
       - containerPort: 30433
         hostPort: 5433
         protocol: TCP
+      # RabbitMQ NodePorts, exposed on localhost for external management tools (RabbitMQ
+      # Management UI, AMQP clients). rabbitmq -> 5672 (AMQP), 15672 (Management UI).
+      - containerPort: 30000
+        hostPort: 5672
+        protocol: TCP
+      - containerPort: 30001
+        hostPort: 15672
+        protocol: TCP   

@@ -75,7 +75,10 @@ kubectl -n ingress-nginx wait --for=condition=Ready pod \
 
 echo "==> Applying manifests (image tag -> ${TAG}; deploys only the difference)"
 # Namespaces first so the namespaced resources below have somewhere to land.
-kubectl apply -f "${SCRIPT_DIR}/quizzler/00-namespace.yaml" -f "${SCRIPT_DIR}/payment/00-namespace.yaml"
+kubectl apply \
+  -f "${SCRIPT_DIR}/quizzler/00-namespace.yaml" \
+  -f "${SCRIPT_DIR}/payment/00-namespace.yaml" \
+  -f "${SCRIPT_DIR}/messaging/00-namespace.yaml"  
 # Everything else, with the :kind image placeholder rewritten to this run's tag.
 # A changed image field is what triggers the rollout — hence no `rollout restart`.
 for ns in quizzler payment; do
@@ -84,6 +87,10 @@ for ns in quizzler payment; do
     echo "---"
   done
 done | kubectl apply -f -
+
+# Need to run this separately because there is a parsing proble with nodePort number when this is streamed via cli
+# applied together with the other manifests (error: "Service "rabbitmq" is invalid: spec.ports[0].nodePort: Invalid value: 30000: provided port is not in the valid range. The range of valid ports is 30000-32767")
+kubectl apply -f "${SCRIPT_DIR}/messaging/10-rabbitmq-messaging.yaml"
 
 echo "==> Waiting for rollouts"
 kubectl -n quizzler rollout status deployment/quizzler-db   --timeout=180s

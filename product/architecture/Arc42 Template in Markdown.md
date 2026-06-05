@@ -555,19 +555,116 @@ Describe (usually in a combination of diagrams, tables, and text):
 For multiple environments or alternative deployments please copy that
 section of arc42 for all relevant environments.
 
-***&lt;Overview Diagram&gt;***
+**Environment: KIND (local single-node Kubernetes)**
+
+The deployment artifacts live in `kind-deployment/`. The whole system runs on a
+single-node KIND cluster (one Docker container acting as the Kubernetes node),
+split into capability namespaces, fronted by an nginx ingress, and reachable
+from the developer host through host-port mappings.
+
+```mermaid
+flowchart TB
+    browser["Web browser<br/>resolves *.localhost &rarr; 127.0.0.1"]
+    tools["Management tools<br/>psql &middot; DBeaver &middot; RabbitMQ UI"]
+
+    subgraph host["Developer host &mdash; localhost"]
+        h80["TCP :80"]
+        h5432["TCP :5432"]
+        h5433["TCP :5433"]
+        h5672["TCP :5672"]
+        h15672["TCP :15672"]
+    end
+
+    subgraph node["KIND node &middot; Docker container quizzler-control-plane &middot; single control-plane node"]
+        direction TB
+
+        subgraph nsing["namespace: ingress-nginx"]
+            ctrl["ingress-nginx-controller<br/>Deployment x1 &middot; hostPort 80/443"]
+        end
+
+        subgraph nsq["namespace: quizzler"]
+            qui["quizzler-ui<br/>Deployment x2 &middot; nginx :80"]
+            qapi["quizzler-api<br/>Deployment x2 &middot; Spring Boot :8080"]
+            qdb[("quizzler-db<br/>Deployment x1 &middot; PostgreSQL :5432<br/>PVC quizzler-db-data")]
+        end
+
+        subgraph nsp["namespace: payment"]
+            pui["payment-ui<br/>Deployment x2 &middot; nginx :80"]
+            papi["payment-api<br/>Deployment x2 &middot; Spring Boot :8081"]
+            pdb[("payment-db<br/>Deployment x1 &middot; PostgreSQL :5432<br/>PVC payment-db-data")]
+        end
+
+        subgraph nsm["namespace: messaging"]
+            mq["rabbitmq<br/>Deployment x1 &middot; AMQP :5672 &middot; UI :15672"]
+        end
+    end
+
+    browser -->|HTTP| h80
+    tools --> h5432
+    tools --> h5433
+    tools --> h5672
+    tools --> h15672
+
+    h80 --> ctrl
+    ctrl -->|"Host: quizzler.localhost"| qui
+    ctrl -->|"Host: api.quizzler.localhost"| qapi
+    ctrl -->|"Host: payment.localhost"| pui
+    ctrl -->|"Host: api.payment.localhost"| papi
+
+    h5432 -->|"NodePort 30432"| qdb
+    h5433 -->|"NodePort 30433"| pdb
+    h5672 -->|"NodePort 30000"| mq
+    h15672 -->|"NodePort 30001"| mq
+
+    qapi -->|JDBC| qdb
+    papi -->|JDBC| pdb
+    qapi -->|"POST /payment (create)"| papi
+    papi -->|"success webhook (callback)"| qapi
+
+    classDef infra fill:#eef2ff,stroke:#8899cc;
+    classDef app fill:#eefaee,stroke:#88aa88;
+    class ctrl,qdb,pdb,mq infra;
+    class qui,qapi,pui,papi app;
+```
 
 Motivation
 
-:   *&lt;explanation in text form&gt;*
+:   A KIND cluster reproduces a realistic Kubernetes topology (namespaces,
+    Deployments, Services, ingress, NodePort) on a single developer machine, so
+    rolling updates and the two-replica-per-pod layout can be exercised without
+    cloud infrastructure. Capabilities are isolated in their own namespaces
+    (`quizzler`, `payment`, `messaging`) to keep ownership and blast radius
+    clear. Browser-facing traffic enters through one nginx ingress on port 80
+    using host-based rules, while east-west calls use in-cluster service DNS.
 
 Quality and/or Performance Features
 
-:   *&lt;explanation in text form&gt;*
+:   Every application pod runs **two replicas** (`*-ui`, `*-api`) for rolling,
+    zero-downtime updates; the stateful PostgreSQL pods run a **single** replica
+    bound to a `ReadWriteOnce` PVC so data survives pod restarts. Host-port
+    mappings expose the databases (5432/5433) and RabbitMQ (5672/15672) on
+    localhost for management tooling. The deployment is driven by a unique,
+    content-distinguishing image tag per `deploy.sh` run, so `kubectl apply`
+    rolls pods only when an image actually changed.
 
 Mapping of Building Blocks to Infrastructure
 
-:   *&lt;description of the mapping&gt;*
+:   | Building block | Namespace | Workload | Replicas | Reached via |
+    |----------------|-----------|----------|----------|-------------|
+    | quizzler-ui  | quizzler  | Deployment (nginx) | 2 | ingress `quizzler.localhost` |
+    | quizzler-api | quizzler  | Deployment (Spring Boot) | 2 | ingress `api.quizzler.localhost` |
+    | quizzler-db  | quizzler  | Deployment (PostgreSQL) + PVC | 1 | ClusterIP DNS; host `localhost:5432` (NodePort 30432) |
+    | payment-ui   | payment   | Deployment (nginx) | 2 | ingress `payment.localhost` |
+    | payment-api  | payment   | Deployment (Spring Boot) | 2 | ingress `api.payment.localhost` |
+    | payment-db   | payment   | Deployment (PostgreSQL) + PVC | 1 | ClusterIP DNS; host `localhost:5433` (NodePort 30433) |
+    | rabbitmq     | messaging | Deployment | 1 | host `localhost:5672`/`15672` (NodePort 30000/30001) |
+    | ingress controller | ingress-nginx | Deployment (hostPort 80/443) | 1 | host `localhost:80` |
+
+    **Note:** RabbitMQ is currently provisioned as infrastructure (deployed and
+    host-exposed) but **not yet consumed by the APIs** — there is no AMQP
+    dependency, configuration, or client code in `quizzler-api`/`payment-api`
+    yet, so no application-to-broker edge is shown. Wiring the services to the
+    broker is a planned next step.
 
 Infrastructure Level 2 
 ----------------------
