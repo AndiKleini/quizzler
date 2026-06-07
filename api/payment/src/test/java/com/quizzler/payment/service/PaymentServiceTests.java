@@ -28,6 +28,7 @@ import org.springframework.web.server.ResponseStatusException;
 @ExtendWith(MockitoExtension.class)
 class PaymentServiceTests {
 
+    private static final String PRODUCT_ID = "PRODUCT_ID";
     private static final String HTTP_EXAMPLE_COM_REDIRECT = "http://example.com/redirect";
     private static final String HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS = "http://example.com/webhook/success";
     private static final String HTTP_EXAMPLE_COM_WEBHOOK_CANCEL = "http://example.com/webhook/cancel";
@@ -49,6 +50,7 @@ class PaymentServiceTests {
             new PaymentRequestDto(
                 TRANSACTION_ID, 
                 PRICE, 
+                PRODUCT_ID,
                 HTTP_EXAMPLE_COM_REDIRECT, 
                 HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS, 
                 HTTP_EXAMPLE_COM_WEBHOOK_CANCEL));
@@ -63,6 +65,7 @@ class PaymentServiceTests {
         verify(paymentRepository).save(saved.capture());
         assertThat(saved.getValue().getTransactionId()).isEqualTo(TRANSACTION_ID);
         assertThat(saved.getValue().getPrice()).isEqualTo(PRICE);
+        assertThat(saved.getValue().getProductId()).isEqualTo(PRODUCT_ID);
         assertThat(saved.getValue().getPublicId()).isEqualTo(dto.getPaymentId());
     }
 
@@ -75,6 +78,7 @@ class PaymentServiceTests {
             new PaymentRequestDto(
                 TRANSACTION_ID, 
                 PRICE, 
+                PRODUCT_ID,
                 HTTP_EXAMPLE_COM_REDIRECT, 
                 HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS, 
                 HTTP_EXAMPLE_COM_WEBHOOK_CANCEL));
@@ -87,7 +91,8 @@ class PaymentServiceTests {
             dto.getPaymentId(), 
             TRANSACTION_ID, 
             PRICE,
-            null,
+            PRODUCT_ID,
+            dto.getCreatedAt(),
             HTTP_EXAMPLE_COM_REDIRECT,
             HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS,
             HTTP_EXAMPLE_COM_WEBHOOK_CANCEL);
@@ -102,20 +107,26 @@ class PaymentServiceTests {
 
     @Test
     void getPayment_when_payment_exists_returns_price_and_redirect_url() {
-        Payment payment = new Payment(
-                PAYMENT_PUBLIC_ID,
-                TRANSACTION_ID,
-                PRICE,
-                Instant.now(),
-                HTTP_EXAMPLE_COM_REDIRECT,
-                HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS,
-                HTTP_EXAMPLE_COM_WEBHOOK_CANCEL);
+        Payment payment = 
+            getTestPayment();
         when(paymentRepository.findByPublicId(PAYMENT_PUBLIC_ID)).thenReturn(Optional.of(payment));
 
         PaymentDetailDto dto = paymentService.getPayment(PAYMENT_PUBLIC_ID);
 
         assertThat(dto).usingRecursiveComparison()
                 .isEqualTo(new PaymentDetailDto(PRICE, HTTP_EXAMPLE_COM_REDIRECT));
+    }
+
+    private Payment getTestPayment() {
+        return new Payment(
+            PAYMENT_PUBLIC_ID,
+            TRANSACTION_ID,
+            PRICE,
+            PRODUCT_ID,
+            Instant.now(),
+            HTTP_EXAMPLE_COM_REDIRECT,
+            HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS,
+            HTTP_EXAMPLE_COM_WEBHOOK_CANCEL);
     }
 
     @Test

@@ -107,7 +107,7 @@ class QuizAttemptPurchaseServiceTests {
         String webhookCancelUrl = UI_BASE_URL + "/quiz-session/" + SESSION_PUBLIC_ID
                 + "/quiz-attempt-purchase-failed/";
         when(paymentApiClient.createPayment(
-                PURCHASE_PUBLIC_ID, 200, redirectUrl, webhookSuccessUrl, webhookCancelUrl)).thenReturn(PAYMENT_ID);
+                PURCHASE_PUBLIC_ID, 200, SESSION_PUBLIC_ID, redirectUrl, webhookSuccessUrl, webhookCancelUrl)).thenReturn(PAYMENT_ID);
 
         PaymentInitiationDto dto = quizAttemptPurchaseService.initiatePayment(SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID);
 

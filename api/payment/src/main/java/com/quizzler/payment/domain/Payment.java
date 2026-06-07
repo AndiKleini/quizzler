@@ -31,6 +31,9 @@ public class Payment {
     @Column(name = "price", nullable = false, updatable = false)
     private int price;
 
+    @Column(name = "product_id", nullable = false, updatable = false)
+    private String productId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -50,6 +53,7 @@ public class Payment {
         String publicId, 
         String transactionId, 
         int price, 
+        String productId, 
         Instant createdAt, 
         String httpExampleComRedirect, 
         String httpExampleComWebhookSuccess, 
@@ -57,6 +61,7 @@ public class Payment {
         this.publicId = publicId;
         this.transactionId = transactionId;
         this.price = price;
+        this.productId = productId;
         this.createdAt = createdAt;
         this.redirectUrl = httpExampleComRedirect;
         this.webhookSuccessUrl = httpExampleComWebhookSuccess;
@@ -78,6 +83,10 @@ public class Payment {
     /** Price in cents. */
     public int getPrice() {
         return price;
+    }
+
+    public String getProductId() {
+        return productId;
     }
 
     public Instant getCreatedAt() {

@@ -1,5 +1,7 @@
 package com.quizzler.payment.dto;
 
+import org.springframework.boot.autoconfigure.web.ConditionalOnEnabledResourceChain;
+
 public class PaymentRequestDto {
 
     private String transactionId;
@@ -7,6 +9,7 @@ public class PaymentRequestDto {
     private String redirectUrl;
     private String webhookSuccessUrl;
     private String webhookCancelUrl;
+    private String productId;
 
     public PaymentRequestDto() {
     }
@@ -14,11 +17,13 @@ public class PaymentRequestDto {
     public PaymentRequestDto(
         String transactionId, 
         int price, 
+        String productId,
         String redirectUrl, 
         String webhookSuccessUrl, 
         String webhookCancelUrl) {
             this.transactionId = transactionId;
             this.price = price;
+            this.productId = productId;
             this.redirectUrl = redirectUrl;
             this.webhookSuccessUrl = webhookSuccessUrl;
             this.webhookCancelUrl = webhookCancelUrl;    
@@ -41,9 +46,9 @@ public class PaymentRequestDto {
     public int getPrice() {
         return price;
     }
-
-    public void setPrice(int price) {
-        this.price = price;
+    
+    public String getProductId() {
+        return this.productId;
     }
 
     public String getRedirectUrl() {
@@ -57,4 +62,5 @@ public class PaymentRequestDto {
     public String getWebhookCancelUrl() {
         return this.webhookCancelUrl;
     }
+
 }

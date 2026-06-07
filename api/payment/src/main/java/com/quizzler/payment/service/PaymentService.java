@@ -37,6 +37,7 @@ public class PaymentService {
             UUID.randomUUID().toString(), 
             request.getTransactionId(), 
             request.getPrice(), 
+            request.getProductId(),
             Instant.now(),
             request.getRedirectUrl(),
             request.getWebhookSuccessUrl(),

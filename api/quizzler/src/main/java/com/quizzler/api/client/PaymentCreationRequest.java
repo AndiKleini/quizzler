@@ -11,22 +11,29 @@ public class PaymentCreationRequest {
 
     private final String transactionId;
     private final int price;
+    private final String productId;
     private final String redirectUrl;
     private final String webhookSuccessUrl;
     private final String webhookCancelUrl;
 
     public PaymentCreationRequest(String transactionId,
                                   int price,
+                                  String productId,
                                   String redirectUrl,
                                   String webhookSuccessUrl,
                                   String webhookCancelUrl) {
         this.transactionId = transactionId;
         this.price = price;
+        this.productId = productId;
         this.redirectUrl = redirectUrl;
         this.webhookSuccessUrl = webhookSuccessUrl;
         this.webhookCancelUrl = webhookCancelUrl;
     }
-
+ 
+    public String getProductId() {
+        return productId;
+    }
+    
     public String getTransactionId() {
         return transactionId;
     }

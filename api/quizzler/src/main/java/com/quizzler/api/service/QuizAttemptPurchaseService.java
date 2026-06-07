@@ -75,7 +75,7 @@ public class QuizAttemptPurchaseService {
                 + "/quiz-attempt-purchase-failed/";
 
         String paymentId = paymentApiClient.createPayment(
-                purchase.getPublicId(), PRICE, redirectUrl, webhookSuccessUrl, webhookCancelUrl);
+                purchase.getPublicId(), PRICE, purchase.getSession().getPublicId(), redirectUrl, webhookSuccessUrl, webhookCancelUrl);
         return new PaymentInitiationDto(paymentId);
     }
 

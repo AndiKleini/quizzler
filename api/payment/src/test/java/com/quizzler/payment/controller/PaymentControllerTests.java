@@ -24,6 +24,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 @AutoConfigureWebTestClient
 public class PaymentControllerTests {
 
+    private static final String PRODUCT_ID = "1111-5555-6666";
     private static final String HTTP_EXAMPLE_COM_REDIRECT = "http://example.com/redirect";
     private static final String HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS = "http://example.com/webhook/success";
     private static final String HTTP_EXAMPLE_COM_WEBHOOK_CANCEL = "http://example.com/webhook/cancel";  
@@ -56,7 +57,9 @@ public class PaymentControllerTests {
         webTestClient.post().uri(PAYMENT_URI)
                 .bodyValue(
                     new PaymentRequestDto(
-                        TRANSACTION_ID, PRICE, 
+                        TRANSACTION_ID, 
+                        PRICE, 
+                        PRODUCT_ID,
                         HTTP_EXAMPLE_COM_REDIRECT, 
                         HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS, 
                         HTTP_EXAMPLE_COM_WEBHOOK_CANCEL))
@@ -79,6 +82,7 @@ public class PaymentControllerTests {
                         PAYMENT_PUBLIC_ID,
                         TRANSACTION_ID,
                         PRICE,
+                        PRODUCT_ID,
                         Instant.now(),
                         HTTP_EXAMPLE_COM_REDIRECT,
                         HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS,

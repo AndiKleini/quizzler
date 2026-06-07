@@ -97,7 +97,7 @@ public class QuizAttemptPurchaseControllerTests {
     public void initiatePayment_creates_payment_for_purchase_and_returns_payment_id(@Autowired WebTestClient webTestClient) {
         QuizSession session = quizSessionRepository.save(new QuizSession(SESSION_PUBLIC_ID, seededSpecification));
         quizAttemptPurchaseRepository.save(new QuizAttemptPurchase(PURCHASE_PUBLIC_ID, session));
-        when(paymentApiClient.createPayment(eq(PURCHASE_PUBLIC_ID), eq(200), anyString(), anyString(), anyString()))
+        when(paymentApiClient.createPayment(eq(PURCHASE_PUBLIC_ID), eq(200), eq(SESSION_PUBLIC_ID), anyString(), anyString(), anyString()))
                 .thenReturn(PAYMENT_ID);
 
         webTestClient.post().uri(PAYMENT_URI, SESSION_PUBLIC_ID, PURCHASE_PUBLIC_ID).exchange()

@@ -28,6 +28,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 @AutoConfigureWebTestClient
 public class PaymentConfirmationControllerTests {
 
+    private static final String PRODUCT_ID = "1111-5555-6666";
     private static final String HTTP_EXAMPLE_COM_REDIRECT = "http://example.com/redirect";
     private static final String HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS = "http://example.com/webhook/success";
     private static final String HTTP_EXAMPLE_COM_WEBHOOK_CANCEL = "http://example.com/webhook/cancel";  
@@ -62,6 +63,7 @@ public class PaymentConfirmationControllerTests {
                 PAYMENT_PUBLIC_ID, 
                 TRANSACTION_ID,
                  1999, 
+                 PRODUCT_ID,
                  Instant.now(), 
                  HTTP_EXAMPLE_COM_REDIRECT,
                  HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS,
@@ -92,6 +94,7 @@ public class PaymentConfirmationControllerTests {
                 PAYMENT_PUBLIC_ID, 
                 TRANSACTION_ID,
                  1999, 
+                 PRODUCT_ID,
                  Instant.now(), 
                  HTTP_EXAMPLE_COM_REDIRECT,
                  HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS,
@@ -111,6 +114,7 @@ public class PaymentConfirmationControllerTests {
                 PAYMENT_PUBLIC_ID, 
                 TRANSACTION_ID,
                  1999, 
+                 PRODUCT_ID,
                  Instant.now(), 
                  HTTP_EXAMPLE_COM_REDIRECT,
                  HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS,
