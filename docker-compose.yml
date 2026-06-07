@@ -62,7 +62,7 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: quizzler-mq
       RABBITMQ_DEFAULT_PASS: quizzler-mq
-      RabbitMQ_DEFAULT_VHOST: quizzler
+      RABBITMQ_DEFAULT_VHOST: quizzler
     healthcheck:
       test: ["CMD-SHELL", "rabbitmqctl -q status || exit 1"]
       interval: 5s
@@ -77,6 +77,8 @@ services:
     depends_on:
       quizzler-db:
         condition: service_healthy
+      quizzler-mq:
+        condition: service_healthy
     environment:
       # Reach the database over the compose network.
       SPRING_DATASOURCE_URL: jdbc:postgresql://quizzler-db:5432/quizzler
@@ -88,6 +90,12 @@ services:
       QUIZZLER_API_BASE_URL: http://quizzler-api:8080
       # Browser redirect target after payment -> must be the host-exposed URL.
       QUIZZLER_UI_BASE_URL: http://localhost:4200
+      # Consume payment-confirmed events over the compose network.
+      SPRING_RABBITMQ_HOST: quizzler-mq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: quizzler-mq
+      SPRING_RABBITMQ_PASSWORD: quizzler-mq
+      SPRING_RABBITMQ_VIRTUAL_HOST: quizzler
     ports:
       - "8080:8080"
 
@@ -98,10 +106,18 @@ services:
     depends_on:
       payment-db:
         condition: service_healthy
+      quizzler-mq:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://payment-db:5432/payment
       SPRING_DATASOURCE_USERNAME: payment
       SPRING_DATASOURCE_PASSWORD: payment
+      # Publish payment-confirmed events over the compose network.
+      SPRING_RABBITMQ_HOST: quizzler-mq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: quizzler-mq
+      SPRING_RABBITMQ_PASSWORD: quizzler-mq
+      SPRING_RABBITMQ_VIRTUAL_HOST: quizzler
     ports:
       - "8081:8081"
 

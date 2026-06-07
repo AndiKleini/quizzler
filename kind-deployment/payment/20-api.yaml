@@ -10,6 +10,12 @@ data:
   SPRING_DATASOURCE_USERNAME: payment
   SPRING_DATASOURCE_PASSWORD: payment
   CORS_ALLOWED_ORIGINS: http://payment.localhost
+  # RabbitMQ lives in the dedicated messaging namespace; publish payment-confirmed events to it.
+  SPRING_RABBITMQ_HOST: rabbitmq.messaging.svc.cluster.local
+  SPRING_RABBITMQ_PORT: "5672"
+  SPRING_RABBITMQ_USERNAME: quizzler-mq
+  SPRING_RABBITMQ_PASSWORD: quizzler-mq
+  SPRING_RABBITMQ_VIRTUAL_HOST: quizzler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -20,6 +26,13 @@ metadata:
     app: payment-api
 spec:
   replicas: 2
+  # Zero-downtime rolling update: never drop below the desired replica count.
+  # A new pod must pass its readiness probe before an old one is removed.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       app: payment-api

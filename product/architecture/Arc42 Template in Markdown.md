@@ -836,6 +836,75 @@ public PaymentInitiationDto initiatePayment(String sessionPublicId, String purch
 
 
 
+**Asynchronous messaging (event publishing)**
+This section describes how a service emits a domain event to the message broker (RabbitMQ) instead of — or, during a migration, in addition to — a synchronous REST call. It is cross-cutting because every outbound event in the system is published the same way: through a generic `RabbitEventPublisher<T>` base class whose destination is declared on the concrete subclass. The reference example is the payment API announcing a confirmed payment so the quizzler API can confirm the matching purchase **without the payment service calling it directly** — the first step in replacing the success-webhook HTTP callback (see *Integration of two REST APIs*) with a message-based integration.
+
+- *All publishing behaviour lives in one generic superclass*: `RabbitEventPublisher<T>` (`com.quizzler.payment.messaging`) is an abstract base parameterised by the event type `T`. It owns the shared `RabbitTemplate` and exposes a single `publish(T event)`; concrete publishers carry no messaging logic of their own, which keeps the broker interaction in exactly one place.
+- *The destination is declarative — set via an annotation, not constructor arguments*: a concrete publisher is annotated `@RabbitPublication(exchange = …, routingKey = …)`. The base class reads that annotation once in its constructor (`AnnotationUtils.findAnnotation(getClass(), …)`) and caches the exchange and routing key, so the destination is a fixed property of the publisher *type* rather than a value passed on every send. A publisher that forgets the annotation fails fast at bean creation with an `IllegalStateException` instead of silently sending nowhere.
+- *A concrete publisher declares only two things — the event type and the destination*: it `extends RabbitEventPublisher<ConcreteEvent>` and carries the `@RabbitPublication`. `PaymentConfirmationPublisher` is the reference adapter: it binds `PaymentConfirmedEvent` to the payment-events exchange and the `payment.confirmed` routing key and adds nothing else.
+- *Publishing is best-effort while the webhook is still authoritative*: during the migration the synchronous success-webhook remains the system of record, so a broker outage must not fail the business operation. `publish` catches `AmqpException`, logs a warning and returns normally instead of propagating — the payment is still confirmed even when the event cannot be sent. This deliberately loosens once the HTTP callback is retired and the message becomes the authoritative integration.
+- *Topology names are shared constants, defined once*: the exchange and routing key (and, on the consumer side, the queue) are `public static final String` constants on `RabbitConfig`, referenced both by the `@RabbitPublication` annotation and by the broker-topology beans, so the producer and the declared infrastructure cannot drift apart. `String` constants are used precisely because annotation attributes must be compile-time constants.
+- *Events are their own classes, serialized as JSON*: the payload is a dedicated event type (`PaymentConfirmedEvent`) that carries only the correlation data the consumer needs — here the `transactionId`, which is the quizzler purchase reference — independent of the publisher's persistence model, mirroring the "DTOs are the wire contract" rule used for REST. Messages are converted with a `Jackson2JsonMessageConverter` built from the Spring-managed `ObjectMapper`, so JSR-310 types such as `Instant` (de)serialize correctly and the consumer can read the event by field name without a shared library between the two services.
+
+The generic superclass owns the `RabbitTemplate`, derives its destination from the annotation, and performs the best-effort send:
+
+```java
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface RabbitPublication {
+    String exchange();
+    String routingKey();
+}
+
+public abstract class RabbitEventPublisher<T> {
+
+    private static final Logger log = LoggerFactory.getLogger(RabbitEventPublisher.class);
+
+    private final RabbitTemplate rabbitTemplate;
+    private final String exchange;
+    private final String routingKey;
+
+    protected RabbitEventPublisher(RabbitTemplate rabbitTemplate) {
+        this.rabbitTemplate = rabbitTemplate;
+        RabbitPublication publication = AnnotationUtils.findAnnotation(getClass(), RabbitPublication.class);
+        if (publication == null) {
+            throw new IllegalStateException(
+                    getClass().getName() + " must be annotated with @" + RabbitPublication.class.getSimpleName());
+        }
+        this.exchange = publication.exchange();
+        this.routingKey = publication.routingKey();
+    }
+
+    public void publish(T event) {
+        try {
+            rabbitTemplate.convertAndSend(exchange, routingKey, event);
+        } catch (AmqpException ex) {
+            log.warn("Failed to publish {} to exchange '{}' with routing key '{}': {}",
+                    event.getClass().getSimpleName(), exchange, routingKey, ex.getMessage());
+        }
+    }
+}
+```
+
+A concrete publisher then reduces to a type binding plus the declarative destination — no messaging code:
+
+```java
+@Component
+@RabbitPublication(
+        exchange = RabbitConfig.PAYMENT_EVENTS_EXCHANGE,
+        routingKey = RabbitConfig.PAYMENT_CONFIRMED_ROUTING_KEY)
+public class PaymentConfirmationPublisher extends RabbitEventPublisher<PaymentConfirmedEvent> {
+
+    public PaymentConfirmationPublisher(RabbitTemplate rabbitTemplate) {
+        super(rabbitTemplate);
+    }
+}
+```
+
+Adding a new outbound event is therefore a three-line affair: define the event class, subclass `RabbitEventPublisher<NewEvent>`, and annotate it with the destination — the base class supplies the transport, the error handling and the destination wiring.
+
+
+
 **Unit testing**
 This section captures the conventions used for unit tests across the system. They apply to all back-end JUnit tests; the same spirit applies to Angular Jest tests where the tooling allows.
 

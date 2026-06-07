@@ -44,6 +44,32 @@ Deployment's image field and rolls the pods automatically — no `rollout restar
 is needed. Re-run `./deploy.sh` after a code change, or `./deploy.sh --no-build`
 to reuse the most recently built tag (reload + re-apply only).
 
+## Rolling updates (cluster stays up)
+
+Once the cluster is running, roll a new version of the **app services** (UIs and
+APIs) without recreating the cluster or touching the databases, RabbitMQ or the
+ingress:
+
+```bash
+cd kind-deployment
+./rolling-update.sh                       # build + roll all four app services
+./rolling-update.sh quizzler-api          # roll only the named service(s)
+./rolling-update.sh quizzler-ui payment-ui
+./rolling-update.sh --no-build quizzler-api   # reuse newest built tag, just roll
+```
+
+The script builds + `kind load`s the selected images under a fresh per-run tag
+and triggers the rollout with `kubectl set image` (so only the app Deployments
+change). It **refuses to run if the cluster is absent** — unlike `deploy.sh`, it
+never creates infrastructure; the cluster is meant to stay available across
+rollouts.
+
+Availability is guaranteed by the Deployments' rolling-update strategy
+(`maxUnavailable: 0`, `maxSurge: 1`): a new pod must pass its readiness probe
+before an old one is removed, so each service keeps serving throughout. The DBs,
+RabbitMQ and ingress are never restarted. Use `deploy.sh` instead when you also
+need to (re)apply infrastructure or config/manifest changes beyond the image.
+
 ## Access
 
 | URL | Routes to |

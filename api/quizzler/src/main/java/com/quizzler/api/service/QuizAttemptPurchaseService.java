@@ -81,9 +81,6 @@ public class QuizAttemptPurchaseService {
 
     @Transactional
     public QuizAttemptPurchaseConfirmationDto confirmPurchase(String sessionPublicId, String purchaseId) {
-        System.out.println("Confirming purchase " + purchaseId + " for session " + sessionPublicId);
-        quizSessionRepository.findAll().forEach(s -> System.out.println("Session in DB: " + s.getPublicId()));
-        quizAttemptPurchaseRepository.findAll().forEach(p -> System.out.println("Purchase in DB: " + p.getPublicId() + ", session: " + p.getSession().getPublicId()));  
         QuizAttemptPurchase purchase = quizAttemptPurchaseRepository.findByPublicId(purchaseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Purchase " + purchaseId + " not found"));
