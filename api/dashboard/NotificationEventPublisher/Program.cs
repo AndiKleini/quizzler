@@ -26,17 +26,7 @@ Console.WriteLine($"Publishing to exchange: {exchangeName}");
 Console.WriteLine($"Routing key: {routingKey}");
 Console.WriteLine();
 
-var eventTypes = new[] { 1, 2, 3, 4, 5 };
 var sessionIds = new[] { "session-001", "session-002", "session-003" };
-var detailsTemplates = new[]
-{
-    "Payment received",
-    "Quiz started",
-    "Answer submitted",
-    "Quiz completed",
-    "Session updated"
-};
-
 var random = new Random();
 var messageCounter = 0;
 
@@ -44,11 +34,43 @@ while (true)
 {
     messageCounter++;
 
+    // Randomly choose between PurchaseConfirmation (Type 1) and Answer (Type 2)
+    var eventType = random.Next(1, 3);
+
+    string details;
+    if (eventType == 1) // PurchaseConfirmation
+    {
+        var purchaseConfirmation = new
+        {
+            PurchaseId = $"purchase-{Guid.NewGuid():N}",
+            SessionId = sessionIds[random.Next(sessionIds.Length)],
+            Amount = random.Next(50, 500),
+            Status = "Confirmed"
+        };
+        details = JsonSerializer.Serialize(purchaseConfirmation, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+    }
+    else // Answer (Type 2)
+    {
+        var answer = new
+        {
+            QuestionId = $"question-{random.Next(1, 100):D3}",
+            SelectedOptionId = $"option-{random.Next(1, 5):D3}",
+            IsCorrect = random.Next(0, 2) == 1
+        };
+        details = JsonSerializer.Serialize(answer, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+    }
+
     var notificationEvent = new
     {
         SessionId = sessionIds[random.Next(sessionIds.Length)],
-        Type = eventTypes[random.Next(eventTypes.Length)],
-        Details = detailsTemplates[random.Next(detailsTemplates.Length)],
+        Type = eventType,
+        Details = details,
         TimeStamp = DateTime.UtcNow
     };
 
@@ -64,7 +86,8 @@ while (true)
         routingKey: routingKey,
         body: body);
 
-    Console.WriteLine($"[{messageCounter:D4}] Published: {json}");
+    var eventTypeName = eventType == 1 ? "PurchaseConfirmation" : "Answer";
+    Console.WriteLine($"[{messageCounter:D4}] {eventTypeName}: {json}");
 
     await Task.Delay(5000);
 }

@@ -17,24 +17,49 @@ The publisher is configured with the following defaults:
 
 ## Event Format
 
-Each published event contains:
+Each published event contains a JSON-serialized DTO in the `details` field based on the event type.
+
+### Type 1: Purchase Confirmation
 
 ```json
 {
   "sessionId": "session-001",
-  "type": 2,
-  "details": "Quiz started",
+  "type": 1,
+  "details": "{\"purchaseId\":\"purchase-abc123\",\"sessionId\":\"session-001\",\"amount\":250,\"status\":\"Confirmed\"}",
   "timeStamp": "2026-06-12T10:30:00.123Z"
 }
 ```
 
+The `details` field deserializes to `QuizAttemptPurchaseConfirmationDto`:
+- `purchaseId`: Unique purchase identifier
+- `sessionId`: Session identifier
+- `amount`: Payment amount in cents
+- `status`: Payment status (e.g., "Confirmed")
+
+### Type 2: Answer
+
+```json
+{
+  "sessionId": "session-002",
+  "type": 2,
+  "details": "{\"questionId\":\"question-042\",\"selectedOptionId\":\"option-003\",\"isCorrect\":true}",
+  "timeStamp": "2026-06-12T10:30:05.456Z"
+}
+```
+
+The `details` field deserializes to `AnswerDto`:
+- `questionId`: Question identifier
+- `selectedOptionId`: Selected answer option
+- `isCorrect`: Whether the answer was correct
+
 ### Test Data
 
-The publisher randomly selects from:
+The publisher randomly generates:
 
 - **Session IDs**: session-001, session-002, session-003
-- **Types**: 1, 2, 3, 4, 5
-- **Details**: Payment received, Quiz started, Answer submitted, Quiz completed, Session updated
+- **Event Types**: 1 (PurchaseConfirmation), 2 (Answer)
+- **Purchase Amounts**: Random between 50-500 cents
+- **Answer Correctness**: Random true/false
 
 ## Usage
 

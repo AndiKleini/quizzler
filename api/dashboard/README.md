@@ -75,13 +75,41 @@ The dashboard listens to notification events from RabbitMQ:
 - **Exchange**: `quizzler.exchange` (topic)
 - **Routing Key**: `quizzler.notifications`
 
-### Event Format
+### Event Types
 
+Events are typed and the `details` field contains JSON-serialized DTOs:
+
+| Type | Enum | DTO | Description |
+|------|------|-----|-------------|
+| 1 | `PurchaseConfirmation` | `QuizAttemptPurchaseConfirmationDto` | Payment confirmation event |
+| 2 | `Answer` | `AnswerDto` | Quiz answer submission event |
+
+### Event Processing Flow
+
+1. `NotificationEventListener` receives events from RabbitMQ
+2. `NotificationEventHandlerService` deserializes the `details` field based on `type`
+3. The deserialized DTO implements `ISessionDashboardUpdate` with an `ApplyTo(SessionDashboardData)` method
+4. The DTO applies its changes to the dashboard data
+5. Updated dashboard data is persisted via `SessionDashboardRepository`
+
+### Example Events
+
+**Purchase Confirmation (Type 1):**
 ```json
 {
-  "sessionId": "session-123",
+  "sessionId": "session-001",
   "type": 1,
-  "details": "Event details",
+  "details": "{\"purchaseId\":\"purchase-123\",\"sessionId\":\"session-001\",\"amount\":250,\"status\":\"Confirmed\"}",
+  "timeStamp": "2026-06-12T10:30:00Z"
+}
+```
+
+**Answer (Type 2):**
+```json
+{
+  "sessionId": "session-001",
+  "type": 2,
+  "details": "{\"questionId\":\"question-001\",\"selectedOptionId\":\"option-002\",\"isCorrect\":true}",
   "timeStamp": "2026-06-12T10:30:00Z"
 }
 ```
