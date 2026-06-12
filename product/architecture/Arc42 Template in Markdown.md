@@ -905,8 +905,8 @@ Adding a new outbound event is therefore a three-line affair: define the event c
 
 
 
-**Unit testing**
-This section captures the conventions used for unit tests across the system. They apply to all back-end JUnit tests; the same spirit applies to Angular Jest tests where the tooling allows.
+**Unit testing (Java)**
+This section captures the conventions used for unit tests in the Java Spring Boot components. They apply to all back-end JUnit tests; the same spirit applies to Angular Jest tests where the tooling allows.
 
 - *Object graph comparison for assertions*: a test asserts the **whole expected result object** against the actual result in a single comparison, rather than asserting field-by-field. On the back-end this is done with AssertJ's `assertThat(actual).usingRecursiveComparison().isEqualTo(expected)`. The expected object is built explicitly in the test body so the reader can see the full shape that is being verified. This keeps tests resilient to internal refactorings (no churn when fields are added) while still failing loudly when the contract changes.
 - *Readable test method naming*: test methods follow the schema `methodUnderTest_when_condition_then_outcome` (or the shorter `methodUnderTest_condition_outcome`) with snake_case separators, e.g. `getSinglePickQuestion_which_exists_is_returned`, `getSinglePickQuestion_when_not_exists_throws`. The intent is that the method name reads as a sentence describing the scenario, so a test report acts as a behavioural specification of the system.
@@ -986,6 +986,125 @@ public class QuizSessionControllerTest {
     }
 }
 ```
+
+**Unit testing (C#)**
+This section captures the conventions used for unit tests in the C# .NET components. The dashboard API (`api/dashboard/Dashboard`) uses NUnit 4.6.1, Moq 4.20.72, Shouldly 4.3.0, and Entity Framework Core In-Memory provider for testing.
+
+- *Test class naming*: for a production class named `ClassName`, the test class must be named `ClassNameTests`. Examples: `SessionDashboardController` → `SessionDashboardControllerTests`; `SessionDashboardRepository` → `SessionDashboardRepositoryTests`.
+- *Test method naming*: test methods follow the pattern `MethodName_Scenario_ExpectedBehavior`, e.g. `GetDashboard_WhenDataExists_ReturnsOkWithData`, `GetDashboard_WhenNoDataExists_ReturnsNotFound`. The method name reads as a specification of the scenario being tested.
+- *Arrange-Act-Assert structure*: every test follows the AAA pattern with explicit `// Arrange`, `// Act`, `// Assert` comments separating the three phases. The arrange phase sets up test data and configures mocks, the act phase executes the method under test, and the assert phase verifies the outcome.
+- *Shouldly fluent assertions*: assertions use Shouldly's fluent syntax for readability: `actual.ShouldBe(expected)`, `result.ShouldNotBeNull()`, `collection.ShouldContain(item)`, `action.ShouldThrow<TException>()`. Shouldly provides clear error messages that show both expected and actual values in a human-readable format.
+- *One scenario per test*: each test method covers a single behavioral scenario (one happy path, one sad path, one edge case). All assertions for that scenario live in the same test — typically verifying the result type, status code and data values.
+- *Pure unit tests for controllers*: controllers are tested with mocked dependencies. All collaborators (repositories, services, loggers) are `Mock<IInterface>` instances created in `[SetUp]`. The controller is instantiated directly in the test fixture, passing the `.Object` properties of the mocks. This keeps tests fast and focused on controller logic (routing, status codes, response mapping) without touching the database.
+- *In-memory database for repository tests*: repositories are tested against Entity Framework's in-memory database provider (`UseInMemoryDatabase`). Each test gets a fresh database named with `Guid.NewGuid().ToString()` to guarantee isolation, and `[TearDown]` calls `EnsureDeleted()` and `Dispose()` to clean up. Test data is seeded in the arrange phase of each individual test, so the reader sees exactly what state the test assumes.
+- *SetUp and TearDown lifecycle*: the `[SetUp]` method runs before each test and initializes mocks, the DbContext and the unit under test. The `[TearDown]` method runs after each test and disposes resources. This ensures every test starts from a clean slate.
+
+The `GetDashboard_WhenDataExists_ReturnsOkWithData` test from `SessionDashboardControllerTests` shows the controller testing pattern:
+
+```csharp
+[TestFixture]
+public class SessionDashboardControllerTests
+{
+    private Mock<ISessionDashboardRepository> _mockRepository = null!;
+    private Mock<ILogger<SessionDashboardController>> _mockLogger = null!;
+    private SessionDashboardController _controller = null!;
+
+    [SetUp]
+    public void SetUp()
+    {
+        _mockRepository = new Mock<ISessionDashboardRepository>();
+        _mockLogger = new Mock<ILogger<SessionDashboardController>>();
+        _controller = new SessionDashboardController(_mockRepository.Object, _mockLogger.Object);
+    }
+
+    [Test]
+    public async Task GetDashboard_WhenDataExists_ReturnsOkWithData()
+    {
+        // Arrange
+        var dashboardData = new SessionDashboardData
+        {
+            Id = 1,
+            PaymentAmount = 500,
+            NumberOfPayments = 5,
+            WrongAnswers = 3,
+            CorrectAnswers = 7,
+            Questions = 10
+        };
+        _mockRepository
+            .Setup(repo => repo.GetDashboardDataAsync())
+            .ReturnsAsync(dashboardData);
+
+        // Act
+        var result = await _controller.GetDashboard();
+
+        // Assert
+        result.Result.ShouldBeOfType<OkObjectResult>();
+        var okResult = result.Result as OkObjectResult;
+        okResult!.Value.ShouldBe(dashboardData);
+    }
+}
+```
+
+The `GetDashboardDataAsync_WhenDataExists_ReturnsData` test from `SessionDashboardRepositoryTests` shows the repository testing pattern with in-memory EF Core:
+
+```csharp
+[TestFixture]
+public class SessionDashboardRepositoryTests
+{
+    private DashboardDbContext _context = null!;
+    private SessionDashboardRepository _repository = null!;
+
+    [SetUp]
+    public void SetUp()
+    {
+        var options = new DbContextOptionsBuilder<DashboardDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        _context = new DashboardDbContext(options);
+        _repository = new SessionDashboardRepository(_context);
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        _context.Database.EnsureDeleted();
+        _context.Dispose();
+    }
+
+    [Test]
+    public async Task GetDashboardDataAsync_WhenDataExists_ReturnsData()
+    {
+        // Arrange
+        var dashboardData = new SessionDashboardData
+        {
+            Id = 1,
+            PaymentAmount = 500,
+            NumberOfPayments = 5,
+            WrongAnswers = 3,
+            CorrectAnswers = 7,
+            Questions = 10
+        };
+        _context.SessionDashboardData.Add(dashboardData);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _repository.GetDashboardDataAsync();
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.PaymentAmount.ShouldBe(500);
+        result.NumberOfPayments.ShouldBe(5);
+        result.WrongAnswers.ShouldBe(3);
+        result.CorrectAnswers.ShouldBe(7);
+        result.Questions.ShouldBe(10);
+    }
+}
+```
+
+- *Moq setup and verification*: mock collaborators are configured with `.Setup(x => x.Method(params)).ReturnsAsync(value)` for async methods or `.Returns(value)` for synchronous ones. Thrown exceptions are configured with `.ThrowsAsync(exception)`. After the act phase, verify that a collaborator was called with `_mock.Verify(x => x.Method(params), Times.Once)` to ensure the controller/service invoked its dependencies correctly.
+- *Testing async methods*: test methods that exercise async code are declared `public async Task` and use `await` to call the method under test. Moq setups use `.ReturnsAsync()` rather than `.Returns()` for async methods.
+- *Project structure*: all test classes live in a `Tests/` directory within the project, organized by component type (e.g. `Tests/Controllers/`, `Tests/Repositories/`). Tests are not in a separate test project; they share the same assembly as the production code, which simplifies the build and avoids `InternalsVisibleTo` ceremony for testing internal members.
 
 **Content.**
 

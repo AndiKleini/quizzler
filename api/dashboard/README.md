@@ -101,6 +101,22 @@ API will be available at `https://localhost:5001` (or check console output for a
 dotnet build
 ```
 
+### Run Tests
+
+```bash
+dotnet test
+```
+
+Unit tests use:
+- **NUnit 4.6.1** for test framework
+- **Moq 4.20.72** for mocking
+- **Shouldly 4.3.0** for fluent assertions
+- **EF Core In-Memory** for repository tests
+
+Test naming convention: `ClassNameTests` for test class, `MethodName_Scenario_ExpectedBehavior` for test methods.
+
+See `product/architecture/Arc42 Template in Markdown.md` → Cross-cutting Concepts → Unit testing (C#) for detailed testing guidelines.
+
 ### Create Migration
 
 ```bash
