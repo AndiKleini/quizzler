@@ -17,4 +17,10 @@ public class SessionDashboardRepository : ISessionDashboardRepository
     {
         return await _context.SessionDashboardData.FirstOrDefaultAsync();
     }
+
+    public async Task UpdateDashboardDataAsync(SessionDashboardData dashboardData)
+    {
+        _context.SessionDashboardData.Update(dashboardData);
+        await _context.SaveChangesAsync();
+    }
 }

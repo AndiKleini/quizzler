@@ -5,4 +5,6 @@ namespace Dashboard.Repositories;
 public interface ISessionDashboardRepository
 {
     Task<SessionDashboardData?> GetDashboardDataAsync();
+
+    Task UpdateDashboardDataAsync(SessionDashboardData dashboardData);
 }
