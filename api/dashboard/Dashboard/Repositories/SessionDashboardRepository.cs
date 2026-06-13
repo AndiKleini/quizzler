@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Dashboard.Data;
 using Dashboard.Models;
 using Microsoft.EntityFrameworkCore;
@@ -22,5 +23,11 @@ public class SessionDashboardRepository : ISessionDashboardRepository
     {
         _context.SessionDashboardData.Update(dashboardData);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<SessionDashboardData> GetDashboardDataByDashboardIdAsync(string dashboardId)
+    {
+        return await _context.SessionDashboardData.
+            SingleOrDefaultAsync(s => s.DashboardId == dashboardId);
     }
 }

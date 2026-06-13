@@ -38,6 +38,7 @@ public class SessionDashboardRepositoryTests
         var dashboardData = new SessionDashboardData
         {
             Id = 1,
+            DashboardId = "SomeDashBoardId",
             PaymentAmount = 500,
             NumberOfPayments = 5,
             WrongAnswers = 3,
@@ -48,6 +49,7 @@ public class SessionDashboardRepositoryTests
             new SessionDashboardData
             {
                 Id = dashboardData.Id,
+                DashboardId = dashboardData.DashboardId,
                 PaymentAmount = dashboardData.PaymentAmount,
                 NumberOfPayments = dashboardData.NumberOfPayments,
                 WrongAnswers = dashboardData.WrongAnswers,
@@ -58,6 +60,41 @@ public class SessionDashboardRepositoryTests
 
         // Act
         var result = await _repository.GetDashboardDataAsync();
+
+        // Assert
+        result.ShouldBeEquivalentTo(dashboardData);
+    }
+
+     [Test]
+    public async Task GetDashboardDataByDashoardIdAsync_WhenDataExists_ReturnsData()
+    {
+        // Arrange
+        const string DASHBOARD_ID = "MyDashboardId";
+        var dashboardData = new SessionDashboardData
+        {
+            Id = 1,
+            DashboardId = DASHBOARD_ID,
+            PaymentAmount = 500,
+            NumberOfPayments = 5,
+            WrongAnswers = 3,
+            CorrectAnswers = 7,
+            Questions = 10
+        };
+        _context.SessionDashboardData.Add(
+            new SessionDashboardData
+            {
+                Id = dashboardData.Id,
+                DashboardId = dashboardData.DashboardId,
+                PaymentAmount = dashboardData.PaymentAmount,
+                NumberOfPayments = dashboardData.NumberOfPayments,
+                WrongAnswers = dashboardData.WrongAnswers,
+                CorrectAnswers = dashboardData.CorrectAnswers,
+                Questions = dashboardData.Questions
+            });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _repository.GetDashboardDataByDashboardIdAsync(DASHBOARD_ID);
 
         // Assert
         result.ShouldBeEquivalentTo(dashboardData);
@@ -80,6 +117,7 @@ public class SessionDashboardRepositoryTests
         var dashboardData1 = new SessionDashboardData
         {
             Id = 1,
+            DashboardId = "SomeDashboardId",
             PaymentAmount = 500,
             NumberOfPayments = 5,
             WrongAnswers = 3,
@@ -89,6 +127,7 @@ public class SessionDashboardRepositoryTests
         var dashboardData2 = new SessionDashboardData
         {
             Id = 2,
+            DashboardId = "SomeDashboardId",
             PaymentAmount = 1000,
             NumberOfPayments = 10,
             WrongAnswers = 5,

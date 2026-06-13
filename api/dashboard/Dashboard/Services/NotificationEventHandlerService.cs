@@ -26,7 +26,8 @@ public class NotificationEventHandlerService : INotificationEventHandlerService
             notificationEvent.Details,
             notificationEvent.TimeStamp);
 
-        var dashboardData = await _sessionDashboardRepository.GetDashboardDataAsync();
+        var dashboardData = await _sessionDashboardRepository.GetDashboardDataByDashboardIdAsync(
+            notificationEvent.SessionId);
         if (dashboardData == null)
         {
             _logger.LogWarning("No dashboard data found for SessionId: {SessionId}", notificationEvent.SessionId);

@@ -12,6 +12,8 @@ public class NotificationEventListener : BackgroundService
     private readonly ILogger<NotificationEventListener> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly string _hostname;
+    private readonly string _username;
+    private readonly string _password;
     private readonly string _queueName;
     private readonly string _exchangeName;
     private readonly string _routingKey;
@@ -26,6 +28,8 @@ public class NotificationEventListener : BackgroundService
         _logger = logger;
         _serviceProvider = serviceProvider;
         _hostname = configuration.GetValue<string>("RabbitMQ:Hostname") ?? "localhost";
+        _username = configuration.GetValue<string>("RabbitMQ:Username") ?? "guest";
+        _password = configuration.GetValue<string>("RabbitMQ:Password") ?? "guest";
         _queueName = configuration.GetValue<string>("RabbitMQ:QueueName") ?? "quizzler.notifications";
         _exchangeName = configuration.GetValue<string>("RabbitMQ:ExchangeName") ?? "quizzler.exchange";
         _routingKey = configuration.GetValue<string>("RabbitMQ:RoutingKey") ?? "quizzler.notifications";
@@ -35,7 +39,12 @@ public class NotificationEventListener : BackgroundService
     {
         try
         {
-            var factory = new ConnectionFactory { HostName = _hostname };
+            var factory = new ConnectionFactory
+            {
+                HostName = _hostname,
+                UserName = _username,
+                Password = _password
+            };
             _connection = await factory.CreateConnectionAsync(stoppingToken);
             _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
 
@@ -72,7 +81,11 @@ public class NotificationEventListener : BackgroundService
 
                     _logger.LogInformation("Received message from queue: {Message}", message);
 
-                    var notificationEvent = JsonSerializer.Deserialize<NotificationEvent>(message);
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    };
+                    var notificationEvent = JsonSerializer.Deserialize<NotificationEvent>(message, options);
 
                     if (notificationEvent != null)
                     {

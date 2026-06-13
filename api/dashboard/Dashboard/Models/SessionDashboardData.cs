@@ -3,6 +3,7 @@ namespace Dashboard.Models;
 public class SessionDashboardData
 {
     public int Id { get; set; }
+    public required String DashboardId { get; set; }
     public int PaymentAmount { get; set; }
     public int NumberOfPayments { get; set; }
     public int WrongAnswers { get; set; }

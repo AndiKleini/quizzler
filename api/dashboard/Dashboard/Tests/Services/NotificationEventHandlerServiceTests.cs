@@ -5,6 +5,7 @@ using Dashboard.Services;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 using Shouldly;
 
 namespace Dashboard.Tests.Services;
@@ -27,10 +28,12 @@ public class NotificationEventHandlerServiceTests
     [Test]
     public async Task HandleNotificationEventAsync_WithPurchaseConfirmation_UpdatesPaymentData()
     {
-        // Arrange
+    // Arrange
+        const string DASHBOARD_ID = "SomeDashboardId";
         var existingData = new SessionDashboardData
         {
             Id = 1,
+            DashboardId = DASHBOARD_ID,
             PaymentAmount = 100,
             NumberOfPayments = 5,
             WrongAnswers = 2,
@@ -41,14 +44,14 @@ public class NotificationEventHandlerServiceTests
         var purchaseConfirmation = new QuizAttemptPurchaseConfirmationDto
         {
             PurchaseId = "purchase-001",
-            SessionId = "session-001",
+            SessionId = DASHBOARD_ID,
             Amount = 250,
             Status = "Confirmed"
         };
 
         var notificationEvent = new NotificationEvent
         {
-            SessionId = "session-001",
+            SessionId = DASHBOARD_ID,
             Type = (int)NotificationEventType.PurchaseConfirmation,
             Details = JsonSerializer.Serialize(purchaseConfirmation, new JsonSerializerOptions
             {
@@ -58,7 +61,7 @@ public class NotificationEventHandlerServiceTests
         };
 
         _mockRepository
-            .Setup(repo => repo.GetDashboardDataAsync())
+            .Setup(repo => repo.GetDashboardDataByDashboardIdAsync(DASHBOARD_ID))
             .ReturnsAsync(existingData);
 
         // Act
@@ -72,10 +75,12 @@ public class NotificationEventHandlerServiceTests
     [Test]
     public async Task HandleNotificationEventAsync_WithCorrectAnswer_UpdatesCorrectAnswersAndQuestions()
     {
+        const string DASHBOARD_ID = "SomeDashboardId";
         // Arrange
         var existingData = new SessionDashboardData
         {
             Id = 1,
+            DashboardId = DASHBOARD_ID,
             PaymentAmount = 100,
             NumberOfPayments = 5,
             WrongAnswers = 2,
@@ -92,7 +97,7 @@ public class NotificationEventHandlerServiceTests
 
         var notificationEvent = new NotificationEvent
         {
-            SessionId = "session-001",
+            SessionId = DASHBOARD_ID,
             Type = (int)NotificationEventType.Answer,
             Details = JsonSerializer.Serialize(answer, new JsonSerializerOptions
             {
@@ -102,7 +107,7 @@ public class NotificationEventHandlerServiceTests
         };
 
         _mockRepository
-            .Setup(repo => repo.GetDashboardDataAsync())
+            .Setup(repo => repo.GetDashboardDataByDashboardIdAsync(DASHBOARD_ID))
             .ReturnsAsync(existingData);
 
         // Act
@@ -117,10 +122,12 @@ public class NotificationEventHandlerServiceTests
     [Test]
     public async Task HandleNotificationEventAsync_WithWrongAnswer_UpdatesWrongAnswersAndQuestions()
     {
+        const string DASHBOARD_ID = "SomeDashboardId";
         // Arrange
         var existingData = new SessionDashboardData
         {
             Id = 1,
+            DashboardId = DASHBOARD_ID,
             PaymentAmount = 100,
             NumberOfPayments = 5,
             WrongAnswers = 2,
@@ -137,7 +144,7 @@ public class NotificationEventHandlerServiceTests
 
         var notificationEvent = new NotificationEvent
         {
-            SessionId = "session-001",
+            SessionId = DASHBOARD_ID,
             Type = (int)NotificationEventType.Answer,
             Details = JsonSerializer.Serialize(answer, new JsonSerializerOptions
             {
@@ -147,7 +154,7 @@ public class NotificationEventHandlerServiceTests
         };
 
         _mockRepository
-            .Setup(repo => repo.GetDashboardDataAsync())
+            .Setup(repo => repo.GetDashboardDataByDashboardIdAsync(DASHBOARD_ID))
             .ReturnsAsync(existingData);
 
         // Act
@@ -162,10 +169,12 @@ public class NotificationEventHandlerServiceTests
     [Test]
     public async Task HandleNotificationEventAsync_WithPurchaseConfirmation_CallsUpdateOnRepository()
     {
-        // Arrange
+    // Arrange
+        const string DASHBOARD_ID = "SomeDashboardId";
         var existingData = new SessionDashboardData
         {
             Id = 1,
+            DashboardId = DASHBOARD_ID,
             PaymentAmount = 100,
             NumberOfPayments = 5,
             WrongAnswers = 2,
@@ -176,14 +185,14 @@ public class NotificationEventHandlerServiceTests
         var purchaseConfirmation = new QuizAttemptPurchaseConfirmationDto
         {
             PurchaseId = "purchase-001",
-            SessionId = "session-001",
+            SessionId = DASHBOARD_ID,
             Amount = 250,
             Status = "Confirmed"
         };
 
         var notificationEvent = new NotificationEvent
         {
-            SessionId = "session-001",
+            SessionId = DASHBOARD_ID,
             Type = (int)NotificationEventType.PurchaseConfirmation,
             Details = JsonSerializer.Serialize(purchaseConfirmation, new JsonSerializerOptions
             {
@@ -193,7 +202,7 @@ public class NotificationEventHandlerServiceTests
         };
 
         _mockRepository
-            .Setup(repo => repo.GetDashboardDataAsync())
+            .Setup(repo => repo.GetDashboardDataByDashboardIdAsync(DASHBOARD_ID))
             .ReturnsAsync(existingData);
 
         // Act
@@ -244,10 +253,12 @@ public class NotificationEventHandlerServiceTests
     [Test]
     public async Task HandleNotificationEventAsync_WithInvalidJson_DoesNotCallUpdate()
     {
-        // Arrange
+    // Arrange
+        const string DASHBOARD_ID = "SomeDashboardId";
         var existingData = new SessionDashboardData
         {
             Id = 1,
+            DashboardId = DASHBOARD_ID,
             PaymentAmount = 100,
             NumberOfPayments = 5,
             WrongAnswers = 2,
@@ -264,7 +275,7 @@ public class NotificationEventHandlerServiceTests
         };
 
         _mockRepository
-            .Setup(repo => repo.GetDashboardDataAsync())
+            .Setup(repo => repo.GetDashboardDataByDashboardIdAsync(DASHBOARD_ID))
             .ReturnsAsync(existingData);
 
         // Act
@@ -280,9 +291,11 @@ public class NotificationEventHandlerServiceTests
     public async Task HandleNotificationEventAsync_WithUnknownEventType_DoesNotCallUpdate()
     {
         // Arrange
+        const string DASHBOARD_ID = "SomeDashboardId";
         var existingData = new SessionDashboardData
         {
             Id = 1,
+            DashboardId = DASHBOARD_ID,
             PaymentAmount = 100,
             NumberOfPayments = 5,
             WrongAnswers = 2,
@@ -299,7 +312,7 @@ public class NotificationEventHandlerServiceTests
         };
 
         _mockRepository
-            .Setup(repo => repo.GetDashboardDataAsync())
+            .Setup(repo => repo.GetDashboardDataByDashboardIdAsync(DASHBOARD_ID))
             .ReturnsAsync(existingData);
 
         // Act

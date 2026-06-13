@@ -31,6 +31,7 @@ public class SessionDashboardControllerTests
         var dashboardData = new SessionDashboardData
         {
             Id = 1,
+            DashboardId = "SomeDashboardId",
             PaymentAmount = 500,
             NumberOfPayments = 5,
             WrongAnswers = 3,
@@ -49,6 +50,61 @@ public class SessionDashboardControllerTests
         var okResult = result.Result as OkObjectResult;
         Assert.That(okResult, Is.Not.Null);
         Assert.That(okResult!.Value, Is.EqualTo(dashboardData));
+    }
+
+    [Test]
+    public async Task GetDashboardByDashboardId_WhenDataExists_ReturnsOkWithData()
+    {
+    // Arrange
+        const string DASHBOARD_ID = "SomeDashboardId";
+        var dashboardData = new SessionDashboardData
+        {
+            Id = 1,
+            DashboardId = DASHBOARD_ID,
+            PaymentAmount = 500,
+            NumberOfPayments = 5,
+            WrongAnswers = 3,
+            CorrectAnswers = 7,
+            Questions = 10
+        };
+        _mockRepository
+            .Setup(repo => repo.GetDashboardDataByDashboardIdAsync(DASHBOARD_ID))
+            .ReturnsAsync(
+                new SessionDashboardData() 
+                {
+                    Id = dashboardData.Id,
+                    DashboardId = dashboardData.DashboardId,
+                    PaymentAmount = dashboardData.PaymentAmount,
+                    NumberOfPayments = dashboardData.NumberOfPayments,
+                    WrongAnswers = dashboardData.WrongAnswers,
+                    CorrectAnswers = dashboardData.CorrectAnswers,
+                    Questions = dashboardData.Questions
+                });
+
+        // Act
+        var result = await _controller.GetDashboardById(DASHBOARD_ID);
+
+        // Assert
+        Assert.That(result.Result, Is.TypeOf<OkObjectResult>());
+        var okResult = result.Result as OkObjectResult;
+        Assert.That(okResult, Is.Not.Null);
+        okResult!.Value.ShouldBeEquivalentTo(dashboardData);
+    }
+
+    [Test]
+    public async Task GetDashboardByDashboardId_WhenNoDataExists_ReturnsNotFound()
+    {
+        const string DASHBOARD_ID = "SomeDashboardId";
+        // Arrange
+        _mockRepository
+            .Setup(repo => repo.GetDashboardDataByDashboardIdAsync(DASHBOARD_ID))
+            .ReturnsAsync((SessionDashboardData?)null);
+
+        // Act
+        var result = await _controller.GetDashboardById(DASHBOARD_ID);
+
+        // Assert
+        Assert.That(result.Result, Is.TypeOf<NotFoundResult>());
     }
 
     [Test]
@@ -73,6 +129,7 @@ public class SessionDashboardControllerTests
         var dashboardData = new SessionDashboardData
         {
             Id = 1,
+            DashboardId = "SomeDashboardId",
             PaymentAmount = 500,
             NumberOfPayments = 5,
             WrongAnswers = 3,
@@ -97,6 +154,7 @@ public class SessionDashboardControllerTests
         var dashboardData = new SessionDashboardData
         {
             Id = 1,
+            DashboardId = "SomeDashboardId",
             PaymentAmount = 25000,
             NumberOfPayments = 100,
             WrongAnswers = 30,
@@ -109,6 +167,7 @@ public class SessionDashboardControllerTests
                 new SessionDashboardData() 
                 {
                     Id = dashboardData.Id,
+                    DashboardId = dashboardData.DashboardId,
                     PaymentAmount = dashboardData.PaymentAmount,
                     NumberOfPayments = dashboardData.NumberOfPayments,
                     WrongAnswers = dashboardData.WrongAnswers,
@@ -122,7 +181,7 @@ public class SessionDashboardControllerTests
         // Assert
         var okResult = result.Result as OkObjectResult;
         var returnedData = okResult!.Value as SessionDashboardData;
-        
+
         returnedData.ShouldBeEquivalentTo(dashboardData);
     }
 }

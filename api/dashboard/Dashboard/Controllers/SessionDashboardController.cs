@@ -31,4 +31,17 @@ public class SessionDashboardController : ControllerBase
 
         return Ok(data);
     }
+
+    [HttpGet("{dashboardId}")]
+    public async Task<ActionResult<SessionDashboardData>> GetDashboardById(string dashboardId)
+    {
+        var data = await _repository.GetDashboardDataByDashboardIdAsync(dashboardId);
+
+        if (data == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(data);
+    }
 }
