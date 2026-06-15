@@ -9,8 +9,10 @@
 #   payment-ui    -> http://localhost:4201
 #   quizzler-api  -> http://localhost:8080
 #   payment-api   -> http://localhost:8081
+#   dashboard-api -> http://localhost:8082
 #   quizzler-db   -> localhost:5432
 #   payment-db    -> localhost:5433
+#   dashboard-db  -> localhost:1433
 #
 # Seed: quizzler-api's existing SeedDataInitializer (a CommandLineRunner) seeds
 # the quizzler database on first startup against an empty schema, so quizzler-db
@@ -52,6 +54,23 @@ services:
       timeout: 5s
       retries: 10
 
+  dashboard-db:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    container_name: dashboard-db-dc
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: Dboard123!
+      MSSQL_PID: Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - dashboard-db-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Dboard123! -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   # --- Infrastructure: RabbitMQ (public image) -----------------------------------------------
   quizzler-mq:
     image: rabbitmq:3-management-alpine
@@ -63,6 +82,8 @@ services:
       RABBITMQ_DEFAULT_USER: quizzler-mq
       RABBITMQ_DEFAULT_PASS: quizzler-mq
       RABBITMQ_DEFAULT_VHOST: quizzler
+    volumes:
+      - quizzler-mq-data:/var/lib/rabbitmq
     healthcheck:
       test: ["CMD-SHELL", "rabbitmqctl -q status || exit 1"]
       interval: 5s
@@ -121,6 +142,27 @@ services:
     ports:
       - "8081:8081"
 
+  dashboard-api:
+    build:
+      context: ./api/dashboard
+    container_name: dashboard-api-dc
+    depends_on:
+      dashboard-db:
+        condition: service_healthy
+      quizzler-mq:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=dashboard-db,1433;Database=dashboard;User Id=sa;Password=Dboard123!;TrustServerCertificate=True"
+      RabbitMQ__Hostname: quizzler-mq
+      RabbitMQ__Username: quizzler-mq
+      RabbitMQ__Password: quizzler-mq
+      RabbitMQ__QueueName: quizzler.notifications
+      RabbitMQ__ExchangeName: quizzler.exchange
+      RabbitMQ__RoutingKey: quizzler.notifications
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "8082:8080"
+
   # --- Frontends (static bundles served by nginx) --------------------------
   quizzler-ui:
     build:
@@ -143,3 +185,5 @@ services:
 volumes:
   quizzler-db-data:
   payment-db-data:
+  dashboard-db-data:
+  quizzler-mq-data:

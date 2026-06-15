@@ -14,6 +14,7 @@ public class NotificationEventListener : BackgroundService
     private readonly string _hostname;
     private readonly string _username;
     private readonly string _password;
+    private readonly string _virtualHost;
     private readonly string _queueName;
     private readonly string _exchangeName;
     private readonly string _routingKey;
@@ -28,8 +29,9 @@ public class NotificationEventListener : BackgroundService
         _logger = logger;
         _serviceProvider = serviceProvider;
         _hostname = configuration.GetValue<string>("RabbitMQ:Hostname") ?? "localhost";
-        _username = configuration.GetValue<string>("RabbitMQ:Username") ?? "guest";
-        _password = configuration.GetValue<string>("RabbitMQ:Password") ?? "guest";
+        _username = configuration.GetValue<string>("RabbitMQ:Username") ?? "quizzler-mq";
+        _password = configuration.GetValue<string>("RabbitMQ:Password") ?? "quizzler-mq";
+        _virtualHost = configuration.GetValue<string>("RabbitMQ:VirtualHost") ?? "/";
         _queueName = configuration.GetValue<string>("RabbitMQ:QueueName") ?? "quizzler.notifications";
         _exchangeName = configuration.GetValue<string>("RabbitMQ:ExchangeName") ?? "quizzler.exchange";
         _routingKey = configuration.GetValue<string>("RabbitMQ:RoutingKey") ?? "quizzler.notifications";
@@ -43,7 +45,8 @@ public class NotificationEventListener : BackgroundService
             {
                 HostName = _hostname,
                 UserName = _username,
-                Password = _password
+                Password = _password,
+                VirtualHost = _virtualHost
             };
             _connection = await factory.CreateConnectionAsync(stoppingToken);
             _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
