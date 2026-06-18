@@ -31,7 +31,7 @@ public class NotificationEventListener : BackgroundService
         _hostname = configuration.GetValue<string>("RabbitMQ:Hostname") ?? "localhost";
         _username = configuration.GetValue<string>("RabbitMQ:Username") ?? "quizzler-mq";
         _password = configuration.GetValue<string>("RabbitMQ:Password") ?? "quizzler-mq";
-        _virtualHost = configuration.GetValue<string>("RabbitMQ:VirtualHost") ?? "/";
+        _virtualHost = configuration.GetValue<string>("RabbitMQ:VirtualHost") ?? "quizzler";
         _queueName = configuration.GetValue<string>("RabbitMQ:QueueName") ?? "quizzler.notifications";
         _exchangeName = configuration.GetValue<string>("RabbitMQ:ExchangeName") ?? "quizzler.exchange";
         _routingKey = configuration.GetValue<string>("RabbitMQ:RoutingKey") ?? "quizzler.notifications";

@@ -7,6 +7,7 @@
 # Host port map:
 #   quizzler-ui   -> http://localhost:4200
 #   payment-ui    -> http://localhost:4201
+#   dashboard-ui  -> http://localhost:4202
 #   quizzler-api  -> http://localhost:8080
 #   payment-api   -> http://localhost:8081
 #   dashboard-api -> http://localhost:8082
@@ -181,6 +182,15 @@ services:
       - payment-api
     ports:
       - "4201:80"
+
+  dashboard-ui:
+    build:
+      context: ./ui/dashboard
+    container_name: dashboard-ui-dc
+    depends_on:
+      - dashboard-api
+    ports:
+      - "4202:80"
 
 volumes:
   quizzler-db-data:

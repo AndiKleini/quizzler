@@ -11,7 +11,7 @@ const string hostname = "localhost";
 const string exchangeName = "quizzler.exchange";
 const string routingKey = "quizzler.notifications";
 
-var factory = new ConnectionFactory { HostName = hostname, UserName = "quizzler-mq", Password = "quizzler-mq" };
+var factory = new ConnectionFactory { HostName = hostname, VirtualHost="quizzler", UserName = "quizzler-mq", Password = "quizzler-mq" };
 await using var connection = await factory.CreateConnectionAsync();
 await using var channel = await connection.CreateChannelAsync();
 

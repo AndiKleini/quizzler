@@ -1,0 +1,64 @@
+<div class="dashboard-container">
+  <div *ngIf="loading" class="loading">
+    <p>Loading dashboard...</p>
+  </div>
+
+  <div *ngIf="error && !loading" class="error">
+    <h2>Error Loading Dashboard</h2>
+    <p>Unable to load dashboard data. Please try again later.</p>
+  </div>
+
+  <div *ngIf="dashboardData && !loading" class="dashboard-content">
+    <header class="dashboard-header">
+      <h1>Session Dashboard</h1>
+      <p class="session-id">Session ID: {{ dashboardData.dashboardId }}</p>
+    </header>
+
+    <div class="stats-grid">
+      <!-- Quiz Statistics -->
+      <div class="stat-card quiz-stats">
+        <h2>Quiz Performance</h2>
+        <div class="stat-row">
+          <span class="stat-label">Total Questions:</span>
+          <span class="stat-value">{{ dashboardData.questions }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Answered:</span>
+          <span class="stat-value">{{ totalAnswers }}</span>
+        </div>
+        <div class="stat-row correct">
+          <span class="stat-label">Correct Answers:</span>
+          <span class="stat-value">{{ dashboardData.correctAnswers }}</span>
+        </div>
+        <div class="stat-row wrong">
+          <span class="stat-label">Wrong Answers:</span>
+          <span class="stat-value">{{ dashboardData.wrongAnswers }}</span>
+        </div>
+        <div class="accuracy">
+          <div class="accuracy-label">Accuracy</div>
+          <div class="accuracy-value">{{ accuracyPercentage }}%</div>
+          <div class="accuracy-bar">
+            <div class="accuracy-fill" [style.width.%]="accuracyPercentage"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Statistics -->
+      <div class="stat-card payment-stats">
+        <h2>Payment Information</h2>
+        <div class="stat-row">
+          <span class="stat-label">Number of Payments:</span>
+          <span class="stat-value">{{ dashboardData.numberOfPayments }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Total Payment Amount:</span>
+          <span class="stat-value currency">${{ formatCurrency(dashboardData.paymentAmount) }}</span>
+        </div>
+        <div class="stat-row" *ngIf="dashboardData.numberOfPayments > 0">
+          <span class="stat-label">Average per Payment:</span>
+          <span class="stat-value currency">${{ formatCurrency(averagePaymentAmount) }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
