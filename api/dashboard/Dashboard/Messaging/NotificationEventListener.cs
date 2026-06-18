@@ -93,9 +93,10 @@ public class NotificationEventListener : BackgroundService
                     if (notificationEvent != null)
                     {
                         using var scope = _serviceProvider.CreateScope();
-                        var handlerService = scope.ServiceProvider
-                            .GetRequiredService<INotificationEventHandlerService>();
+                        var handlerFactory = scope.ServiceProvider
+                            .GetRequiredService<INotificationEventHandlerServiceFactory>();
 
+                        var handlerService = await handlerFactory.CreateHandlerAsync(notificationEvent.SessionId);
                         await handlerService.HandleNotificationEventAsync(notificationEvent);
 
                         await _channel.BasicAckAsync(ea.DeliveryTag, false, stoppingToken);

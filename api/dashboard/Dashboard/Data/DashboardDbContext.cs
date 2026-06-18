@@ -10,6 +10,7 @@ public class DashboardDbContext : DbContext
     }
 
     public DbSet<SessionDashboardData> SessionDashboardData { get; set; }
+    public DbSet<StoredNotificationEvent> StoredNotificationEvents { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -19,6 +20,15 @@ public class DashboardDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.ToTable("SessionDashboardData");
+        });
+
+        modelBuilder.Entity<StoredNotificationEvent>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("StoredNotificationEvents");
+            entity.HasIndex(e => e.SessionId);
+            entity.Property(e => e.Details).IsRequired();
+            entity.Property(e => e.SessionId).IsRequired();
         });
     }
 }
