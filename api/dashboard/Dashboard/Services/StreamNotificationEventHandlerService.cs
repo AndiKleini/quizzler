@@ -1,0 +1,80 @@
+using System.Text.Json;
+using Dashboard.Data;
+using Dashboard.Models;
+
+namespace Dashboard.Services;
+
+public class StreamNotificationEventHandlerService : INotificationEventHandlerService
+{
+    private readonly ILogger<StreamNotificationEventHandlerService> _logger;
+    private readonly DashboardDbContext _dbContext;
+
+    public StreamNotificationEventHandlerService(
+        ILogger<StreamNotificationEventHandlerService> logger,
+        DashboardDbContext dbContext)
+    {
+        _logger = logger;
+        _dbContext = dbContext;
+    }
+
+    public async Task HandleNotificationEventAsync(NotificationEvent notificationEvent)
+    {
+        _logger.LogInformation(
+            "Storing notification event as stream - SessionId: {SessionId}, Type: {Type}, TimeStamp: {TimeStamp}",
+            notificationEvent.SessionId,
+            notificationEvent.Type,
+            notificationEvent.TimeStamp);
+
+        try
+        {
+            var storedEvent = new StoredNotificationEvent
+            {
+                SessionId = notificationEvent.SessionId,
+                Type = notificationEvent.Type,
+                TimeStamp = notificationEvent.TimeStamp
+            };
+
+            var eventType = (NotificationEventType)notificationEvent.Type;
+
+            switch (eventType)
+            {
+                case NotificationEventType.Answer:
+                    var answerDto = JsonSerializer.Deserialize<AnswerDto>(notificationEvent.Details, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                    if (answerDto != null)
+                    {
+                        storedEvent.AnswerDetails = StoredAnswerDetails.FromDto(answerDto);
+                    }
+                    break;
+
+                case NotificationEventType.PurchaseConfirmation:
+                    var purchaseDto = JsonSerializer.Deserialize<QuizAttemptPurchaseConfirmationDto>(notificationEvent.Details, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                    if (purchaseDto != null)
+                    {
+                        storedEvent.PurchaseConfirmationDetails = StoredPurchaseConfirmationDetails.FromDto(purchaseDto);
+                    }
+                    break;
+            }
+
+            _dbContext.StoredNotificationEvents.Add(storedEvent);
+            await _dbContext.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Successfully stored notification event with Id: {Id} for SessionId: {SessionId}",
+                storedEvent.Id,
+                notificationEvent.SessionId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error storing notification event for SessionId: {SessionId}",
+                notificationEvent.SessionId);
+            throw;
+        }
+    }
+}

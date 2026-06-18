@@ -9,13 +9,16 @@ namespace Dashboard.Controllers;
 public class SessionDashboardController : ControllerBase
 {
     private readonly ISessionDashboardRepository _repository;
+    private readonly IStoredNotificationEventRepository _eventRepository;
     private readonly ILogger<SessionDashboardController> _logger;
 
     public SessionDashboardController(
         ISessionDashboardRepository repository,
+        IStoredNotificationEventRepository eventRepository,
         ILogger<SessionDashboardController> logger)
     {
         _repository = repository;
+        _eventRepository = eventRepository;
         _logger = logger;
     }
 
@@ -41,6 +44,13 @@ public class SessionDashboardController : ControllerBase
         {
             return NotFound();
         }
+
+        // Populate answers from stored events
+        var answerEvents = await _eventRepository.GetAnswerEventsBySessionIdAsync(dashboardId);
+        data.Answers = answerEvents
+            .Select(e => new Tuple<DateTime, AnswerDto>(e.TimeStamp, e.GetAnswerDetails()!))
+            .Where(t => t.Item2 != null)
+            .ToList();
 
         return Ok(data);
     }

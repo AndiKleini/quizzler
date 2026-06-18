@@ -1,0 +1,38 @@
+erDiagram
+    StoredNotificationEvents ||--o| StoredAnswerDetails : "has"
+    StoredNotificationEvents ||--o| StoredPurchaseConfirmationDetails : "has"
+    SessionDashboardData ||--o{ StoredNotificationEvents : "references"
+
+    StoredNotificationEvents {
+        int Id PK
+        string SessionId FK "Indexed"
+        int Type "1=Answer, 2=PurchaseConfirmation"
+        datetime TimeStamp
+    }
+
+    StoredAnswerDetails {
+        int Id PK
+        int StoredNotificationEventId FK "One-to-One, Cascade Delete"
+        string QuestionId "Required"
+        string SelectedOptionId "Required"
+        bool IsCorrect
+    }
+
+    StoredPurchaseConfirmationDetails {
+        int Id PK
+        int StoredNotificationEventId FK "One-to-One, Cascade Delete"
+        string PurchaseId "Required"
+        string SessionId "Required"
+        int Amount "Amount in cents"
+        string Status "Required"
+    }
+
+    SessionDashboardData {
+        int Id PK
+        string DashboardId UK "Indexed"
+        int PaymentAmount
+        int NumberOfPayments
+        int WrongAnswers
+        int CorrectAnswers
+        int Questions
+    }

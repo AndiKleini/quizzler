@@ -13,6 +13,7 @@ namespace Dashboard.Tests.Controllers;
 public class SessionDashboardControllerTests
 {
     private Mock<ISessionDashboardRepository> _mockRepository = null!;
+    private Mock<IStoredNotificationEventRepository> _mockEventRepository = null!;
     private Mock<ILogger<SessionDashboardController>> _mockLogger = null!;
     private SessionDashboardController _controller = null!;
 
@@ -20,8 +21,9 @@ public class SessionDashboardControllerTests
     public void SetUp()
     {
         _mockRepository = new Mock<ISessionDashboardRepository>();
+        _mockEventRepository = new Mock<IStoredNotificationEventRepository>();
         _mockLogger = new Mock<ILogger<SessionDashboardController>>();
-        _controller = new SessionDashboardController(_mockRepository.Object, _mockLogger.Object);
+        _controller = new SessionDashboardController(_mockRepository.Object, _mockEventRepository.Object, _mockLogger.Object);
     }
 
     [Test]
@@ -70,7 +72,7 @@ public class SessionDashboardControllerTests
         _mockRepository
             .Setup(repo => repo.GetDashboardDataByDashboardIdAsync(DASHBOARD_ID))
             .ReturnsAsync(
-                new SessionDashboardData() 
+                new SessionDashboardData()
                 {
                     Id = dashboardData.Id,
                     DashboardId = dashboardData.DashboardId,
@@ -81,6 +83,10 @@ public class SessionDashboardControllerTests
                     Questions = dashboardData.Questions
                 });
 
+        _mockEventRepository
+            .Setup(repo => repo.GetAnswerEventsBySessionIdAsync(DASHBOARD_ID))
+            .ReturnsAsync(new List<StoredNotificationEvent>());
+
         // Act
         var result = await _controller.GetDashboardById(DASHBOARD_ID);
 
@@ -88,7 +94,17 @@ public class SessionDashboardControllerTests
         Assert.That(result.Result, Is.TypeOf<OkObjectResult>());
         var okResult = result.Result as OkObjectResult;
         Assert.That(okResult, Is.Not.Null);
-        okResult!.Value.ShouldBeEquivalentTo(dashboardData);
+        var returnedData = okResult!.Value as SessionDashboardData;
+        Assert.That(returnedData, Is.Not.Null);
+        Assert.That(returnedData!.Id, Is.EqualTo(dashboardData.Id));
+        Assert.That(returnedData.DashboardId, Is.EqualTo(dashboardData.DashboardId));
+        Assert.That(returnedData.PaymentAmount, Is.EqualTo(dashboardData.PaymentAmount));
+        Assert.That(returnedData.NumberOfPayments, Is.EqualTo(dashboardData.NumberOfPayments));
+        Assert.That(returnedData.WrongAnswers, Is.EqualTo(dashboardData.WrongAnswers));
+        Assert.That(returnedData.CorrectAnswers, Is.EqualTo(dashboardData.CorrectAnswers));
+        Assert.That(returnedData.Questions, Is.EqualTo(dashboardData.Questions));
+        Assert.That(returnedData.Answers, Is.Not.Null);
+        Assert.That(returnedData.Answers, Is.Empty);
     }
 
     [Test]
@@ -99,6 +115,10 @@ public class SessionDashboardControllerTests
         _mockRepository
             .Setup(repo => repo.GetDashboardDataByDashboardIdAsync(DASHBOARD_ID))
             .ReturnsAsync((SessionDashboardData?)null);
+
+        _mockEventRepository
+            .Setup(repo => repo.GetAnswerEventsBySessionIdAsync(DASHBOARD_ID))
+            .ReturnsAsync(new List<StoredNotificationEvent>());
 
         // Act
         var result = await _controller.GetDashboardById(DASHBOARD_ID);
