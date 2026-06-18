@@ -1,3 +1,5 @@
+import { TimestampedAnswer } from './answer-dto';
+
 export interface SessionDashboardData {
   id: number;
   dashboardId: string;
@@ -6,4 +8,5 @@ export interface SessionDashboardData {
   wrongAnswers: number;
   correctAnswers: number;
   questions: number;
+  answers?: TimestampedAnswer[];
 }

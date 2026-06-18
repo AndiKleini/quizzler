@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Dashboard.Models;
 
 public class SessionDashboardData
@@ -9,4 +11,7 @@ public class SessionDashboardData
     public int WrongAnswers { get; set; }
     public int CorrectAnswers { get; set; }
     public int Questions { get; set; }
+
+    [NotMapped]
+    public List<Tuple<DateTime, AnswerDto>>? Answers { get; set; }
 }

@@ -1,0 +1,54 @@
+<div class="wisdom-chart-card">
+  <h2>Wisdom Development Over Time</h2>
+
+  <div *ngIf="showNoData" class="no-data-message">
+    <p>Graph of wisdom development coming soon</p>
+  </div>
+
+  <div *ngIf="!showNoData && timeZones.length > 0" class="chart-container">
+    <div class="chart">
+      <div class="y-axis">
+        <span class="y-label">{{ maxCount }}</span>
+        <span class="y-label">{{ Math.floor(maxCount * 0.75) }}</span>
+        <span class="y-label">{{ Math.floor(maxCount * 0.5) }}</span>
+        <span class="y-label">{{ Math.floor(maxCount * 0.25) }}</span>
+        <span class="y-label">0</span>
+      </div>
+
+      <div class="bars-container">
+        <div *ngFor="let zone of timeZones" class="time-zone">
+          <div class="bar-group">
+            <div class="bar-wrapper">
+              <div
+                class="bar correct-bar"
+                [style.height.%]="getBarHeight(zone.correctAnswers)"
+                [title]="'Correct: ' + zone.correctAnswers">
+                <span class="bar-value" *ngIf="zone.correctAnswers > 0">{{ zone.correctAnswers }}</span>
+              </div>
+            </div>
+            <div class="bar-wrapper">
+              <div
+                class="bar wrong-bar"
+                [style.height.%]="getBarHeight(zone.wrongAnswers)"
+                [title]="'Wrong: ' + zone.wrongAnswers">
+                <span class="bar-value" *ngIf="zone.wrongAnswers > 0">{{ zone.wrongAnswers }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="zone-label">{{ zone.label }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item">
+        <span class="legend-color correct"></span>
+        <span>Correct Answers</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color wrong"></span>
+        <span>Wrong Answers</span>
+      </div>
+    </div>
+  </div>
+</div>

@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { DashboardService } from '../services/dashboard.service';
 import { SessionDashboardData } from '../entities/session-dashboard-data';
+import { WisdomChartComponent } from '../wisdom-chart/wisdom-chart.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, WisdomChartComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
