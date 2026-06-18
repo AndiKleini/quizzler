@@ -1,0 +1,20 @@
+erDiagram
+    SessionDashboardData ||--o{ StoredNotificationEvents : "references"
+
+    StoredNotificationEvents {
+        int Id PK
+        string SessionId FK "Indexed"
+        int Type "1=Answer, 2=PurchaseConfirmation"
+        string Details "JSON string with event-specific data"
+        datetime TimeStamp
+    }
+
+    SessionDashboardData {
+        int Id PK
+        string DashboardId UK "Indexed"
+        int PaymentAmount "Total amount in cents"
+        int NumberOfPayments "Count of payments"
+        int WrongAnswers "Count of wrong answers"
+        int CorrectAnswers "Count of correct answers"
+        int Questions "Total questions"
+    }
