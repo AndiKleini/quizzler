@@ -11,7 +11,10 @@ builder.Services.AddDbContext<DashboardDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<ISessionDashboardRepository, SessionDashboardRepository>();
+builder.Services.AddScoped<IStoredNotificationEventRepository, StoredNotificationEventRepository>();
 builder.Services.AddScoped<INotificationEventHandlerService, NotificationEventHandlerService>();
+builder.Services.AddScoped<StreamNotificationEventHandlerService>();
+builder.Services.AddScoped<INotificationEventHandlerServiceFactory, NotificationEventHandlerServiceFactory>();
 
 // Register RabbitMQ listener as hosted service
 builder.Services.AddHostedService<NotificationEventListener>();

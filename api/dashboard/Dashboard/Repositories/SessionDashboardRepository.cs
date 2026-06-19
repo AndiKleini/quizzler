@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using Dashboard.Data;
 using Dashboard.Models;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +17,14 @@ public class SessionDashboardRepository : ISessionDashboardRepository
 
     public async Task<SessionDashboardData?> GetDashboardDataAsync()
     {
-        return await _context.SessionDashboardData.FirstOrDefaultAsync();
+        var dashboardData = await _context.SessionDashboardData.FirstOrDefaultAsync();
+
+        if (dashboardData != null)
+        {
+            await PopulateAnswersAsync(dashboardData);
+        }
+
+        return dashboardData;
     }
 
     public async Task UpdateDashboardDataAsync(SessionDashboardData dashboardData)
@@ -27,7 +35,36 @@ public class SessionDashboardRepository : ISessionDashboardRepository
 
     public async Task<SessionDashboardData> GetDashboardDataByDashboardIdAsync(string dashboardId)
     {
-        return await _context.SessionDashboardData.
+        var dashboardData = await _context.SessionDashboardData.
             SingleOrDefaultAsync(s => s.DashboardId == dashboardId);
+
+        if (dashboardData != null)
+        {
+            await PopulateAnswersAsync(dashboardData);
+        }
+
+        return dashboardData;
+    }
+
+    private async Task PopulateAnswersAsync(SessionDashboardData dashboardData)
+    {
+        var answerEvents = await _context.StoredNotificationEvents
+            .Where(e => e.SessionId == dashboardData.DashboardId &&
+                        e.Type == (int)NotificationEventType.Answer)
+            .OrderBy(e => e.TimeStamp)
+            .ToListAsync();
+
+        dashboardData.Answers = answerEvents
+            .Select(e =>
+            {
+                var answerDto = JsonSerializer.Deserialize<AnswerDto>(e.Details, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+                return answerDto != null ? new Tuple<DateTime, AnswerDto>(e.TimeStamp, answerDto) : null;
+            })
+            .Where(tuple => tuple != null)
+            .Cast<Tuple<DateTime, AnswerDto>>()
+            .ToList();
     }
 }
