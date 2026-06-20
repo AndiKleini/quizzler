@@ -58,6 +58,14 @@ services:
   dashboard-db:
     image: mcr.microsoft.com/mssql/server:2025-latest
     container_name: dashboard-db-dc
+    # On hybrid Intel CPUs (P-cores with hyperthreading + E-cores without),
+    # logical-processor count is not a clean multiple of physical-core count, so
+    # SQL Server's NUMA setup hits a fatal assert in sosnumap.cpp and aborts
+    # (the `/proc/.../fdinfo: Permission denied` lines are just the crash-dump
+    # collector, not the cause). Pinning to a homogeneous set of CPUs — here the
+    # P-cores (2 threads/core) of an i7-12700H — gives a uniform topology so it
+    # starts. Adjust the range to your host's P-cores if the layout differs.
+    cpuset: "0-11"
     environment:
       ACCEPT_EULA: "Y"
       SA_PASSWORD: Dboard123!

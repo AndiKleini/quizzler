@@ -1,0 +1,132 @@
+# dashboard-db: single-instance SQL Server (public image), the dashboard
+# capability's datastore. Like the PostgreSQL pods it does NOT run two replicas —
+# it is one instance bound to a RWO PVC so the data survives pod restarts.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dashboard-db-data
+  namespace: dashboard
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dashboard-db-credentials
+  namespace: dashboard
+type: Opaque
+stringData:
+  # SA password must satisfy SQL Server's complexity policy.
+  MSSQL_SA_PASSWORD: Dboard123!
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashboard-db
+  namespace: dashboard
+  labels:
+    app: dashboard-db
+spec:
+  replicas: 1
+  strategy:
+    # A single instance bound to a RWO volume must not run two pods at once.
+    type: Recreate
+  selector:
+    matchLabels:
+      app: dashboard-db
+  template:
+    metadata:
+      labels:
+        app: dashboard-db
+    spec:
+      securityContext:
+        # The mssql process runs as uid 10001; make the mounted volume writable
+        # by its group so the fresh PVC initialises cleanly.
+        fsGroup: 10001
+      containers:
+        - name: sqlserver
+          image: mcr.microsoft.com/mssql/server:2025-latest
+          # NOTE: On hybrid Intel CPUs (P-cores + E-cores) SQL Server aborts at
+          # startup with a fatal sosnumap.cpp assert because the logical-processor
+          # count is not a clean multiple of the physical-core count. Kubernetes
+          # has no simple per-pod cpuset, so deploy.sh pins the whole kind node
+          # container to a homogeneous CPU set (MSSQL_CPUSET, default the P-cores)
+          # — every pod then inherits a uniform processor/core ratio and it starts.
+          ports:
+            - containerPort: 1433
+          env:
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: MSSQL_PID
+              value: Developer
+            - name: MSSQL_SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: dashboard-db-credentials
+                  key: MSSQL_SA_PASSWORD
+          resources:
+            requests:
+              # SQL Server requires at least 2 GiB of memory to start.
+              memory: 2Gi
+              cpu: 500m
+            limits:
+              memory: 4Gi
+          volumeMounts:
+            - name: data
+              mountPath: /var/opt/mssql
+          readinessProbe:
+            exec:
+              command:
+                - /opt/mssql-tools18/bin/sqlcmd
+                - -S
+                - localhost
+                - -U
+                - sa
+                - -P
+                - Dboard123!
+                - -C
+                - -Q
+                - SELECT 1
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 12
+          livenessProbe:
+            exec:
+              command:
+                - /opt/mssql-tools18/bin/sqlcmd
+                - -S
+                - localhost
+                - -U
+                - sa
+                - -P
+                - Dboard123!
+                - -C
+                - -Q
+                - SELECT 1
+            initialDelaySeconds: 60
+            periodSeconds: 15
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: dashboard-db-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard-db
+  namespace: dashboard
+spec:
+  # NodePort so the DB is reachable from the host on localhost:1433 via the
+  # cluster's extraPortMapping (30434 -> 1433). In-cluster clients keep using
+  # the service DNS dashboard-db:1433 on the ClusterIP unchanged.
+  type: NodePort
+  selector:
+    app: dashboard-db
+  ports:
+    - port: 1433
+      targetPort: 1433
+      nodePort: 30434

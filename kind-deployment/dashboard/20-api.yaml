@@ -1,0 +1,83 @@
+# dashboard-api: ASP.NET Core (.NET) backend, 2 replicas. Applies its EF Core
+# migrations on startup, so the `dashboard` database/schema is created on the
+# fresh SQL Server instance automatically.
+#
+# Cross-service wiring:
+#   - ConnectionStrings__DefaultConnection -> dashboard-db in this namespace
+#   - RabbitMQ__*                          -> rabbitmq in the messaging namespace
+#                                             (consumes quizzler notification events)
+#   - Cors__AllowedOrigins                 -> browser-facing ingress host of the UI
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-api-config
+  namespace: dashboard
+data:
+  # ASP.NET Core binds the same image used by docker-compose to http on 8080.
+  ASPNETCORE_URLS: http://+:8080
+  ConnectionStrings__DefaultConnection: "Server=dashboard-db,1433;Database=dashboard;User Id=sa;Password=Dboard123!;TrustServerCertificate=True"
+  # RabbitMQ lives in the dedicated messaging namespace; consume quizzler notification events from it.
+  RabbitMQ__Hostname: rabbitmq.messaging.svc.cluster.local
+  RabbitMQ__Username: quizzler-mq
+  RabbitMQ__Password: quizzler-mq
+  RabbitMQ__QueueName: quizzler.notifications
+  RabbitMQ__ExchangeName: quizzler.exchange
+  RabbitMQ__RoutingKey: quizzler.notifications
+  # Browser-facing origin of the dashboard SPA, for CORS.
+  Cors__AllowedOrigins: http://dashboard.localhost
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashboard-api
+  namespace: dashboard
+  labels:
+    app: dashboard-api
+spec:
+  replicas: 2
+  # Zero-downtime rolling update: never drop below the desired replica count.
+  # A new pod must pass its readiness probe before an old one is removed.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: dashboard-api
+  template:
+    metadata:
+      labels:
+        app: dashboard-api
+    spec:
+      containers:
+        - name: dashboard-api
+          image: dashboard-api:kind
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: dashboard-api-config
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 45
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard-api
+  namespace: dashboard
+spec:
+  selector:
+    app: dashboard-api
+  ports:
+    - port: 8080
+      targetPort: 8080

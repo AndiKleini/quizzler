@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 #
-# Continuous zero-downtime probe: run the quiz journey over and over. A failing
-# run does NOT stop the loop — its full output is appended to the error log and
-# the loop resumes with the next run. Stop with Ctrl-C.
+# Continuous zero-downtime probe: run the quiz AND dashboard journeys over and
+# over (Playwright discovers every *.spec.ts under tests/, so both run each pass).
+# A failing run does NOT stop the loop — its full output is appended to the error
+# log and the loop resumes with the next run. Stop with Ctrl-C.
 #
 # Usage:
 #   ./run-continuous.sh
-#   QUIZZLER_UI_BASE_URL=http://quizzler.localhost ./run-continuous.sh
+#   # KIND: each UI has its own ingress host, so set both targets
+#   QUIZZLER_UI_BASE_URL=http://quizzler.localhost \
+#     DASHBOARD_UI_BASE_URL=http://dashboard.localhost ./run-continuous.sh
 #   ITERATIONS=100 ./run-continuous.sh          # bounded instead of infinite
 #   ERROR_LOG=/tmp/probe.log ./run-continuous.sh # custom log location
 #
@@ -16,6 +19,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${SCRIPT_DIR}"
 
 TARGET="${QUIZZLER_UI_BASE_URL:-http://localhost:4200}"
+DASHBOARD_TARGET="${DASHBOARD_UI_BASE_URL:-http://localhost:4202}"
 LOG_FILE="${ERROR_LOG:-${SCRIPT_DIR}/errors.log}"
 ITERATIONS="${ITERATIONS:-0}"   # 0 = run forever
 
@@ -23,7 +27,8 @@ pass=0
 fail=0
 n=0
 
-echo "Probing ${TARGET}"
+echo "Probing quiz UI:      ${TARGET}"
+echo "Probing dashboard UI: ${DASHBOARD_TARGET}"
 echo "Failures are appended to ${LOG_FILE} — the loop never stops on an error (Ctrl-C to quit)."
 echo
 
@@ -38,7 +43,7 @@ while :; do
     fail=$((fail + 1))
     {
       echo "==================================================================="
-      echo "FAILURE  run #${n}  $(date -Is)  target=${TARGET}"
+      echo "FAILURE  run #${n}  $(date -Is)  quiz=${TARGET}  dashboard=${DASHBOARD_TARGET}"
       echo "-------------------------------------------------------------------"
       echo "${output}"
       echo

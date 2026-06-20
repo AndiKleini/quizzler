@@ -20,12 +20,18 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-// Add CORS policy for dashboard UI
+// Add CORS policy for dashboard UI. The allowed origin(s) are environment-driven
+// (comma-separated) so the same image serves docker-compose (localhost:4202) and
+// KIND (the dashboard ingress host) without a rebuild. Defaults to the
+// docker-compose UI origin when unset.
+var corsOrigins = (builder.Configuration["Cors:AllowedOrigins"] ?? "http://localhost:4202")
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:4202")
+        policy.WithOrigins(corsOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader();
     });

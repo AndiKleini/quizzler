@@ -34,6 +34,11 @@ nodes:
       - containerPort: 30433
         hostPort: 5433
         protocol: TCP
+      # SQL Server NodePort, exposed on localhost for external management tools
+      # (Azure Data Studio, sqlcmd, DBeaver). dashboard-db -> 1433.
+      - containerPort: 30434
+        hostPort: 1433
+        protocol: TCP
       # RabbitMQ NodePorts, exposed on localhost for external management tools (RabbitMQ
       # Management UI, AMQP clients). rabbitmq -> 5672 (AMQP), 15672 (Management UI).
       - containerPort: 30000

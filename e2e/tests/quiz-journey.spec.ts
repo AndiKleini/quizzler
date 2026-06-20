@@ -1,4 +1,5 @@
-import { test, expect, Page, TestInfo } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+import { watch, reportDiagnostics, assertNoServerProblems } from './support/diagnostics';
 
 // --- Configuration ---------------------------------------------------------
 // The journey enters on the quizzler UI and is carried across to the payment UI
@@ -9,39 +10,6 @@ const SESSION_ID = process.env.QUIZZLER_SESSION_ID ?? '11111111-2222-3333-4444-5
 // Upper bound on questions so a broken "Next" can never loop forever.
 const MAX_QUESTIONS = 25;
 
-// --- Diagnostics: make any problem visible ---------------------------------
-// We watch the browser for the failure signals that matter during a rollout:
-// uncaught JS errors, console errors, dropped connections, and 5xx responses.
-interface Diagnostics {
-  consoleErrors: string[];
-  pageErrors: string[];
-  serverErrors: string[];
-  failedRequests: string[];
-}
-
-function watch(page: Page): Diagnostics {
-  const d: Diagnostics = { consoleErrors: [], pageErrors: [], serverErrors: [], failedRequests: [] };
-
-  page.on('console', (msg) => {
-    if (msg.type() === 'error') d.consoleErrors.push(msg.text());
-  });
-  page.on('pageerror', (err) => d.pageErrors.push(err.message));
-  page.on('response', (resp) => {
-    if (resp.status() >= 500) {
-      d.serverErrors.push(`${resp.status()} ${resp.request().method()} ${resp.url()}`);
-    }
-  });
-  page.on('requestfailed', (req) => {
-    const reason = req.failure()?.errorText ?? 'failed';
-    // ERR_ABORTED is the browser cancelling in-flight requests on navigation — not downtime.
-    if (reason !== 'net::ERR_ABORTED') {
-      d.failedRequests.push(`${reason} ${req.method()} ${req.url()}`);
-    }
-  });
-
-  return d;
-}
-
 // Fail loudly (with the captured URL) if the app routed itself to its error page.
 async function ensureNotErrorPage(page: Page): Promise<void> {
   const onErrorRoute = page.url().includes('/error');
@@ -51,25 +19,6 @@ async function ensureNotErrorPage(page: Page): Promise<void> {
     .catch(() => false);
   if (onErrorRoute || errorTextVisible) {
     throw new Error(`Application routed to its error page (url: ${page.url()})`);
-  }
-}
-
-// Attach everything we saw to the report and echo a summary to the console.
-async function reportDiagnostics(testInfo: TestInfo, d: Diagnostics): Promise<void> {
-  await testInfo.attach('diagnostics.json', {
-    body: JSON.stringify(d, null, 2),
-    contentType: 'application/json',
-  });
-
-  const problems = [
-    ...d.serverErrors.map((e) => `  [5xx]      ${e}`),
-    ...d.failedRequests.map((e) => `  [dropped]  ${e}`),
-    ...d.pageErrors.map((e) => `  [pageerr]  ${e}`),
-    ...d.consoleErrors.map((e) => `  [console]  ${e}`),
-  ];
-  if (problems.length > 0) {
-    // eslint-disable-next-line no-console
-    console.log(`\n!!! ${problems.length} problem(s) observed during the journey:\n${problems.join('\n')}\n`);
   }
 }
 
@@ -135,19 +84,5 @@ test('quiz journey: buy → pay → answer → finish (stays up end-to-end)', as
     await reportDiagnostics(testInfo, diag);
   }
 
-  // Zero-downtime gate: a single 5xx or dropped connection during the run is a failure.
-  // Soft assertions so one run reports *every* problem category at once instead of
-  // stopping at the first — the continuous runner logs them and resumes.
-  expect.soft(
-    diag.serverErrors,
-    `Server (5xx) responses occurred during the journey:\n${diag.serverErrors.join('\n')}`,
-  ).toHaveLength(0);
-  expect.soft(
-    diag.failedRequests,
-    `Requests were dropped during the journey:\n${diag.failedRequests.join('\n')}`,
-  ).toHaveLength(0);
-  expect.soft(
-    diag.pageErrors,
-    `Uncaught page errors occurred during the journey:\n${diag.pageErrors.join('\n')}`,
-  ).toHaveLength(0);
+  assertNoServerProblems(diag);
 });

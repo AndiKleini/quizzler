@@ -15,12 +15,12 @@
 # timestamp), so `kubectl set image` sees a real change and triggers a rollout.
 #
 # Usage:
-#   ./rolling-update.sh                       build + roll all four app services
+#   ./rolling-update.sh                       build + roll all six app services
 #   ./rolling-update.sh quizzler-api          build + roll only the named service(s)
 #   ./rolling-update.sh quizzler-ui payment-ui
 #   ./rolling-update.sh --no-build [service…] reuse the newest built tag, just roll
 #
-# Valid service names: quizzler-api  payment-api  quizzler-ui  payment-ui
+# Valid service names: quizzler-api  payment-api  dashboard-api  quizzler-ui  payment-ui  dashboard-ui
 set -euo pipefail
 
 CLUSTER="quizzler"
@@ -31,8 +31,10 @@ ROOT="$(dirname "$SCRIPT_DIR")"
 ALL_SERVICES=(
   "quizzler-api|quizzler|${ROOT}/api/quizzler|"
   "payment-api|payment|${ROOT}/api/payment|"
+  "dashboard-api|dashboard|${ROOT}/api/dashboard|"
   "quizzler-ui|quizzler|${ROOT}/ui/quizzler|--build-arg NG_CONFIGURATION=kind"
   "payment-ui|payment|${ROOT}/ui/payment|--build-arg NG_CONFIGURATION=kind"
+  "dashboard-ui|dashboard|${ROOT}/ui/dashboard|--build-arg NG_CONFIGURATION=kind"
 )
 
 valid_service() {
@@ -52,7 +54,7 @@ for arg in "$@"; do
     -*) echo "ERROR: unknown flag '${arg}'" >&2; exit 2 ;;
     *)
       if ! valid_service "${arg}"; then
-        echo "ERROR: unknown service '${arg}'. Valid: quizzler-api payment-api quizzler-ui payment-ui" >&2
+        echo "ERROR: unknown service '${arg}'. Valid: quizzler-api payment-api dashboard-api quizzler-ui payment-ui dashboard-ui" >&2
         exit 2
       fi
       REQUESTED+=("${arg}")
