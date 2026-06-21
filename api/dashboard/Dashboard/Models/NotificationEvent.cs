@@ -6,4 +6,5 @@ public class NotificationEvent
     public int Type { get; set; }
     public string Details { get; set; } = string.Empty;
     public DateTime TimeStamp { get; set; }
+    public object? Id { get; internal set; }
 }
