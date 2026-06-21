@@ -11,6 +11,8 @@ public class DashboardDbContext : DbContext
 
     public DbSet<SessionDashboardData> SessionDashboardData { get; set; }
 
+    public DbSet<NotificationEvent> NotificationEvents { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
