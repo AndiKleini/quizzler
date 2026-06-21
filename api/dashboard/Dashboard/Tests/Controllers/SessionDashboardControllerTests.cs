@@ -14,6 +14,7 @@ public class SessionDashboardControllerTests
 {
     private Mock<ISessionDashboardRepository> _mockRepository = null!;
     private Mock<ILogger<SessionDashboardController>> _mockLogger = null!;
+    private Mock<ISessionDashboardService> _mockSessionDashboardService  = null;
     private SessionDashboardController _controller = null!;
 
     [SetUp]
@@ -21,7 +22,8 @@ public class SessionDashboardControllerTests
     {
         _mockRepository = new Mock<ISessionDashboardRepository>();
         _mockLogger = new Mock<ILogger<SessionDashboardController>>();
-        _controller = new SessionDashboardController(_mockRepository.Object, _mockLogger.Object);
+        _mockSessionDashboardService = new Mock<ISessionDashboardService>();
+        _controller = new SessionDashboardController(_mockRepository.Object, _mockLogger.Object, _mockSessionDashboardService.Object);
     }
 
     [Test]
@@ -92,6 +94,48 @@ public class SessionDashboardControllerTests
     }
 
     [Test]
+    public async Task GetDashboardByDashboardId_WhenDataComesFromService_ReturnsOkWithServiceData()
+    {
+        // Arrange
+        const string DASHBOARD_ID = "SomeDashboardId";
+        var dashboardData = new SessionDashboardData
+        {
+            Id = 1,
+            DashboardId = DASHBOARD_ID,
+            PaymentAmount = 500,
+            NumberOfPayments = 5,
+            WrongAnswers = 3,
+            CorrectAnswers = 7,
+            Questions = 10
+        };
+        _mockRepository
+            .Setup(repo => repo.GetDashboardDataByDashboardIdAsync(DASHBOARD_ID))
+            .ReturnsAsync((SessionDashboardData?)null);
+        _mockSessionDashboardService
+            .Setup(s => s.GetDashboardFromNotificationEvents(DASHBOARD_ID))
+            .ReturnsAsync(
+                new SessionDashboardData()
+                {
+                    Id = dashboardData.Id,
+                    DashboardId = dashboardData.DashboardId,
+                    PaymentAmount = dashboardData.PaymentAmount,
+                    NumberOfPayments = dashboardData.NumberOfPayments,
+                    WrongAnswers = dashboardData.WrongAnswers,
+                    CorrectAnswers = dashboardData.CorrectAnswers,
+                    Questions = dashboardData.Questions
+                });
+
+        // Act
+        var result = await _controller.GetDashboardById(DASHBOARD_ID);
+
+        // Assert
+        Assert.That(result.Result, Is.TypeOf<OkObjectResult>());
+        var okResult = result.Result as OkObjectResult;
+        Assert.That(okResult, Is.Not.Null);
+        okResult!.Value.ShouldBeEquivalentTo(dashboardData);
+    }
+
+    [Test]
     public async Task GetDashboardByDashboardId_WhenNoDataExists_ReturnsNotFound()
     {
         const string DASHBOARD_ID = "SomeDashboardId";
@@ -99,6 +143,9 @@ public class SessionDashboardControllerTests
         _mockRepository
             .Setup(repo => repo.GetDashboardDataByDashboardIdAsync(DASHBOARD_ID))
             .ReturnsAsync((SessionDashboardData?)null);
+        _mockSessionDashboardService.
+            Setup(s => s.GetDashboardFromNotificationEvents(DASHBOARD_ID))
+            .ReturnsAsync((SessionDashboardData)null);
 
         // Act
         var result = await _controller.GetDashboardById(DASHBOARD_ID);

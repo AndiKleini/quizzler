@@ -9,4 +9,6 @@ public interface ISessionDashboardRepository
     Task UpdateDashboardDataAsync(SessionDashboardData dashboardData);
 
     Task<SessionDashboardData> GetDashboardDataByDashboardIdAsync(string dashBoardId);
+    
+    bool Exists(string dashboardId);
 }

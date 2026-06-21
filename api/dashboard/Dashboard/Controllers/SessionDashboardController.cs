@@ -10,13 +10,16 @@ public class SessionDashboardController : ControllerBase
 {
     private readonly ISessionDashboardRepository _repository;
     private readonly ILogger<SessionDashboardController> _logger;
+    private readonly ISessionDashboardService _dashboardService;
 
     public SessionDashboardController(
         ISessionDashboardRepository repository,
-        ILogger<SessionDashboardController> logger)
+        ILogger<SessionDashboardController> logger,
+        ISessionDashboardService dashboardService)
     {
         _repository = repository;
         _logger = logger;
+        _dashboardService = dashboardService;
     }
 
     [HttpGet]
@@ -39,7 +42,12 @@ public class SessionDashboardController : ControllerBase
 
         if (data == null)
         {
-            return NotFound();
+            data = await _dashboardService.GetDashboardFromNotificationEvents(dashboardId);
+
+            if (data == null)
+            {
+                return NotFound();
+            }
         }
 
         return Ok(data);

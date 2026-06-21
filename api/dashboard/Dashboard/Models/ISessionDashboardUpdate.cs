@@ -2,5 +2,5 @@ namespace Dashboard.Models;
 
 public interface ISessionDashboardUpdate
 {
-    void ApplyTo(SessionDashboardData dashboard);
+    void ApplyTo(SessionDashboardData dashboard, DateTime timeStamp);
 }

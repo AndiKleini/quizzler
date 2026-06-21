@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using Dashboard.Models;
+using Dashboard.Repositories;
 using Dashboard.Services;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -93,8 +94,12 @@ public class NotificationEventListener : BackgroundService
                     if (notificationEvent != null)
                     {
                         using var scope = _serviceProvider.CreateScope();
-                        var handlerService = scope.ServiceProvider
-                            .GetRequiredService<INotificationEventHandlerService>();
+                        var handlerService = 
+                            new NotificationHandlerServiceFactory(
+                                scope.ServiceProvider.GetRequiredService<ISessionDashboardRepository>(),
+                                scope.ServiceProvider.GetRequiredService<NotificationEventHandlerService>(),
+                                scope.ServiceProvider.GetRequiredService<StreamNotificationEventHandlerService>()
+                            ).GetInstance(notificationEvent.SessionId);
 
                         await handlerService.HandleNotificationEventAsync(notificationEvent);
 

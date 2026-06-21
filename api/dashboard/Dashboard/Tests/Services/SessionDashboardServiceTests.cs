@@ -11,6 +11,11 @@ public class SessionDashboardServiceTests
     [Test]
     public async Task GetDashboardFromNotificationEvents_DashboardIdSupplied_ReturnsSessionDashboard()
     {
+        // Capture the answer timestamps so the expected Answers list can be
+        // asserted against the actual one tuple-for-tuple.
+        DateTime answerTimeStamp1 = DateTime.Now;
+        DateTime answerTimeStamp2 = DateTime.Now;
+        DateTime answerTimeStamp3 = DateTime.Now;
         SessionDashboardData expectedDashboard =
             new SessionDashboardData()
             {
@@ -20,12 +25,39 @@ public class SessionDashboardServiceTests
                 WrongAnswers = 1,
                 PaymentAmount = 300,
                 NumberOfPayments = 2,
+                Answers = new List<Tuple<DateTime, AnswerDto>>()
+                {
+                    new Tuple<DateTime, AnswerDto>(
+                        answerTimeStamp1,
+                        new AnswerDto()
+                        {
+                            QuestionId = "selection_1",
+                            SelectedOptionId = "option_1",
+                            IsCorrect = false
+                        }),
+                    new Tuple<DateTime, AnswerDto>(
+                        answerTimeStamp2,
+                        new AnswerDto()
+                        {
+                            QuestionId = "selection_1",
+                            SelectedOptionId = "option_1",
+                            IsCorrect = true
+                        }),
+                    new Tuple<DateTime, AnswerDto>(
+                        answerTimeStamp3,
+                        new AnswerDto()
+                        {
+                            QuestionId = "selection_1",
+                            SelectedOptionId = "option_1",
+                            IsCorrect = true
+                        })
+                }
             };
-        NotificationEvent receivedEvent1 = 
+        NotificationEvent receivedEvent1 =
             new NotificationEvent()
             {
                 SessionId = DASHBOARD_ID,
-                TimeStamp = DateTime.Now, // no need to worry about flakiness here
+                TimeStamp = answerTimeStamp1,
                 Details = @"{
                             ""questionId"": ""selection_1"",
                             ""isCorrect"": false,
@@ -33,11 +65,11 @@ public class SessionDashboardServiceTests
                 }",
                 Type = (int)NotificationEventType.Answer
             };
-        NotificationEvent receivedEvent2 = 
+        NotificationEvent receivedEvent2 =
             new NotificationEvent()
             {
                 SessionId = DASHBOARD_ID,
-                TimeStamp = DateTime.Now, // no need to worry about flakiness here
+                TimeStamp = answerTimeStamp2,
                 Details = @"{
                             ""questionId"": ""selection_1"",
                             ""isCorrect"": true,
@@ -45,11 +77,11 @@ public class SessionDashboardServiceTests
                 }",
                 Type = (int)NotificationEventType.Answer
             };
-        NotificationEvent receivedEvent3 = 
+        NotificationEvent receivedEvent3 =
             new NotificationEvent()
             {
                 SessionId = DASHBOARD_ID,
-                TimeStamp = DateTime.Now, // no need to worry about flakiness here
+                TimeStamp = answerTimeStamp3,
                 Details = @"{
                             ""questionId"": ""selection_1"",
                             ""isCorrect"": true,

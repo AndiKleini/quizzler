@@ -30,4 +30,9 @@ public class SessionDashboardRepository : ISessionDashboardRepository
         return await _context.SessionDashboardData.
             SingleOrDefaultAsync(s => s.DashboardId == dashboardId);
     }
+
+    public bool Exists(string dashboardId)
+    {
+        return _context.SessionDashboardData.SingleOrDefault(s => s.DashboardId == dashboardId) != null;
+    }
 }

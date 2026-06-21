@@ -13,5 +13,5 @@ public class SessionDashboardData
     public int Questions { get; set; }
 
     [NotMapped]
-    public List<Tuple<DateTime, AnswerDto>>? Answers { get; set; }
+    public List<Tuple<DateTime, AnswerDto>>? Answers { get; set; } = new List<Tuple<DateTime, AnswerDto>>();
 }

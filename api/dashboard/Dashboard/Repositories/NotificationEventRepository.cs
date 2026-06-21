@@ -14,6 +14,7 @@ public class NotificationEventRepository : INotificationEventRepository
   public async Task AddAsync(NotificationEvent receivedEvent)
   {
     await this.context.AddAsync(receivedEvent);
+    await this.context.SaveChangesAsync();
   }
 
   public async Task<List<NotificationEvent>> GetNotificationEventsForDashboardId(string dashboardId)

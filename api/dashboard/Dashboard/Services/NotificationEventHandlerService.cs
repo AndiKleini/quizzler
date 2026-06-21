@@ -40,7 +40,7 @@ public class NotificationEventHandlerService : INotificationEventHandlerService
 
             if (update != null)
             {
-                update.ApplyTo(dashboardData);
+                update.ApplyTo(dashboardData, notificationEvent.TimeStamp);
                 await _sessionDashboardRepository.UpdateDashboardDataAsync(dashboardData);
                 _logger.LogInformation(
                     "Updated dashboard data for SessionId: {SessionId} with event type: {Type}",

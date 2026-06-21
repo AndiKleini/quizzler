@@ -2,11 +2,11 @@ using System.ComponentModel;
 using System.Text.Json;
 using Dashboard.Models;
 
-internal class SessionDashboardService
+public class SessionDashboardService : ISessionDashboardService
 {
   private static readonly JsonSerializerOptions JsonOptions = new()
   {
-      PropertyNameCaseInsensitive = true  // case SENSITIVE (this is actually the default)
+    PropertyNameCaseInsensitive = true  // case SENSITIVE (this is actually the default)
   };
 
   private INotificationEventRepository repository;
@@ -18,22 +18,22 @@ internal class SessionDashboardService
 
   public async Task<SessionDashboardData> GetDashboardFromNotificationEvents(string dashboardId)
   {
-     SessionDashboardData dashboardFromStream = new SessionDashboardData() { DashboardId = dashboardId};
+    SessionDashboardData dashboardFromStream = new SessionDashboardData() { DashboardId = dashboardId };
 
-     List<NotificationEvent> events = 
-      await this.repository.GetNotificationEventsForDashboardId(dashboardId);
+    List<NotificationEvent> events =
+     await this.repository.GetNotificationEventsForDashboardId(dashboardId);
 
-    foreach(var currEvent in events)
+    foreach (var currEvent in events)
     {
       ISessionDashboardUpdate? update = (NotificationEventType)currEvent.Type switch
       {
-        NotificationEventType.Answer => 
+        NotificationEventType.Answer =>
           JsonSerializer.Deserialize<AnswerDto>(currEvent.Details, JsonOptions),
-        NotificationEventType.PurchaseConfirmation => 
+        NotificationEventType.PurchaseConfirmation =>
           JsonSerializer.Deserialize<QuizAttemptPurchaseConfirmationDto>(currEvent.Details, JsonOptions),
         var unknown => throw new InvalidEnumArgumentException()
       };
-      update?.ApplyTo(dashboardFromStream);
+      update?.ApplyTo(dashboardFromStream, currEvent.TimeStamp);
     }
     return dashboardFromStream;
   }

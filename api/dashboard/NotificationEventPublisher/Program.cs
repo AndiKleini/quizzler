@@ -26,7 +26,7 @@ Console.WriteLine($"Publishing to exchange: {exchangeName}");
 Console.WriteLine($"Routing key: {routingKey}");
 Console.WriteLine();
 
-var sessionIds = new[] { "session-001", "session-002", "session-003" };
+var sessionIds = new[] { "session-004", "session-005", "session-006" };
 var random = new Random();
 var messageCounter = 0;
 
