@@ -20,5 +20,11 @@ public class DashboardDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.ToTable("SessionDashboardData");
         });
+
+        modelBuilder.Entity<NotificationEvent>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("NotificationEvents");
+        });
     }
 }

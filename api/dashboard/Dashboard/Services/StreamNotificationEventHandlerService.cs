@@ -12,6 +12,6 @@ public class StreamNotificationEventHandlerService : INotificationEventHandlerSe
 
   public async Task HandleNotificationEventAsync(NotificationEvent notificationEvent)
   {
-    throw new NotImplementedException();
+     await this.repository.AddAsync(notificationEvent);
   }
 }
