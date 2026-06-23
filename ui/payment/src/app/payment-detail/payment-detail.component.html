@@ -5,14 +5,20 @@
       <p class="message">Amount: <span class="value">{{ price() }}</span></p>
     }
 
-    @if (outcome() === PaymentOutcome.Pending) {
+    @if(isLoading() === false) {
+       @if (outcome() === PaymentOutcome.Pending) {
       <div class="button-row">
         <button type="button" (click)="onConfirm()" class="btn btn-primary">Confirm</button>
         <button type="button" (click)="onCancel()" class="btn btn-secondary">Cancel</button>
       </div>
-    } @else if (outcome() === PaymentOutcome.Confirmed) {
-      <p class="message message-success">Payment confirmed.</p>
-    } @else if (outcome() === PaymentOutcome.Cancelled) {
-      <p class="message message-error">Payment cancelled.</p>
+      } @else if (outcome() === PaymentOutcome.Confirmed) {
+        <p class="message message-success">Payment confirmed.</p>
+      } @else if (outcome() === PaymentOutcome.Cancelled) {
+        <p class="message message-error">Payment cancelled.</p>
+      }
+    } @else {
+      <p>Loading...</p>
     }
+
+   
 </div>

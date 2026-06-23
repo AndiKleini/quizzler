@@ -81,6 +81,17 @@ public class QuizAttemptPurchaseService {
 
     @Transactional
     public QuizAttemptPurchaseConfirmationDto confirmPurchase(String sessionPublicId, String purchaseId) {
+
+        // introduce an artificial delay in order to simulate that the api takes longer to response
+        try {
+                Thread.sleep(5000);
+        } catch (InterruptedException ex) {
+                throw new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR, 
+                        "Waiting thread was interrupted");
+        }
+
+
         QuizAttemptPurchase purchase = quizAttemptPurchaseRepository.findByPublicId(purchaseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Purchase " + purchaseId + " not found"));

@@ -16,6 +16,7 @@ export enum PaymentOutcome {
   styleUrl: './payment-detail.component.css'
 })
 export class PaymentDetailComponent implements OnInit {
+
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private paymentService = inject(PaymentService);
@@ -25,17 +26,19 @@ export class PaymentDetailComponent implements OnInit {
   public paymentId = this.route.snapshot.paramMap.get('paymentId') ?? '';
   public outcome = signal<PaymentOutcome>(PaymentOutcome.Pending);
   public price = signal<number | undefined>(undefined);
+  public isLoading = signal<boolean>(false);
 
   // URL to return the user to once the payment is settled (supplied by the merchant).
   private redirectUrl = '';
 
   public ngOnInit(): void {
     this.paymentService.getPayment(this.paymentId)
-      .pipe(catchError(err => {
-        console.error(err?.message ?? err);
-        this.router.navigate(['/error']);
-        return of(undefined);
-      }))
+      .pipe(
+        catchError(err => {
+          console.error(err?.message ?? err);
+          this.router.navigate(['/error']);
+          return of(undefined);
+        }))
       .subscribe(payment => {
         if (payment) {
           this.price.set(payment.price);
@@ -45,10 +48,12 @@ export class PaymentDetailComponent implements OnInit {
   }
 
   public onConfirm(): void {
+    this.isLoading.set(true);
     this.paymentService.confirmPayment(this.paymentId)
       .pipe(catchError(err => {
         console.error(err?.message ?? err);
         this.router.navigate(['/error']);
+        this.isLoading.set(false);
         return of(undefined);
       }))
       .subscribe(confirmation => {
@@ -56,6 +61,7 @@ export class PaymentDetailComponent implements OnInit {
           this.outcome.set(PaymentOutcome.Confirmed);
           this.redirect(this.redirectUrl);
         }
+        this.isLoading.set(false);
       });
   }
 
