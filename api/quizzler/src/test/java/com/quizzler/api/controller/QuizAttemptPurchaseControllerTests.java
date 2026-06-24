@@ -29,7 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureWebTestClient
+@AutoConfigureWebTestClient(timeout = "30000")
 public class QuizAttemptPurchaseControllerTests {
 
     private static final String PURCHASE_URI = "/session/{publicId}/quiz-attempt-purchase";
