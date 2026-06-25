@@ -40,7 +40,7 @@ describe('QuizAttemptStepFinalComponent', () => {
     expect(component).toBeTruthy();
     expect(component.sessionId).toBe(SESSIONID_KEY);
     expect(component.attemptId).toBe(ATTEMPTID_KEY);
-    var text = fixture.nativeElement.querySelector('p').textContent.trim();
+    var text = fixture.nativeElement.querySelector('p:nth-child(3)').textContent.trim();
     expect(text).toContain(SESSIONID_KEY);
     expect(text).toContain(ATTEMPTID_KEY);
   });

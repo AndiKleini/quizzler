@@ -66,7 +66,7 @@ describe('QuizAttemptPurchaseConfirmedComponent', () => {
     fixture.detectChanges();
 
     expect(component.loading()).toBe(true);
-    expect(fixture.nativeElement.textContent).toContain('Loading');
+    expect(fixture.nativeElement.querySelector('quizzler-loading-spinner')).toBeTruthy();
     expect(mockQuizAttemptPurchaseService.getConfirmation).toHaveBeenCalledWith(SESSION_ID, PURCHASE_ID);
 
     tick(5000);
