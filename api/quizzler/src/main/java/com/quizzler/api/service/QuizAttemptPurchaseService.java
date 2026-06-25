@@ -38,6 +38,7 @@ public class QuizAttemptPurchaseService {
                                       PaymentApiClient paymentApiClient,
                                       @Value("${quizzler.api.base-url}") String apiBaseUrl,
                                       @Value("${quizzler.ui.base-url}") String uiBaseUrl) {
+                                        System.out.println("APIBaseUrl this is new " + apiBaseUrl);
         this.quizSessionRepository = quizSessionRepository;
         this.quizAttemptPurchaseRepository = quizAttemptPurchaseRepository;
         this.quizAttemptPurchaseConfirmationRepository = quizAttemptPurchaseConfirmationRepository;
@@ -59,6 +60,7 @@ public class QuizAttemptPurchaseService {
 
     @Transactional(readOnly = true)
     public PaymentInitiationDto initiatePayment(String sessionPublicId, String purchaseId) {
+        System.out.println("In initiate payment");
         QuizAttemptPurchase purchase = quizAttemptPurchaseRepository.findByPublicId(purchaseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Purchase " + purchaseId + " not found"));
@@ -73,6 +75,8 @@ public class QuizAttemptPurchaseService {
                 + "/quiz-attempt-purchase/" + purchase.getPublicId() + "/confirmation";
         String webhookCancelUrl = uiBaseUrl + "/quiz-session/" + sessionPublicId
                 + "/quiz-attempt-purchase-failed/";
+
+        System.out.println("SuccessUrl specifiedf "  + webhookSuccessUrl);
 
         String paymentId = paymentApiClient.createPayment(
                 purchase.getPublicId(), PRICE, purchase.getSession().getPublicId(), redirectUrl, webhookSuccessUrl, webhookCancelUrl);

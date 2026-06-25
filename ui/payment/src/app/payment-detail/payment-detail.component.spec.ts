@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, throwError, delay } from 'rxjs';
 import { By } from '@angular/platform-browser';
 
 import { PaymentDetailComponent, PaymentOutcome } from './payment-detail.component';
@@ -131,6 +131,23 @@ describe('PaymentDetailComponent', () => {
 
     expect(mockRouter.navigate).toHaveBeenCalledWith(['/error']);
     expect(component.outcome()).toBe(PaymentOutcome.Pending);
+  });
+
+  it('onConfirm_when_confirming_then_displays_loading_spinner', () => {
+    setup();
+    // Use a delayed observable to simulate async call so isLoading remains true
+    mockPaymentService.confirmPayment.mockReturnValue(
+      of(new PaymentConfirmation(CONFIRMATION_ID, PAYMENT_ID, CREATED_AT)).pipe(delay(100))
+    );
+
+    component.onConfirm();
+    fixture.detectChanges();
+
+    expect(component.isLoading()).toBe(true);
+    const spinner = fixture.debugElement.query(By.css('payment-loading-spinner'));
+    expect(spinner).toBeTruthy();
+    expect(queryButton('confirm')).toBeFalsy();
+    expect(queryButton('cancel')).toBeFalsy();
   });
 
   function queryButton(text: string): HTMLButtonElement | null {

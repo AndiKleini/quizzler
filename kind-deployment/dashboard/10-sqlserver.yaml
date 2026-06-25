@@ -93,6 +93,7 @@ spec:
                 - SELECT 1
             initialDelaySeconds: 20
             periodSeconds: 10
+            timeoutSeconds: 10
             failureThreshold: 12
           livenessProbe:
             exec:
@@ -109,6 +110,7 @@ spec:
                 - SELECT 1
             initialDelaySeconds: 60
             periodSeconds: 15
+            timeoutSeconds: 10
       volumes:
         - name: data
           persistentVolumeClaim:

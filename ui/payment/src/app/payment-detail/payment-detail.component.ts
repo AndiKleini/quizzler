@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { PaymentService } from '../services/paymentservice';
+import { LoadingSpinnerComponent } from '../loading-spinner/loading-spinner.component';
 
 export enum PaymentOutcome {
   Pending = 'pending',
@@ -12,6 +13,7 @@ export enum PaymentOutcome {
 @Component({
   selector: 'payment-detail',
   standalone: true,
+  imports: [ LoadingSpinnerComponent ],
   templateUrl: './payment-detail.component.html',
   styleUrl: './payment-detail.component.css'
 })

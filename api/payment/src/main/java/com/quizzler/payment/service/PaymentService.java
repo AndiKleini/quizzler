@@ -20,6 +20,7 @@ public class PaymentService {
 
     public PaymentService(PaymentRepository paymentRepository) {
         this.paymentRepository = paymentRepository;
+        System.out.println("PaymentService initialized");
     }
 
     @Transactional(readOnly = true)
@@ -42,7 +43,9 @@ public class PaymentService {
             request.getRedirectUrl(),
             request.getWebhookSuccessUrl(),
             request.getWebhookCancelUrl());
-        Payment saved = paymentRepository.save(payment);
+        System.out.println("Before saved " + request.getWebhookSuccessUrl());
+            Payment saved = paymentRepository.save(payment);
+        System.out.println("After saved " + saved.getWebhookSuccessUrl());
         return new PaymentDto(
             saved.getPublicId(), 
             saved.getTransactionId(),

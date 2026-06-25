@@ -25,6 +25,7 @@ public class QuizAttemptPurchaseController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public QuizAttemptPurchaseDto createPurchase(@PathVariable String sessionId) {
+        System.out.println("CONTROLLER: createPurchase called with sessionId=" + sessionId);
         return quizAttemptPurchaseService.createPurchase(sessionId);
     }
 
@@ -32,6 +33,7 @@ public class QuizAttemptPurchaseController {
     @ResponseStatus(HttpStatus.CREATED)
     public PaymentInitiationDto initiatePayment(@PathVariable String sessionId,
                                                 @PathVariable String purchaseId) {
+        System.out.println("CONTROLLER: initiatePayment called with sessionId=" + sessionId + ", purchaseId=" + purchaseId);
         return quizAttemptPurchaseService.initiatePayment(sessionId, purchaseId);
     }
 
