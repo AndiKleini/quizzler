@@ -78,7 +78,6 @@ public class SeedDataInitializer implements CommandLineRunner {
                     inputStream, new TypeReference<List<SessionDto>>() {});
 
             for (SessionDto sessionDto : sessionDtos) {
-                // If session exists, delete old specification and questions
                 if (quizSessionRepository.findByPublicId(sessionDto.sessionId).isPresent()) {
                     continue;
                 }

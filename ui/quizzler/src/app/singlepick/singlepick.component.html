@@ -1,7 +1,7 @@
 <div *ngIf="singlePickQuestion() as question" [formGroup]="singlePickForm" class="card">
     <div class="title">{{question.title}}</div>
     <div class="subtitle"> {{question.text}} </div>
-    <div *ngFor='let option of question.options;' class="option-item" id="optcontainer-{{option.id}}"
+    <div *ngFor='let option of question.options; let number = index;'  class="option-item" id="optcontainer-{{option.id}}"
         [ngClass]="{
             'selected': option.id.toString() === this.singlePickForm.get('selectedOption')?.value,
             'correct': isEvaluated() && option.id === correctOption(),
@@ -11,7 +11,7 @@
             [value]="option.id"
             formControlName="selectedOption" #selectedOption [attr.disabled]="isEvaluated() ? true : null">
         <div class="option-text">
-            <label for="{{option.id}}"><span class="option-label">({{option.id}})</span> {{option.text}}
+            <label for="{{option.id}}"><span class="option-label">({{ number + 1 }})</span> {{option.text}}
             </label>
         </div>
     </div>
