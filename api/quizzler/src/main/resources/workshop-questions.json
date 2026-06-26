@@ -1,0 +1,40 @@
+[
+  {
+    "sessionId": "session-part-1",
+    "questions": [
+      {
+        "title": "Workshop Statement",
+        "text": "What statement is wrong about this workshop?",
+        "options": [
+          "Interactive sessions where people work together.",
+          "Fun is allowed and we gonna have a good time.",
+          "Our goal is to complete each session with the 100% correct solution.",
+          "We retreat from our working environment and can try out new approaches with no risk of failure."
+        ],
+        "correctOption": "Our goal is to complete each session with the 100% correct solution."
+      },
+      {
+        "title": "Refactoring Statement",
+        "text": "What statement is wrong about refactoring?",
+        "options": [
+          "We have a good reason for our changes and we are actually creating value with it.",
+          "Given the possibilities, we gonna adapt the business logic to improve the system for our users.",
+          "Our changes will not affect the policies.",
+          "We don't need to understand each aspect of the code base in order to refactor."
+        ],
+        "correctOption": "Given the possibilities, we gonna adapt the business logic to improve the system for our users."
+      },
+      {
+        "title": "Workshop Topics",
+        "text": "What term doesn't fit to our workshop:",
+        "options": [
+          "AI",
+          "TDD",
+          "No Code platform",
+          "Architecture"
+        ],
+        "correctOption": "No Code platform"
+      }
+    ]
+  }
+]
