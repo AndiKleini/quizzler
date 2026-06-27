@@ -62,8 +62,15 @@ services:
       ACCEPT_EULA: "Y"
       SA_PASSWORD: Dboard123!
       MSSQL_PID: Developer
-      # Disable NUMA to prevent crashes on hybrid CPUs (P+E cores with asymmetric topology)
-      MSSQL_ENABLE_NUMA: "false"
+    # Pin to a 2-CPU set so SQL Server's SQLPal startup assert
+    # `result * coreCount == procCount` always holds. On hybrid Intel CPUs
+    # (e.g. i7-12700H: P-cores x2 threads + E-cores x1 thread) the host
+    # topology is non-uniform and the assert crashes at startup. A 2-CPU set is
+    # uniform on every machine (either 1 core x2 threads or 2 cores x1 thread,
+    # both satisfy the assert) and CPUs 0-1 exist everywhere, including the
+    # Docker Desktop VM on macOS. MSSQL_ENABLE_NUMA targets a different layer
+    # and does not prevent this crash.
+    cpuset: "0-1"
     ports:
       - "1433:1433"
     volumes:
