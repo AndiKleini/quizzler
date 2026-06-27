@@ -14,12 +14,15 @@ import com.quizzler.payment.client.ConfirmationWebhookClient;
 import com.quizzler.payment.domain.Payment;
 import com.quizzler.payment.domain.PaymentConfirmation;
 import com.quizzler.payment.dto.PaymentConfirmationDto;
+import com.quizzler.payment.messaging.PaymentConfirmationEvent;
+import com.quizzler.payment.messaging.PaymentConfirmationPublisher;
 import com.quizzler.payment.repository.PaymentCancellationRepository;
 import com.quizzler.payment.repository.PaymentConfirmationRepository;
 import com.quizzler.payment.repository.PaymentRepository;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -52,6 +55,9 @@ class PaymentConfirmationServiceTests {
     @InjectMocks
     private PaymentConfirmationService paymentConfirmationService;
 
+    @Mock
+    private PaymentConfirmationPublisher paymentConfirmationPublisher;
+
     @Test
     void confirmPayment_inserts_confirmation_with_insertion_timestamp() {
         Instant before = Instant.now().minus(1, ChronoUnit.SECONDS);
@@ -69,6 +75,14 @@ class PaymentConfirmationServiceTests {
         assertThat(dto.getConfirmationId()).isNotBlank();
         assertThat(dto.getCreatedAt()).isAfterOrEqualTo(before);
         verify(confirmationWebhookClient).notifyConfirmation(HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS);
+
+        PaymentConfirmationEvent expectedConfirmationEvent = 
+                new PaymentConfirmationEvent(TRANSACTION_ID, PRODUCT_ID);
+        ArgumentCaptor<PaymentConfirmationEvent> confirmationEventCaptor = 
+                ArgumentCaptor.forClass(PaymentConfirmationEvent.class);
+        verify(paymentConfirmationPublisher).publish(confirmationEventCaptor.capture());
+        assertThat(confirmationEventCaptor.getValue()).usingRecursiveComparison().
+                isEqualTo(expectedConfirmationEvent);
     }
 
     @Test

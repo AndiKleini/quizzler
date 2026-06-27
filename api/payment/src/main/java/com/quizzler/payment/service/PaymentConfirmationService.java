@@ -7,6 +7,8 @@ import com.quizzler.payment.client.ConfirmationWebhookClient;
 import com.quizzler.payment.domain.Payment;
 import com.quizzler.payment.domain.PaymentConfirmation;
 import com.quizzler.payment.dto.PaymentConfirmationDto;
+import com.quizzler.payment.messaging.PaymentConfirmationEvent;
+import com.quizzler.payment.messaging.PaymentConfirmationPublisher;
 import com.quizzler.payment.repository.PaymentCancellationRepository;
 import com.quizzler.payment.repository.PaymentConfirmationRepository;
 import com.quizzler.payment.repository.PaymentRepository;
@@ -23,15 +25,18 @@ public class PaymentConfirmationService {
     private final PaymentConfirmationRepository paymentConfirmationRepository;
     private final PaymentCancellationRepository paymentCancellationRepository;
     private final ConfirmationWebhookClient confirmationWebhookClient;
+    private PaymentConfirmationPublisher confirmationPublisher;
 
     public PaymentConfirmationService(PaymentRepository paymentRepository,
                                       PaymentConfirmationRepository paymentConfirmationRepository,
                                       PaymentCancellationRepository paymentCancellationRepository,
-                                      ConfirmationWebhookClient confirmationWebhookClient) {
+                                      ConfirmationWebhookClient confirmationWebhookClient,
+                                      PaymentConfirmationPublisher confirmationPublisher) {
         this.paymentRepository = paymentRepository;
         this.paymentConfirmationRepository = paymentConfirmationRepository;
         this.paymentCancellationRepository = paymentCancellationRepository;
         this.confirmationWebhookClient = confirmationWebhookClient;
+        this.confirmationPublisher = confirmationPublisher;
     }
 
     @Transactional
@@ -59,6 +64,12 @@ public class PaymentConfirmationService {
         // URL it supplied at payment creation. A webhook failure surfaces as 502 and rolls the
         // confirmation back, so the caller can safely retry the whole operation.
         confirmationWebhookClient.notifyConfirmation(payment.getWebhookSuccessUrl());
+
+        this.confirmationPublisher.publish(
+            new PaymentConfirmationEvent(
+                payment.getTransactionId(), 
+                payment.getProductId()));
+
         return new PaymentConfirmationDto(saved.getPublicId(), payment.getPublicId(), saved.getCreatedAt());
     }
 }

@@ -14,6 +14,7 @@
 #   quizzler-db   -> localhost:5432
 #   payment-db    -> localhost:5433
 #   dashboard-db  -> localhost:1433
+#   quizzler-mq   -> localhost:15672 (management port)
 #
 # Seed: quizzler-api's existing SeedDataInitializer (a CommandLineRunner) seeds
 # the quizzler database on first startup against an empty schema, so quizzler-db
