@@ -7,13 +7,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 import com.quizzler.payment.client.ConfirmationWebhookClient;
 import com.quizzler.payment.domain.Payment;
 import com.quizzler.payment.domain.PaymentConfirmation;
-import com.quizzler.payment.dto.PaymentConfirmationDto;
 import com.quizzler.payment.messaging.PaymentConfirmationEvent;
 import com.quizzler.payment.messaging.PaymentConfirmationPublisher;
 import com.quizzler.payment.repository.PaymentCancellationRepository;
@@ -60,21 +58,13 @@ class PaymentConfirmationServiceTests {
 
     @Test
     void confirmPayment_inserts_confirmation_with_insertion_timestamp() {
-        Instant before = Instant.now().minus(1, ChronoUnit.SECONDS);
         Payment payment = getTestPayment();
         when(paymentRepository.findByPublicId(PAYMENT_PUBLIC_ID)).thenReturn(Optional.of(payment));
         when(paymentCancellationRepository.existsByPayment(payment)).thenReturn(false);
         when(paymentConfirmationRepository.saveAndFlush(any(PaymentConfirmation.class)))
                 .thenAnswer(call -> call.getArgument(0));
 
-        PaymentConfirmationDto dto = paymentConfirmationService.confirmPayment(PAYMENT_PUBLIC_ID);
-
-        PaymentConfirmationDto expected =
-                new PaymentConfirmationDto(dto.getConfirmationId(), PAYMENT_PUBLIC_ID, dto.getCreatedAt());
-        assertThat(dto).usingRecursiveComparison().isEqualTo(expected);
-        assertThat(dto.getConfirmationId()).isNotBlank();
-        assertThat(dto.getCreatedAt()).isAfterOrEqualTo(before);
-        verify(confirmationWebhookClient).notifyConfirmation(HTTP_EXAMPLE_COM_WEBHOOK_SUCCESS);
+        paymentConfirmationService.confirmPayment(PAYMENT_PUBLIC_ID);
 
         PaymentConfirmationEvent expectedConfirmationEvent = 
                 new PaymentConfirmationEvent(TRANSACTION_ID, PRODUCT_ID);

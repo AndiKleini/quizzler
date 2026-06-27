@@ -24,18 +24,15 @@ public class PaymentConfirmationService {
     private final PaymentRepository paymentRepository;
     private final PaymentConfirmationRepository paymentConfirmationRepository;
     private final PaymentCancellationRepository paymentCancellationRepository;
-    private final ConfirmationWebhookClient confirmationWebhookClient;
     private PaymentConfirmationPublisher confirmationPublisher;
 
     public PaymentConfirmationService(PaymentRepository paymentRepository,
                                       PaymentConfirmationRepository paymentConfirmationRepository,
                                       PaymentCancellationRepository paymentCancellationRepository,
-                                      ConfirmationWebhookClient confirmationWebhookClient,
                                       PaymentConfirmationPublisher confirmationPublisher) {
         this.paymentRepository = paymentRepository;
         this.paymentConfirmationRepository = paymentConfirmationRepository;
         this.paymentCancellationRepository = paymentCancellationRepository;
-        this.confirmationWebhookClient = confirmationWebhookClient;
         this.confirmationPublisher = confirmationPublisher;
     }
 
@@ -59,11 +56,6 @@ public class PaymentConfirmationService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Payment " + paymentId + " is already confirmed", ex);
         }
-
-        // Once the confirmation is persisted, notify the merchant by calling back the success-webhook
-        // URL it supplied at payment creation. A webhook failure surfaces as 502 and rolls the
-        // confirmation back, so the caller can safely retry the whole operation.
-        confirmationWebhookClient.notifyConfirmation(payment.getWebhookSuccessUrl());
 
         this.confirmationPublisher.publish(
             new PaymentConfirmationEvent(
