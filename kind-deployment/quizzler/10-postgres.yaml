@@ -100,6 +100,17 @@ spec:
                     cp /pg_hba_custom.conf /var/lib/postgresql/data/pgdata/pg_hba.conf
                     # Reload PostgreSQL configuration
                     psql -U quizzler -d postgres -c "SELECT pg_reload_conf();" 2>/dev/null || true
+          # A fresh initdb (plus the postStart pg_hba reload) can take a while on a
+          # constrained kind node. The startupProbe suspends the liveness and
+          # readiness probes until Postgres first accepts connections, giving it up
+          # to failureThreshold*periodSeconds = 150s to start without being killed.
+          # Once it succeeds, the tighter liveness/readiness timings take over.
+          startupProbe:
+            exec:
+              command: ["pg_isready", "-U", "quizzler", "-d", "quizzler"]
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 30
           readinessProbe:
             exec:
               command: ["pg_isready", "-U", "quizzler", "-d", "quizzler"]

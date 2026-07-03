@@ -56,6 +56,17 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /var/lib/postgresql/data
+          # A fresh initdb can take a while on a constrained kind node. The
+          # startupProbe suspends the liveness and readiness probes until Postgres
+          # first accepts connections, giving it up to failureThreshold*periodSeconds
+          # = 150s to start without being killed. Once it succeeds, the tighter
+          # liveness/readiness timings take over.
+          startupProbe:
+            exec:
+              command: ["pg_isready", "-U", "payment", "-d", "payment"]
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 30
           readinessProbe:
             exec:
               command: ["pg_isready", "-U", "payment", "-d", "payment"]
