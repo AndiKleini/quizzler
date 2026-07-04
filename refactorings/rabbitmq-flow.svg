@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 300" width="940" height="300" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="940" height="300" fill="#ffffff"/>
+  <text x="470" y="34" text-anchor="middle" font-size="17" font-weight="700" fill="#0f172a">RabbitMQ message flow: publisher → exchange → queue → consumer</text>
+
+  <!-- Publisher: 20-180 -->
+  <rect x="20" y="96" width="160" height="86" rx="10" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+  <text x="100" y="128" text-anchor="middle" font-size="14" font-weight="700" fill="#075985">Publisher</text>
+  <text x="100" y="148" text-anchor="middle" font-size="11.5" fill="#0c4a6e">Payment API</text>
+  <text x="100" y="165" text-anchor="middle" font-size="10.5" fill="#0c4a6e">ConfirmationPublisher</text>
+
+  <!-- Exchange: 258-418 -->
+  <rect x="258" y="96" width="160" height="86" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="338" y="128" text-anchor="middle" font-size="14" font-weight="700" fill="#5b21b6">Exchange (topic)</text>
+  <text x="338" y="148" text-anchor="middle" font-size="11.5" fill="#4c1d95">payment.events</text>
+  <text x="338" y="165" text-anchor="middle" font-size="10.5" fill="#6d28d9">routes by routing key</text>
+
+  <!-- Queue: 496-656 -->
+  <rect x="496" y="96" width="160" height="86" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="576" y="128" text-anchor="middle" font-size="14" font-weight="700" fill="#166534">Queue (durable)</text>
+  <text x="576" y="148" text-anchor="middle" font-size="10.5" fill="#14532d">quizzler.payment-</text>
+  <text x="576" y="164" text-anchor="middle" font-size="10.5" fill="#14532d">confirmed</text>
+
+  <!-- Consumer: 734-894 -->
+  <rect x="734" y="96" width="160" height="86" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="814" y="128" text-anchor="middle" font-size="14" font-weight="700" fill="#92400e">Consumer</text>
+  <text x="814" y="148" text-anchor="middle" font-size="11.5" fill="#78350f">Quizzler API</text>
+  <text x="814" y="165" text-anchor="middle" font-size="10.5" fill="#78350f">ConfirmationListener</text>
+
+  <!-- Arrows -->
+  <line x1="180" y1="139" x2="256" y2="139" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="218" y="126" text-anchor="middle" font-size="10" fill="#334155">publish</text>
+  <text x="218" y="205" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">key:</text>
+  <text x="218" y="220" text-anchor="middle" font-size="10" fill="#334155">payment.confirmed</text>
+
+  <line x1="418" y1="139" x2="494" y2="139" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="456" y="126" text-anchor="middle" font-size="10" fill="#334155">binding</text>
+  <text x="456" y="205" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">match</text>
+  <text x="456" y="220" text-anchor="middle" font-size="10" fill="#334155">payment.confirmed</text>
+
+  <line x1="656" y1="139" x2="732" y2="139" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="694" y="126" text-anchor="middle" font-size="10" fill="#334155">deliver</text>
+
+  <!-- payload note -->
+  <text x="470" y="266" text-anchor="middle" font-size="11" fill="#64748b">payload: PaymentConfirmationEvent { transactionId, productId }  ·  JSON via Jackson2JsonMessageConverter</text>
+</svg>
