@@ -24,139 +24,32 @@ Requirements Overview
 Quality Goals 
 -------------
 
-**Contents.**
+The top three quality goals for the architecture, in priority order:
 
-The top three (max five) quality goals for the architecture whose
-fulfillment is of highest importance to the major stakeholders. We
-really mean quality goals for the architecture. Don’t confuse them with
-project goals. They are not necessarily identical.
-
-**Motivation.**
-
-You should know the quality goals of your most important stakeholders,
-since they will influence fundamental architectural decisions. Make sure
-to be very concrete about these qualities, avoid buzzwords. If you as an
-architect do not know how the quality of your work will be judged …
-
-**Form.**
-
-A table with quality goals and concrete scenarios, ordered by priorities
+| Priority | Quality Goal | Motivation / Scenario |
+| -------- | ------------ | --------------------- |
+| 1 | **Availability** | A quiz session is live and time-boxed: participants and the moderator must be able to join, answer, and see results without interruption. The system stays responsive while a session runs, and a failure of one component (e.g. the payment or dashboard service) must not take down the ongoing quiz. |
+| 2 | **Security** | Correct answers must never leak to participants before evaluation (DTOs hide `correctOptionId`), and payment/purchase data must be handled safely — e.g. a `TransactionId` is unique per payment so a purchase cannot be confirmed twice or replayed. |
+| 3 | **Usability** | Both the moderator and the participants use the app under time pressure during a live session. Joining a quiz, submitting an answer, and reading the answer-distribution statistics must be simple, self-explanatory, and give immediate visual feedback (e.g. the loading spinner while a purchase is being confirmed). |
 
 Stakeholders
 ------------
 
-**Contents.**
-
-Explicit overview of stakeholders of the system, i.e. all person, roles
-or organizations that
-
--   should know the architecture
-
--   have to be convinced of the architecture
-
--   have to work with the architecture or with code
-
--   need the documentation of the architecture for their work
-
--   have to come up with decisions about the system or its development
-
-**Motivation.**
-
-You should know all parties involved in development of the system or
-affected by the system. Otherwise, you may get nasty surprises later in
-the development process. These stakeholders determine the extent and the
-level of detail of your work and its results.
-
-**Form.**
-
-Table with role names, person names, and their expectations with respect
-to the architecture and its documentation.
-
 | Role/Name   | Contact                   | Expectations              |
 | ----------- | ------------------------- | ------------------------- |
 | Trainer / Andreas Kleinbichler    | AndiKleini                  | *&lt;Wants to check whether all participants share a common understanding of the topics.&gt;   |
-| Role-2      | Contact-2                 | *&lt;Expectation-2*&gt;   |
+| ...     | ...                 | ...   |
 
 Architecture Constraints
 ========================
 
-**Contents.**
-
-Any requirement that constrains software architects in their freedom of
-design and implementation decisions or decision about the development
-process. These constraints sometimes go beyond individual systems and
-are valid for whole organizations and companies.
-
-**Motivation.**
-
-Architects should know exactly where they are free in their design
-decisions and where they must adhere to constraints. Constraints must
-always be dealt with; they may be negotiable, though.
-
-**Form.**
-
-Simple tables of constraints with explanations. If needed you can
-subdivide them into technical constraints, organizational and political
-constraints and conventions (e.g. programming or versioning guidelines,
-documentation or naming conventions)
+Is kept empty.
 
 System Scope and Context
 ========================
 
-**Contents.**
-
-System scope and context - as the name suggests - delimits your system
-(i.e. your scope) from all its communication partners (neighboring
-systems and users, i.e. the context of your system). It thereby
-specifies the external interfaces.
-
-If necessary, differentiate the business context (domain specific inputs
-and outputs) from the technical context (channels, protocols, hardware).
-
-**Motivation.**
-
-The domain interfaces and technical interfaces to communication partners
-are among your system’s most critical aspects. Make sure that you
-completely understand them.
-
-**Form.**
-
-Various options:
-
--   Context diagrams
-
--   Lists of communication partners and their interfaces.
-
 Business Context
 ----------------
-
-**Contents.**
-
-Specification of **all** communication partners (users, IT-systems, …)
-with explanations of domain specific inputs and outputs or interfaces.
-Optionally you can add domain specific formats or communication
-protocols.
-
-**Motivation.**
-
-All stakeholders should understand which data are exchanged with the
-environment of the system.
-
-**Form.**
-
-All kinds of diagrams that show the system as a black box and specify
-the domain interfaces to communication partners.
-
-Alternatively (or additionally) you can use a table. The title of the
-table is the name of your system, the three columns contain the name of
-the communication partner, the inputs, and the outputs.
-
-**&lt;Diagram or Table&gt;**
-
-**&lt;optionally: Explanation of external domain interfaces&gt;**
-
-Technical Context
------------------
 
 **Business Context**
 
@@ -177,31 +70,6 @@ C4Context
   Rel(moderator, quizzler, "Navigates through a quiz")
 ```
 
-**Contents.**
-
-Technical interfaces (channels and transmission media) linking your
-system to its environment. In addition a mapping of domain specific
-input/output to the channels, i.e. an explanation with I/O uses which
-channel.
-
-**Motivation.**
-
-Many stakeholders make architectural decision based on the technical
-interfaces between the system and its context. Especially infrastructure
-or hardware designers decide these technical interfaces.
-
-**Form.**
-
-E.g. UML deployment diagram describing channels to neighboring systems,
-together with a mapping table showing the relationships between channels
-and input/output.
-
-**&lt;Diagram or Table&gt;**
-
-**&lt;optionally: Explanation of technical interfaces&gt;**
-
-**&lt;Mapping Input/Output to Channels&gt;**
-
 Solution Strategy
 =================
 
@@ -212,215 +80,184 @@ It is planned to deliver the product in iterations:
 - ***Version 1:*** 
 Users can enter a single quizzround and go through the questions on their own. After each submission the result is diplayed.
 
+- ***Version 2:***
+Has to be defined.
+
 **Technology stack**
 - Java Springboot for API
 - Angular for FE (Web)
 - PostgreSQL
+- ASP .NET with EF
+- SQL Server 2025
 
 Building Block View
 ===================
 
-**quizzlerapi**
-
-Provides the server side backend to the frontend.
-
-**Content.**
-
-The building block view shows the static decomposition of the system
-into building blocks (modules, components, subsystems, classes,
-interfaces, packages, libraries, frameworks, layers, partitions, tiers,
-functions, macros, operations, datas structures, …) as well as their
-dependencies (relationships, associations, …)
-
-This view is mandatory for every architecture documentation. In analogy
-to a house this is the *floor plan*.
-
-**Motivation.**
-
-Maintain an overview of your source code by making its structure
-understandable through abstraction.
-
-This allows you to communicate with your stakeholder on an abstract
-level without disclosing implementation details.
-
-**Form.**
-
-The building block view is a hierarchical collection of black boxes and
-white boxes (see figure below) and their descriptions.
-
-![Hierarchy of building blocks](images/05_building_blocks-EN.png)
-
-**Level 1** is the white box description of the overall system together
-with black box descriptions of all contained building blocks.
-
-**Level 2** zooms into some building blocks of level 1. Thus it contains
-the white box description of selected building blocks of level 1,
-together with black box descriptions of their internal building blocks.
-
-**Level 3** zooms into selected building blocks of level 2, and so on.
-
-Whitebox Overall System
------------------------
-
-quizzlerui
-
-quizzlerapi
-
-quizzlerdb
-
-Here you describe the decomposition of the overall system using the
-following white box template. It contains
-
--   an overview diagram
-
--   a motivation for the decomposition
-
--   black box descriptions of the contained building blocks. For these
-    we offer you alternatives:
-
-    -   use *one* table for a short and pragmatic overview of all
-        contained building blocks and their interfaces
-
-    -   use a list of black box descriptions of the building blocks
-        according to the black box template (see below). Depending on
-        your choice of tool this list could be sub-chapters (in text
-        files), sub-pages (in a Wiki) or nested elements (in a modeling
-        tool).
-
--   (optional:) important interfaces, that are not explained in the
-    black box templates of a building block, but are very important for
-    understanding the white box. Since there are so many ways to specify
-    interfaces why do not provide a specific template for them. In the
-    worst case you have to specify and describe syntax, semantics,
-    protocols, error handling, restrictions, versions, qualities,
-    necessary compatibilities and many things more. In the best case you
-    will get away with examples or simple signatures.
-
-***&lt;Overview Diagram&gt;***
-
-Motivation
-
-:   *&lt;text explanation&gt;*
-
-Contained Building Blocks
-
-:   *&lt;Description of contained building block (black boxes)&gt;*
-
-Important Interfaces
-
-:   *&lt;Description of important interfaces&gt;*
-
-Insert your explanations of black boxes from level 1:
-
-If you use tabular form you will only describe your black boxes with
-name and responsibility according to the following schema:
-
-| **Name**             | **Responsibility**                           |
-| -------------------- | -------------------------------------------- |
-| Black Box 1          |  *&lt;Text&gt;*                              |
-| Black Box 2          |  *&lt;Text&gt;*                              |
-
-If you use a list of black box descriptions then you fill in a separate
-black box template for every important building block . Its headline is
-the name of the black box.
-
-### &lt;Name black box 1&gt; 
-
-Here you describe &lt;black box 1&gt; according the the following black
-box template:
-
--   Purpose/Responsibility
-
--   Interface(s), when they are not extracted as separate paragraphs.
-    This interfaces may include qualities and performance
-    characteristics.
-
--   (Optional) Quality-/Performance characteristics of the black box,
-    e.g.availability, run time behavior, ….
-
--   (Optional) directory/file location
-
--   (Optional) Fulfilled requirements (if you need traceability to
-    requirements).
-
--   (Optional) Open issues/problems/risks
-
-*&lt;Purpose/Responsibility&gt;*
-
-*&lt;Interface(s)&gt;*
-
-*&lt;(Optional) Quality/Performance Characteristics&gt;*
-
-*&lt;(Optional) Directory/File Location&gt;*
-
-*&lt;(Optional) Fulfilled Requirements&gt;*
-
-*&lt;(optional) Open Issues/Problems/Risks&gt;*
-
-### &lt;Name black box 2&gt; 
-
-*&lt;black box template&gt;*
-
-### &lt;Name black box n&gt; 
-
-*&lt;black box template&gt;*
-
-### &lt;Name interface 1&gt; 
-
-…
-
-### &lt;Name interface m&gt; 
-
-Level 2 
--------
-
-Here you can specify the inner structure of (some) building blocks from
-level 1 as white boxes.
-
-You have to decide which building blocks of your system are important
-enough to justify such a detailed description. Please prefer relevance
-over completeness. Specify important, surprising, risky, complex or
-volatile building blocks. Leave out normal, simple, boring or
-standardized parts of your system
-
-### White Box *&lt;building block 1&gt;* 
-
-…describes the internal structure of *building block 1*.
-
-*&lt;white box template&gt;*
-
-### White Box *&lt;building block 2&gt;* 
-
-*&lt;white box template&gt;*
-
-…
-
-### White Box *&lt;building block m&gt;* 
-
-*&lt;white box template&gt;*
-
-Level 3 
--------
-
-Here you can specify the inner structure of (some) building blocks from
-level 2 as white boxes.
-
-When you need more detailed levels of your architecture please copy this
-part of arc42 for additional levels.
-
-### White Box &lt;\_building block x.1\_&gt; 
-
-Specifies the internal structure of *building block x.1*.
-
-*&lt;white box template&gt;*
-
-### White Box &lt;\_building block x.2\_&gt; 
-
-*&lt;white box template&gt;*
-
-### White Box &lt;\_building block y.1\_&gt; 
-
-*&lt;white box template&gt;*
+The system is composed of three independent, self-contained web applications
+(*quizzler*, *payment*, *dashboard*), each with an Angular frontend and a backend
+API. They collaborate over synchronous REST calls and asynchronous messaging.
+
+Level 1 — Whitebox Overall System
+---------------------------------
+
+Application building blocks only (infrastructure such as databases and the message
+broker is intentionally omitted here — see the Deployment View for those).
+
+```mermaid
+flowchart TB
+  subgraph fe["Frontends (Angular)"]
+    qui["quizzler-ui"]
+    pui["payment-ui"]
+    dui["dashboard-ui"]
+  end
+
+  subgraph be["Backend APIs"]
+    qapi["quizzler-api<br/>Spring Boot / Java"]
+    papi["payment-api<br/>Spring Boot / Java"]
+    dapi["dashboard-api<br/>ASP.NET Core / C#"]
+  end
+
+  qui -->|REST| qapi
+  pui -->|REST| papi
+  dui -->|REST| dapi
+
+  qapi -->|"REST: create payment"| papi
+  papi -.->|"event: payment.confirmed"| qapi
+  qapi -.->|"event: notifications"| dapi
+
+  classDef ui fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e;
+  classDef api fill:#ede9fe,stroke:#7c3aed,color:#4c1d95;
+  class qui,pui,dui ui;
+  class qapi,papi,dapi api;
+```
+
+Legend: **solid** = synchronous REST, **dashed** = asynchronous event (mediated by
+the RabbitMQ broker, shown in the Deployment View).
+
+| Building block | Responsibility |
+| -------------- | -------------- |
+| **quizzler-ui** | Angular SPA for participants/moderator: join a quiz, answer single-pick questions, see results. Talks to `quizzler-api` over REST. |
+| **payment-ui** | Angular SPA for the payment/checkout flow (purchase a quiz attempt). Talks to `payment-api` over REST. |
+| **dashboard-ui** | Angular SPA that visualizes a live session dashboard (answer distribution, purchases). Talks to `dashboard-api` over REST. |
+| **quizzler-api** | Core domain backend: questions, quiz sessions, attempts, answers and purchases. Initiates payments on `payment-api` and consumes payment-confirmation events. |
+| **payment-api** | Owns payments, confirmations and cancellations. Publishes `payment.confirmed` events (and historically calls back a success webhook). |
+| **dashboard-api** | Consumes notification events and derives the session dashboard read model from them (event stream). |
+
+> Two relationships are being reshaped by ongoing refactorings, documented in
+> `refactorings/`: the payment→quizzler confirmation is moving from an HTTP webhook
+> to the `payment.confirmed` event (*"Loading Spinner on the Move"*), and the
+> dashboard is being fed by a notification event stream (*"Graph of Wisdom"*).
+
+Level 2 — Internal Structure of the Backends
+--------------------------------------------
+
+### quizzler-api (`com.quizzler.api`)
+
+Classic layered Spring Boot application (controller → service → repository → domain).
+
+```mermaid
+flowchart TB
+  qc["controller/<br/>Question · QuizSession · QuizAttempt · QuizAttemptPurchase"]
+  qs["service/<br/>Question · Answer · QuizAttempt · QuizSession · QuizAttemptPurchase"]
+  qr["repository/ (Spring Data JPA)"]
+  qd["domain/ (entities: Question, SinglePickQuestion, QuizSession, QuizAttempt, ...)"]
+  qcl["client/PaymentApiClient"]
+  qcfg["config/ (RabbitConfig · RestClientConfig · WebConfig)"]
+  qb["bootstrap/SeedDataInitializer"]
+  qdto["dto/ (wire models)"]
+
+  qc --> qs --> qr --> qd
+  qc -.-> qdto
+  qs --> qcl
+  qs -.-> qcfg
+  qb -.-> qr
+
+  qcl ==>|"REST"| ext1["payment-api"]:::ext
+  classDef ext fill:#f1f5f9,stroke:#94a3b8,color:#334155,stroke-dasharray:4 3;
+```
+
+| Component | Responsibility |
+| --------- | -------------- |
+| `controller/` | REST endpoints (questions, sessions, attempts, purchases). Maps to/from DTOs only. |
+| `service/` | Business logic; `QuizAttemptPurchaseService` initiates payment via `PaymentApiClient`. |
+| `repository/` | `JpaRepository` interfaces over the domain entities. |
+| `domain/` | JPA entities; `Question` is abstract (JOINED inheritance) with `SinglePickQuestion`. |
+| `dto/` | Wire-format types; `SinglePickQuestionDto` deliberately omits `correctOptionId`. |
+| `client/` | `PaymentApiClient` — outbound REST client to `payment-api`. |
+| `config/` | `RabbitConfig` (payment-confirmed consumer topology), `RestClientConfig`, `WebConfig` (CORS). |
+| `bootstrap/` | `SeedDataInitializer` — idempotent seed data on first startup. |
+
+### payment-api (`com.quizzler.payment`)
+
+Layered Spring Boot application with an outbound webhook client and a RabbitMQ publisher.
+
+```mermaid
+flowchart TB
+  pc["controller/<br/>Payment · PaymentConfirmation · PaymentCancellation"]
+  ps["service/<br/>Payment · PaymentConfirmation · PaymentCancellation"]
+  pr["repository/ (Spring Data JPA)"]
+  pd["domain/ (Payment · PaymentConfirmation · PaymentCancellation)"]
+  pmsg["messaging/<br/>RabbitEventPublisher · RabbitPublication"]
+  pcl["client/ConfirmationWebhookClient"]
+  pcfg["config/ (RabbitConfig · RestClientConfig · WebConfig)"]
+  pdto["dto/ (wire models)"]
+
+  pc --> ps --> pr --> pd
+  pc -.-> pdto
+  ps --> pmsg
+  ps --> pcl
+  ps -.-> pcfg
+
+  pmsg ==>|"publish payment.confirmed"| ext2["RabbitMQ → quizzler-api"]:::ext
+  pcl ==>|"HTTP webhook (legacy)"| ext3["quizzler-api"]:::ext
+  classDef ext fill:#f1f5f9,stroke:#94a3b8,color:#334155,stroke-dasharray:4 3;
+```
+
+| Component | Responsibility |
+| --------- | -------------- |
+| `controller/` | REST endpoints for payment, confirmation and cancellation. |
+| `service/` | Business logic; `PaymentConfirmationService` persists the confirmation and emits the event. |
+| `repository/` | `JpaRepository` interfaces over payment entities. |
+| `domain/` | JPA entities: `Payment`, `PaymentConfirmation`, `PaymentCancellation`. |
+| `dto/` | Wire-format request/response types. |
+| `messaging/` | `RabbitEventPublisher` / `RabbitPublication` — publishes `payment.confirmed` to the topic exchange. |
+| `client/` | `ConfirmationWebhookClient` — legacy HTTP callback to quizzler-api (being retired). |
+| `config/` | `RabbitConfig` (exchange), `RestClientConfig`, `WebConfig`. |
+
+### dashboard-api (`Dashboard`, ASP.NET Core)
+
+ASP.NET Core Web API with EF Core persistence and a hosted RabbitMQ consumer that
+builds the session read model from a stream of notification events.
+
+```mermaid
+flowchart TB
+  dctrl["Controllers/SessionDashboardController"]
+  dsvc["Services/<br/>SessionDashboardService · NotificationEventHandlerService ·<br/>StreamNotificationEventHandlerService · NotificationHandlerServiceFactory"]
+  drepo["Repositories/<br/>SessionDashboardRepository · NotificationEventRepository"]
+  ddata["Data/DashboardDbContext (EF Core)"]
+  dmodel["Models/<br/>SessionDashboardData · NotificationEvent · AnswerDto ·<br/>QuizAttemptPurchaseConfirmationDto · ISessionDashboardUpdate"]
+  dmsg["Messaging/NotificationEventListener (BackgroundService)"]
+  dprog["Program.cs (composition root / DI)"]
+
+  dctrl --> dsvc --> drepo --> ddata
+  dsvc -.-> dmodel
+  dmsg --> dsvc
+  dprog -.-> dctrl
+  dprog -.-> dmsg
+
+  dmsg ==>|"consume notifications"| ext4["RabbitMQ"]:::ext
+  classDef ext fill:#f1f5f9,stroke:#94a3b8,color:#334155,stroke-dasharray:4 3;
+```
+
+| Component | Responsibility |
+| --------- | -------------- |
+| `Controllers/` | `SessionDashboardController` — REST endpoint returning the session dashboard. |
+| `Services/` | Read-model logic; `SessionDashboardService` folds notification events into `SessionDashboardData`; the factory selects stored vs. stream handler. |
+| `Repositories/` | EF Core-backed access to stored dashboards and persisted notification events. |
+| `Data/` | `DashboardDbContext` — EF Core context over SQL Server. |
+| `Models/` | Read model, event entity and update DTOs (each `ISessionDashboardUpdate.ApplyTo`). |
+| `Messaging/` | `NotificationEventListener` — hosted `BackgroundService` consuming `quizzler.notifications`. |
+| `Program.cs` | Composition root: DI registration and hosted-service wiring. |
 
 Runtime View 
 ============
@@ -471,23 +308,107 @@ There are many notations for describing scenarios, e.g.
 
 -   …
 
-&lt;Runtime Scenario 1&gt;
---------------------------
+Scenario 1 — Purchasing a quiz attempt (quizzler-api ↔ payment-api)
+-------------------------------------------------------------------
 
--   *&lt;insert runtime diagram or textual description of the
-    scenario&gt;*
+A participant buys a quiz attempt. `quizzler-api` creates the purchase and
+delegates the actual payment to `payment-api`; once the payment is confirmed,
+`payment-api` calls **back** into `quizzler-api` through the success-webhook it was
+given at payment creation, which is where the quiz-attempt purchase is confirmed.
 
--   *&lt;insert description of the notable aspects of the interactions
-    between the building block instances depicted in this diagram.&gt;*
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Browser (UI)
+    participant Q as quizzler-api
+    participant P as payment-api
 
-&lt;Runtime Scenario 2&gt; 
---------------------------
+    U->>Q: POST /session/{s}/quiz-attempt-purchase
+    Q-->>U: 201 QuizAttemptPurchaseDto (purchaseId, price=200)
 
-… {#_}
--
+    U->>Q: POST .../{purchaseId}/payment  (initiatePayment)
+    Q->>P: POST /payment  (PaymentApiClient.createPayment)<br/>redirect + success/cancel webhook URLs
+    P-->>Q: 201 { paymentId }
+    Q-->>U: 201 PaymentInitiationDto (paymentId)
 
-&lt;Runtime Scenario n&gt; 
---------------------------
+    Note over U,P: user completes payment in payment-ui
+    U->>P: POST /payment/{paymentId}/confirmation
+    P->>P: persist PaymentConfirmation
+    P->>Q: POST success-webhook (back to quizzler-api)<br/>/session/{s}/quiz-attempt-purchase/{purchaseId}/confirmation
+    Q->>Q: persist QuizAttemptPurchaseConfirmation<br/>(~5s simulated delay)
+    Q-->>P: 201 QuizAttemptPurchaseConfirmationDto
+    P-->>U: 201 PaymentConfirmationDto
+
+    loop poll until confirmed (loading spinner)
+        U->>Q: GET .../{purchaseId}/confirmation
+        Q-->>U: 200 confirmation  (404 while pending)
+    end
+```
+
+Notable aspects:
+
+-   The **round trip** is `quizzler-api → payment-api` (create the payment) and,
+    after settlement, `payment-api → quizzler-api` (the success-webhook confirms
+    the quiz-attempt purchase). `quizzler-api` passes its own callback URL to
+    `payment-api`, so `payment-api` stays decoupled from the merchant's endpoint.
+-   Both confirmation inserts are guarded by a unique constraint, so a duplicate
+    confirmation surfaces as `409 Conflict` rather than a second row.
+-   `confirmPurchase` sleeps ~5s on purpose to simulate a slow settlement; the UI
+    shows a loading spinner and polls the `GET .../confirmation` endpoint.
+-   The success-webhook leg is being replaced by an asynchronous
+    `payment.confirmed` RabbitMQ event — see the *"Loading Spinner on the Move"*
+    refactoring in `refactorings/`.
+
+Scenario 2 — Loading a session dashboard (dashboard-api)
+--------------------------------------------------------
+
+The dashboard UI requests a session's dashboard by id. `dashboard-api` returns the
+stored read model when present, and otherwise reconstructs it by replaying the
+session's notification-event stream.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Browser (dashboard-ui)
+    participant C as dashboard-api : SessionDashboardController
+    participant R as SessionDashboardRepository
+    participant S as SessionDashboardService
+    participant N as NotificationEventRepository
+    participant DB as dashboard-db (SQL Server, EF Core)
+
+    U->>C: GET /api/SessionDashboard/{dashboardId}
+    C->>R: GetDashboardDataByDashboardIdAsync(dashboardId)
+    R->>DB: SELECT FROM SessionDashboardData WHERE DashboardId = ?
+    DB-->>R: row or none
+    R-->>C: SessionDashboardData?
+
+    alt stored snapshot found
+        C-->>U: 200 OK  SessionDashboardData
+    else not found — reconstruct from event stream
+        Note over C,DB: "Graph of Wisdom" refactoring (refactor-to-stream-step-4)
+        C->>S: GetDashboardFromNotificationEvents(dashboardId)
+        S->>N: GetNotificationEventsForDashboardId(dashboardId)
+        N->>DB: SELECT FROM NotificationEvents WHERE SessionId = ?
+        DB-->>N: events[]
+        N-->>S: events[]
+        loop each event in order
+            S->>S: deserialize Details by Type, ApplyTo(dashboard)
+        end
+        S-->>C: SessionDashboardData
+        C-->>U: 200 OK  (404 if still empty)
+    end
+```
+
+Notable aspects:
+
+-   The controller exposes both `GET /api/SessionDashboard` (first dashboard) and
+    `GET /api/SessionDashboard/{dashboardId}`; the diagram shows the by-id read.
+-   On the current `master` the read is the **stored-snapshot** path only
+    (`SessionDashboardRepository` → EF Core → SQL Server); the `else` branch is the
+    **event-stream reconstruction** introduced by the *"Graph of Wisdom"*
+    refactoring, where each `NotificationEvent` is deserialized by `Type` and
+    folded into the `SessionDashboardData` via `ISessionDashboardUpdate.ApplyTo`.
+-   A missing dashboard returns `404 Not Found`.
 
 Deployment View 
 ===============
@@ -665,6 +586,119 @@ Mapping of Building Blocks to Infrastructure
     dependency, configuration, or client code in `quizzler-api`/`payment-api`
     yet, so no application-to-broker edge is shown. Wiring the services to the
     broker is a planned next step.
+
+**Environment: Docker Compose (local whole-system bring-up)**
+
+Defined in the top-level `docker-compose.yml`. The entire system — three
+frontends, three backend APIs and all infrastructure (two PostgreSQL databases,
+one SQL Server, one RabbitMQ broker) — runs as containers on a single Docker
+bridge network. Every container is published on `localhost` so the hard-coded
+`localhost` URLs baked into the Angular bundles resolve unchanged. This is the
+"first testing step" toward the KIND deployment above.
+
+```mermaid
+flowchart TB
+    browser["Web browser<br/>hard-coded localhost URLs"]
+    tools["Management tools<br/>psql &middot; sqlcmd &middot; RabbitMQ UI"]
+
+    subgraph host["Developer host &mdash; localhost (published ports)"]
+        h4200["TCP :4200"]
+        h4201["TCP :4201"]
+        h4202["TCP :4202"]
+        h8080["TCP :8080"]
+        h8081["TCP :8081"]
+        h8082["TCP :8082"]
+        h5432["TCP :5432"]
+        h5433["TCP :5433"]
+        h1433["TCP :1433"]
+        h5672["TCP :5672"]
+        h15672["TCP :15672"]
+    end
+
+    subgraph net["Docker Compose bridge network"]
+        direction TB
+        subgraph fe["Frontends &middot; nginx :80"]
+            qui["quizzler-ui-dc"]
+            pui["payment-ui-dc"]
+            dui["dashboard-ui-dc"]
+        end
+        subgraph be["Backend API containers"]
+            qapi["quizzler-api-dc<br/>Spring Boot :8080"]
+            papi["payment-api-dc<br/>Spring Boot :8081"]
+            dapi["dashboard-api-dc<br/>ASP.NET Core :8080"]
+        end
+        subgraph inf["Infrastructure containers"]
+            qdb[("quizzler-db-dc<br/>postgres:16 &middot; :5432<br/>vol quizzler-db-data")]
+            pdb[("payment-db-dc<br/>postgres:16 &middot; :5432<br/>vol payment-db-data")]
+            ddb[("dashboard-db-dc<br/>mssql 2025 &middot; :1433<br/>vol dashboard-db-data")]
+            mq["quizzler-mq-dc<br/>rabbitmq:3-mgmt<br/>AMQP :5672 &middot; UI :15672<br/>vol quizzler-mq-data"]
+        end
+    end
+
+    browser --> h4200 --> qui
+    browser --> h4201 --> pui
+    browser --> h4202 --> dui
+    browser --> h8080 --> qapi
+    browser --> h8081 --> papi
+    browser --> h8082 --> dapi
+    tools --> h5432 --> qdb
+    tools --> h5433 --> pdb
+    tools --> h1433 --> ddb
+    tools --> h5672 --> mq
+    tools --> h15672 --> mq
+
+    qapi -->|JDBC| qdb
+    papi -->|JDBC| pdb
+    dapi -->|"EF Core / TDS"| ddb
+    qapi -->|"POST /payment (create)"| papi
+    papi -.->|"publish payment.confirmed"| mq
+    qapi -.->|"consume payment.confirmed"| mq
+    dapi -.->|"consume notifications"| mq
+
+    classDef infra fill:#eef2ff,stroke:#8899cc;
+    classDef app fill:#eefaee,stroke:#88aa88;
+    class qdb,pdb,ddb,mq infra;
+    class qui,pui,dui,qapi,papi,dapi app;
+```
+
+Legend: **solid** = synchronous (HTTP/JDBC/TDS), **dashed** = asynchronous AMQP
+messaging. In-container east-west calls use the compose service names as DNS
+(e.g. `quizzler-db`, `payment-api`, `quizzler-mq`); the host ports are only for
+the browser and management tooling.
+
+Motivation
+
+:   A single `docker compose up` brings the whole system online on one machine
+    with no Kubernetes. Because every container is host-published, the browser
+    reaches each UI/API on its fixed `localhost` port and no code changes are
+    needed. `depends_on` with `condition: service_healthy` (backed by container
+    healthchecks) gates each API so it only starts once its database and the
+    broker are ready.
+
+Quality and/or Performance Features
+
+:   Each service runs as a **single** container (no replicas — high availability
+    is the KIND environment's concern). Named **volumes** persist the databases
+    and the broker across restarts, and `quizzler-api`'s idempotent
+    `SeedDataInitializer` seeds `quizzler-db` on first healthy startup. The
+    `dashboard-db` container is pinned to `cpuset: "0-1"` so SQL Server's SQLPal
+    startup assertion holds on hybrid-core hosts. Unlike KIND, the APIs here are
+    **fully wired to RabbitMQ** via `SPRING_RABBITMQ_*` / `RabbitMQ__*` settings.
+
+Mapping of Building Blocks to Infrastructure
+
+:   | Building block | Container | Image / build context | Host&rarr;container port | Volume |
+    |----------------|-----------|-----------------------|--------------------------|--------|
+    | quizzler-ui   | quizzler-ui-dc   | build `./ui/quizzler` (nginx)      | 4200&rarr;80   | — |
+    | payment-ui    | payment-ui-dc    | build `./ui/payment` (nginx)       | 4201&rarr;80   | — |
+    | dashboard-ui  | dashboard-ui-dc  | build `./ui/dashboard` (nginx)     | 4202&rarr;80   | — |
+    | quizzler-api  | quizzler-api-dc  | build `./api/quizzler` (Spring Boot) | 8080&rarr;8080 | — |
+    | payment-api   | payment-api-dc   | build `./api/payment` (Spring Boot)  | 8081&rarr;8081 | — |
+    | dashboard-api | dashboard-api-dc | build `./api/dashboard` (ASP.NET Core) | 8082&rarr;8080 | — |
+    | quizzler-db   | quizzler-db-dc   | `postgres:16-alpine`               | 5432&rarr;5432 | quizzler-db-data |
+    | payment-db    | payment-db-dc    | `postgres:16-alpine`               | 5433&rarr;5432 | payment-db-data |
+    | dashboard-db  | dashboard-db-dc  | `mcr.microsoft.com/mssql/server:2025-latest` | 1433&rarr;1433 | dashboard-db-data |
+    | quizzler-mq   | quizzler-mq-dc   | `rabbitmq:3-management-alpine`     | 5672&rarr;5672, 15672&rarr;15672 | quizzler-mq-data |
 
 Infrastructure Level 2 
 ----------------------
