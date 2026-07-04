@@ -413,51 +413,6 @@ Notable aspects:
 Deployment View 
 ===============
 
-**Content.**
-
-The deployment view describes:
-
-1.  the technical infrastructure used to execute your system, with
-    infrastructure elements like geographical locations, environments,
-    computers, processors, channels and net topologies as well as other
-    infrastructure elements and
-
-2.  the mapping of (software) building blocks to that infrastructure
-    elements.
-
-Often systems are executed in different environments, e.g. development
-environment, test environment, production environment. In such cases you
-should document all relevant environments.
-
-Especially document the deployment view when your software is executed
-as distributed system with more then one computer, processor, server or
-container or when you design and construct your own hardware processors
-and chips.
-
-From a software perspective it is sufficient to capture those elements
-of the infrastructure that are needed to show the deployment of your
-building blocks. Hardware architects can go beyond that and describe the
-infrastructure to any level of detail they need to capture.
-
-**Motivation.**
-
-Software does not run without hardware. This underlying infrastructure
-can and will influence your system and/or some cross-cutting concepts.
-Therefore, you need to know the infrastructure.
-
-Maybe the highest level deployment diagram is already contained in
-section 3.2. as technical context with your own infrastructure as ONE
-black box. In this section you will zoom into this black box using
-additional deployment diagrams:
-
--   UML offers deployment diagrams to express that view. Use it,
-    probably with nested diagrams, when your infrastructure is more
-    complex.
-
--   When your (hardware) stakeholders prefer other kinds of diagrams
-    rather than the deployment diagram, let them use any kind that is
-    able to show nodes and channels of the infrastructure.
-
 Infrastructure Level 1 
 ----------------------
 
@@ -703,24 +658,7 @@ Mapping of Building Blocks to Infrastructure
 Infrastructure Level 2 
 ----------------------
 
-Here you can include the internal structure of (some) infrastructure
-elements from level 1.
-
-Please copy the structure from level 1 for each selected element.
-
-### *&lt;Infrastructure Element 1&gt;* 
-
-*&lt;diagram + explanation&gt;*
-
-### *&lt;Infrastructure Element 2&gt;* 
-
-*&lt;diagram + explanation&gt;*
-
-…
-
-### *&lt;Infrastructure Element n&gt;* 
-
-*&lt;diagram + explanation&gt;*
+Is kept empty.
 
 Cross-cutting Concepts 
 ======================
@@ -867,8 +805,6 @@ public PaymentInitiationDto initiatePayment(String sessionPublicId, String purch
     return new PaymentInitiationDto(paymentId);
 }
 ```
-
-
 
 **Asynchronous messaging (event publishing)**
 This section describes how a service emits a domain event to the message broker (RabbitMQ) instead of — or, during a migration, in addition to — a synchronous REST call. It is cross-cutting because every outbound event in the system is published the same way: through a generic `RabbitEventPublisher<T>` base class whose destination is declared on the concrete subclass. The reference example is the payment API announcing a confirmed payment so the quizzler API can confirm the matching purchase **without the payment service calling it directly** — the first step in replacing the success-webhook HTTP callback (see *Integration of two REST APIs*) with a message-based integration.
@@ -1140,87 +1076,6 @@ public class SessionDashboardRepositoryTests
 - *Testing async methods*: test methods that exercise async code are declared `public async Task` and use `await` to call the method under test. Moq setups use `.ReturnsAsync()` rather than `.Returns()` for async methods.
 - *Project structure*: all test classes live in a `Tests/` directory within the project, organized by component type (e.g. `Tests/Controllers/`, `Tests/Repositories/`). Tests are not in a separate test project; they share the same assembly as the production code, which simplifies the build and avoids `InternalsVisibleTo` ceremony for testing internal members.
 
-**Content.**
-
-This section describes overall, principal regulations and solution ideas
-that are relevant in multiple parts (= cross-cutting) of your system.
-Such concepts are often related to multiple building blocks. They can
-include many different topics, such as
-
--   domain models
-
--   architecture patterns or design patterns
-
--   rules for using specific technology
-
--   principal, often technical decisions of overall decisions
-
--   implementation rules
-
-**Motivation.**
-
-Concepts form the basis for *conceptual integrity* (consistency,
-homogeneity) of the architecture. Thus, they are an important
-contribution to achieve inner qualities of your system.
-
-Some of these concepts cannot be assigned to individual building blocks
-(e.g. security or safety). This is the place in the template that we
-provided for a cohesive specification of such concepts.
-
-**Form.**
-
-The form can be varied:
-
--   concept papers with any kind of structure
-
--   cross-cutting model excerpts or scenarios using notations of the
-    architecture views
-
--   sample implementations, especially for technical concepts
-
--   reference to typical usage of standard frameworks (e.g. using
-    Hibernate for object/relational mapping)
-
-**Structure.**
-
-A potential (but not mandatory) structure for this section could be:
-
--   Domain concepts
-
--   User Experience concepts (UX)
-
--   Safety and security concepts
-
--   Architecture and design patterns
-
--   "Under-the-hood"
-
--   development concepts
-
--   operational concepts
-
-Note: it might be difficult to assign individual concepts to one
-specific topic on this list.
-
-![Possible topics for crosscutting concepts](images/08-Crosscutting-Concepts-Structure-EN.png)
-
-*&lt;Concept 1&gt;* 
--------------------
-
-*&lt;explanation&gt;*
-
-*&lt;Concept 2&gt;* 
--------------------
-
-*&lt;explanation&gt;*
-
-…
-
-*&lt;Concept n&gt;* 
--------------------
-
-*&lt;explanation&gt;*
-
 Design Decisions 
 ================
 
@@ -1237,83 +1092,15 @@ Design Decisions
 Quality Requirements 
 ====================
 
-**Content.**
-
-This section contains all quality requirements as quality tree with
-scenarios. The most important ones have already been described in
-section 1.2. (quality goals)
-
-Here you can also capture quality requirements with lesser priority,
-which will not create high risks when they are not fully achieved.
-
-**Motivation.**
-
-Since quality requirements will have a lot of influence on architectural
-decisions you should know for every stakeholder what is really important
-to them, concrete and measurable.
-
 Quality Tree 
 ------------
 
-**Content.**
-
-The quality tree (as defined in ATAM – Architecture Tradeoff Analysis
-Method) with quality/evaluation scenarios as leafs.
-
-**Motivation.**
-
-The tree structure with priorities provides an overview for a sometimes
-large number of quality requirements.
-
-**Form.**
-
-The quality tree is a high-level overview of the quality goals and
-requirements:
-
--   tree-like refinement of the term "quality". Use "quality" or
-    "usefulness" as a root
-
--   a mind map with quality categories as main branches
-
-In any case the tree should include links to the scenarios of the
-following section.
+Is kept empty.
 
 Quality Scenarios 
 -----------------
 
-**Contents.**
-
-Concretization of (sometimes vague or implicit) quality requirements
-using (quality) scenarios.
-
-These scenarios describe what should happen when a stimulus arrives at
-the system.
-
-For architects, two kinds of scenarios are important:
-
--   Usage scenarios (also called application scenarios or use case
-    scenarios) describe the system’s runtime reaction to a certain
-    stimulus. This also includes scenarios that describe the system’s
-    efficiency or performance. Example: The system reacts to a user’s
-    request within one second.
-
--   Change scenarios describe a modification of the system or of its
-    immediate environment. Example: Additional functionality is
-    implemented or requirements for a quality attribute change.
-
-**Motivation.**
-
-Scenarios make quality requirements concrete and allow to more easily
-measure or decide whether they are fulfilled.
-
-Especially when you want to assess your architecture using methods like
-ATAM you need to describe your quality goals (from section 1.2) more
-precisely down to a level of scenarios that can be discussed and
-evaluated.
-
-**Form.**
-
-Tabular or free form text.
+Is kept empty.
 
 Risks and Technical Debts 
 =========================
@@ -1330,28 +1117,6 @@ Risks and Technical Debts
 
 Glossary 
 ========
-
-**Contents.**
-
-The most important domain and technical terms that your stakeholders use
-when discussing the system.
-
-You can also see the glossary as source for translations if you work in
-multi-language teams.
-
-**Motivation.**
-
-You should clearly define your terms, so that all stakeholders
-
--   have an identical understanding of these terms
-
--   do not use synonyms and homonyms
-
-**Form.**
-
-A table with columns &lt;Term&gt; and &lt;Definition&gt;.
-
-Potentially more columns in case you need translations.
 
 | Term                              | Definition                        |
 | --------------------------------- | --------------------------------- |
