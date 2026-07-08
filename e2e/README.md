@@ -47,7 +47,7 @@ npx playwright test dashboard-journey   # dashboard only
 ```
 
 > The dashboard happy-path test reads a seeded session. Seed it first with
-> `api/dashboard/insert-session-dashboard-data.sql` (its default id `session-001`
+> `api/dashboard/insert-session-dashboard-data.sql` (its default id `session-old-001`
 > is one of those rows), or point `DASHBOARD_ID` at a session the dashboard has
 > already received events for. The unknown-session test needs no seed.
 

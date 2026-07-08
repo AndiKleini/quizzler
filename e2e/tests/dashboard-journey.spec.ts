@@ -11,7 +11,7 @@ import { watch, reportDiagnostics, assertNoServerProblems } from './support/diag
 // api/dashboard/insert-session-dashboard-data.sql — run that seed first, or
 // point DASHBOARD_ID at a session the dashboard has already received events for.
 const DASHBOARD_UI = process.env.DASHBOARD_UI_BASE_URL ?? 'http://localhost:4202';
-const DASHBOARD_ID = process.env.DASHBOARD_ID ?? 'session-001';
+const DASHBOARD_ID = process.env.DASHBOARD_ID ?? 'session-old-001';
 
 // Read the numeric value out of a "<label>: <value>" stat row.
 function statValue(page: Page, label: string): Locator {
