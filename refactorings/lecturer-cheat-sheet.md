@@ -31,3 +31,32 @@ QUIZZLER_UI_BASE_URL=http://quizzler.localhost \
   DASHBOARD_UI_BASE_URL=http://dashboard.localhost \
   npm run loop
 ```
+
+## Zero-downtime deployment steps for Loading Spinner on the move
+
+Roll out the images in the exact sequence below:
+
+```bash
+./roll-api.sh kind.mlos.step.1 payment-api
+./roll-api.sh kind.mlos.step.2 quizzler-api
+./roll-api.sh kind.mlos.step.3 payment-api
+```
+
+## Reset quizzler and payment api and dashboard-api
+
+```bash
+./roll-api.sh 51ccf8f-20260703191213 payment-api
+./roll-api.sh 51ccf8f-20260703191213 quizzler-api
+./roll-api.sh 51ccf8f-20260703191213 dashboard-api
+```
+
+## Zero-downtime deployment steps for Graph of Wisdom
+
+Roll out the images in the exact sequence below:
+
+```bash
+./roll-api.sh kind.gow.step.1 dashboard-api
+./roll-api.sh kind.gow.step.2 dashboard-api
+./roll-api.sh kind.gow.step.3 dashboard-api
+./roll-api.sh kind.gow.step.4 dashboard-api
+```

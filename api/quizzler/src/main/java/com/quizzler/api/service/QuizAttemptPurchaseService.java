@@ -95,7 +95,6 @@ public class QuizAttemptPurchaseService {
                         "Waiting thread was interrupted");
         }
 
-
         QuizAttemptPurchase purchase = quizAttemptPurchaseRepository.findByPublicId(purchaseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Purchase " + purchaseId + " not found"));
