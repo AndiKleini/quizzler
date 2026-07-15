@@ -4,6 +4,8 @@ using Dashboard.Repositories;
 using Dashboard.Services;
 using Microsoft.EntityFrameworkCore;
 
+// dotnet run --UseInMemoryDatabase=true
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.

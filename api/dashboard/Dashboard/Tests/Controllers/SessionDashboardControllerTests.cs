@@ -1,6 +1,7 @@
 using Dashboard.Controllers;
 using Dashboard.Models;
 using Dashboard.Repositories;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -92,7 +93,7 @@ public class SessionDashboardControllerTests
     }
 
     [Test]
-    public async Task GetDashboardByDashboardId_WhenNoDataExists_ReturnsNotFound()
+    public async Task GetDashboardByDashboardId_WhenNoDataExists_ReturnsServerError()
     {
         const string DASHBOARD_ID = "SomeDashboardId";
         // Arrange
@@ -104,11 +105,28 @@ public class SessionDashboardControllerTests
         var result = await _controller.GetDashboardById(DASHBOARD_ID);
 
         // Assert
-        Assert.That(result.Result, Is.TypeOf<NotFoundResult>());
+        Assert.That(result.Result, Is.TypeOf<StatusCodeResult>());
     }
 
     [Test]
-    public async Task GetDashboard_WhenNoDataExists_ReturnsNotFound()
+    public async Task GetDashboardByDashboardId_WhenDashboradIdIsInvalid_ReturnsServerError()
+    {
+        const string INVALID_DASHBOARD_ID = "1";
+        // Arrange
+        _mockRepository
+            .Setup(repo => repo.GetDashboardDataByDashboardIdAsync(INVALID_DASHBOARD_ID))
+            .ReturnsAsync((SessionDashboardData?)null);
+
+        // Act
+        var result = await _controller.GetDashboardById(INVALID_DASHBOARD_ID);
+
+        // Assert
+        Assert.That(result.Result, Is.TypeOf<StatusCodeResult>());
+        Assert.That((result.Result as StatusCodeResult)?.StatusCode, Is.EqualTo(500));
+    }
+
+    [Test]
+    public async Task GetDashboard_WhenNoDataExists_ReturnsServerError()
     {
         // Arrange
         _mockRepository
@@ -119,7 +137,7 @@ public class SessionDashboardControllerTests
         var result = await _controller.GetDashboard();
 
         // Assert
-        Assert.That(result.Result, Is.TypeOf<NotFoundResult>());
+        Assert.That(result.Result, Is.TypeOf<StatusCodeResult>());
     }
 
     [Test]

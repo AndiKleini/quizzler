@@ -1,5 +1,6 @@
 using Dashboard.Models;
 using Dashboard.Repositories;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Dashboard.Controllers;
@@ -26,7 +27,7 @@ public class SessionDashboardController : ControllerBase
 
         if (data == null)
         {
-            return NotFound();
+            return StatusCode(500);
         }
 
         return Ok(data);
@@ -35,11 +36,16 @@ public class SessionDashboardController : ControllerBase
     [HttpGet("{dashboardId}")]
     public async Task<ActionResult<SessionDashboardData>> GetDashboardById(string dashboardId)
     {
+        if (dashboardId.Length < 3)
+        {
+            return StatusCode(500);
+        }
+
         var data = await _repository.GetDashboardDataByDashboardIdAsync(dashboardId);
 
         if (data == null)
         {
-            return NotFound();
+            return StatusCode(500);
         }
 
         return Ok(data);
