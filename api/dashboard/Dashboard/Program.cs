@@ -26,7 +26,7 @@ builder.Services.AddScoped<ISessionDashboardRepository, SessionDashboardReposito
 builder.Services.AddScoped<INotificationEventHandlerService, NotificationEventHandlerService>();
 
 // Register RabbitMQ listener as hosted service
-builder.Services.AddHostedService<NotificationEventListener>();
+// builder.Services.AddHostedService<NotificationEventListener>();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
